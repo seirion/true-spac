@@ -82,4 +82,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
+
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room.ktx)
 }
