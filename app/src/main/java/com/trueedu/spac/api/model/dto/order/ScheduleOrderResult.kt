@@ -1,23 +1,24 @@
 package com.trueedu.spac.api.model.dto.order
 
+import com.trueedu.spac.api.model.dto.common.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ScheduleOrderResult(
     @SerialName("rt_cd")
-    val rtCd: String, // 성공 실패 여부 "0" 성공
+    override val rtCd: String,
     @SerialName("msg_cd")
-    val msgCd: String, // 응답코드 - "KIOK0560"
+    override val msgCd: String,
     @SerialName("msg1")
-    val msg: String, // 응답메세지
+    override val msg1: String,
     @SerialName("output")
     val list: List<ScheduleOrderResultDetail>?,
     @SerialName("ctx_area_fk200")
     val fk200: String,
     @SerialName("ctx_area_nk200")
     val nk200: String,
-)
+) : ApiResponse
 
 @Serializable
 data class ScheduleOrderResultDetail(

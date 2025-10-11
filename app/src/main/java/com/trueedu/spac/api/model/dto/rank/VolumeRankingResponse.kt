@@ -1,5 +1,6 @@
 package com.trueedu.spac.api.model.dto.rank
 
+import com.trueedu.spac.api.model.dto.common.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -7,11 +8,11 @@ import kotlinx.serialization.Serializable
 data class VolumeRankingResponse(
     val output: List<VolumeRankingOutput>,
     @SerialName("rt_cd")
-    val rtCd: String, // 성공 실패 여부 "0" 성공
+    override val rtCd: String,
     @SerialName("msg_cd")
-    val msgCd: String, // 응답코드 - "MCA00000"
-    val msg1: String, // 응답메세지 - "정상처리 되었습니다."
-)
+    override val msgCd: String,
+    override val msg1: String,
+) : ApiResponse
 
 @Serializable
 data class VolumeRankingOutput(

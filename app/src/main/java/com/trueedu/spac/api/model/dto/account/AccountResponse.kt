@@ -1,5 +1,6 @@
 package com.trueedu.spac.api.model.dto.account
 
+import com.trueedu.spac.api.model.dto.common.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,17 +9,17 @@ data class AccountResponse(
     val output1: List<AccountAsset>,
     val output2: List<AccountDetail>,
     @SerialName("rt_cd")
-    val rtCd: String, // 성공 실패 여부 "0" 성공
+    override val rtCd: String,
     @SerialName("msg_cd")
-    val msgCd: String, // 응답코드 - "KIOK0510"
-    val msg1: String, // 응답메세지 - "정상처리 되었습니다."
+    override val msgCd: String,
+    override val msg1: String,
 
     // 다음 연속 조회시 사용
     @SerialName("ctx_area_fk100")
     val fk100: String, // 연속조회검색조건100
     @SerialName("ctx_area_nk100")
     val nk100: String, // 연속조회키100
-)
+) : ApiResponse
 
 @Serializable
 data class AccountAsset(
