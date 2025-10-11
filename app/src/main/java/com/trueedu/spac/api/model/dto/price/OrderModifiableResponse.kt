@@ -24,33 +24,33 @@ data class OrderModifiableResponse(
 @Serializable
 data class OrderModifiableDetail(
     @SerialName("ord_gno_brno")
-    val ordGnoBrno: String, // 주문채번지점번호 - 주문시 한국투자증권 시스템에서 지정된 영업점코드
+    val ordGnoBrno: String, // 주문시 한국투자증권 시스템에서 지정된 영업점코드
     @SerialName("odno")
-    val orderNo: String, // 주문번호 - 주문시 한국투자증권 시스템에서 채번된 주문번호
+    val orderNo: String, // 주문시 한국투자증권 시스템에서 채번된 주문번호
     @SerialName("orgn_odno")
-    val originalOrderNo: String, // 원주문번호 - 정정/취소주문 인경우 원주문번호
+    val originalOrderNo: String, // 원주문번호 (정정/취소주문인 경우)
     @SerialName("ord_dvsn_name")
-    val orderDivisionName: String, // 주문구분명 - 주문구분명
+    val orderDivisionName: String, // 주문구분명
     @SerialName("pdno")
     val code: String, // 종목번호(뒤 6자리만 해당)
     @SerialName("prdt_name")
-    val nameKr: String, // 상품명 - 종목명
+    val nameKr: String, // 종목명
     @SerialName("rvse_cncl_dvsn_name")
-    val revisionCancellationDivisionName : String, // 정정취소구분명 - 정정 또는 취소 여부 표시
+    val revisionCancellationDivisionName : String, // 정정취소구분명 (정정 또는 취소 여부)
     @SerialName("ord_qty")
     val quantity: String, // 주문수량
     @SerialName("ord_unpr")
     val price: String, // 주문단가
     @SerialName("ord_tmd")
-    val orderTime: String, //주문시각(시분초HHMMSS)
+    val orderTime: String, // 주문시각 (HHmmss)
     @SerialName("tot_ccld_qty")
-    val totalContractedQuantity: String, // 총체결수량 - 주문 수량 중 체결된 수량
+    val totalContractedQuantity: String, // 총체결수량 (주문 수량 중 체결된 수량)
     @SerialName("tot_ccld_amt")
-    val totalContractedAmount: String, // 총체결금액 -	주문금액 중 체결금액
+    val totalContractedAmount: String, // 총체결금액 (주문금액 중 체결금액)
     @SerialName("psbl_qty")
-    val possibleQuantity: String, // 가능수량 - 정정/취소 주문 가능 수량
+    val possibleQuantity: String, // 가능수량 (정정/취소 주문 가능 수량)
     @SerialName("sll_buy_dvsn_cd")
-    val sellBuyDivisionCode: String, // 매도매수구분코드 - 01 : 매도 02 : 매수
+    val sellBuyDivisionCode: String, // 매도매수구분코드 (01: 매도, 02: 매수)
     /*
     00 : 지정가
     01 : 시장가
@@ -72,7 +72,5 @@ data class OrderModifiableDetail(
     51 : 장중대량
     */
     @SerialName("ord_dvsn_cd")
-    val orderDivisionCode: String, // 주문구분코드 - 주문구분코드
-
-// -mgco_aptm_odno	운용사지정주문번호	String	Y	12	주문 번호 (운용사 통한 주문)
+    val orderDivisionCode: String, // 주문구분코드
 )
