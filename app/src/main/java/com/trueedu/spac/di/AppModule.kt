@@ -2,6 +2,7 @@ package com.trueedu.spac.di
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.repo.local.Local
 import dagger.Module
@@ -16,17 +17,25 @@ import javax.inject.Singleton
 object AppModuleProvider {
     @Provides
     @Singleton
-    fun providesLocal(
+    fun providesSharedPreferences(
         @ApplicationContext context: Context
+    ): SharedPreferences {
+        return context.getSharedPreferences("local", Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    @Singleton
+    fun providesLocal(
+        sharedPreferences: SharedPreferences
     ): Local {
-        return Local(context.getSharedPreferences("local", Context.MODE_PRIVATE))
+        return Local(sharedPreferences)
     }
 
     @Provides
     @Singleton
     fun providesTrueAnalytics(
-        @ApplicationContext context: Context,
+        application: Application
     ): TrueAnalytics {
-        return TrueAnalytics(context as Application)
+        return TrueAnalytics(application)
     }
 }
