@@ -29,20 +29,18 @@ data class OrderExecutionDetail(
     @SerialName("ord_dt")
     val orderDate: String, // 주문일자
     @SerialName("ord_gno_brno")
-    val orderBranchNo: String, // 주문채번지점번호 - 주문시 한국투자증권 시스템에서 지정된 영업점코드
+    val orderBranchNo: String, // 주문시 한국투자증권 시스템에서 지정된 영업점코드
     @SerialName("odno")
-    val orderNo: String, // 주문번호 - 주문시 한국투자증권 시스템에서 채번된 주문번호, 지점별 일자별로 채번됨
-             // * 주문번호 유일조건: ord_dt(주문일자) + ord_gno_brno(주문채번지점번호) + odno(주문번호)
+    val orderNo: String, // 주문시 한국투자증권 시스템에서 채번된 주문번호 (지점별 일자별로 채번됨)
+    // * 주문번호 유일조건: ord_dt(주문일자) + ord_gno_brno(주문채번지점번호) + odno(주문번호)
     @SerialName("orgn_odno")
-    val originalOrderNo: String, // 원주문번호 - 이전 주문에 채번된 주문번호
+    val originalOrderNo: String, // 원주문번호 (이전 주문에 채번된 주문번호)
     @SerialName("ord_dvsn_name")
     val orderDivisionName: String, // 주문구분명
     @SerialName("sll_buy_dvsn_cd")
-    val sellBuyDivisionCode: String, // 매도매수구분코드 - 01 : 매도 02 : 매수
+    val sellBuyDivisionCode: String, // 매도매수구분코드 (01: 매도, 02: 매수)
     @SerialName("sll_buy_dvsn_cd_name")
-    val sellBuyCodeName: String, // 매도매수구분명 - 반대매매 인경우 "임의매도"로 표시됨
-                        // 정정취소여부가 Y이면 *이 붙음
-                        //ex) 매수취소* = 매수취소가 완료됨
+    val sellBuyCodeName: String, // 매도매수구분명 (반대매매인 경우 "임의매도"로 표시, 정정취소여부가 Y이면 *이 붙음, 예: 매수취소*)
     @SerialName("pdno")
     val code: String, // 상품번호
     @SerialName("prdt_name")
@@ -93,12 +91,11 @@ data class OrderExecutionDetail(
     @SerialName("ccld_cndt_name")
     val concludedConditionName: String, // 체결조건명
     @SerialName("infm_tmd")
-    val informationTime: String, // 통보시각 - 실전투자계좌로는 해당값이 제공되지 않습니다.
-    // -ctac_tlno	연락전화번호	String	Y	20
+    val informationTime: String, // 통보시각 (실전투자계좌로는 해당값이 제공되지 않습니다)
     @SerialName("prdt_type_cd")
-    val productTypeCode: String, // 상품유형코드 - 300 : 주식 301 : 선물옵션 302 : 채권 306 : ELS
+    val productTypeCode: String, // 상품유형코드 (300: 주식, 301: 선물옵션, 302: 채권, 306: ELS)
     @SerialName("excg_dvsn_cd")
-    val exchangeDivisionCode: String, // 거래소구분코드 - 01 : 한국증권 02 : 증권거래소 03 : 코스닥 04 : K-OTC
+    val exchangeDivisionCode: String, // 거래소구분코드 (01: 한국증권, 02: 증권거래소, 03: 코스닥, 04: K-OTC)
     // 05 : 선물거래소 06 : CME 07 : EUREX
     // 21 : 금현물
     // 51 : 홍콩 52 : 상해B 53 : 심천 54 : 홍콩거래소 55 : 미국 56 : 일본 57 : 상해A
@@ -117,5 +114,5 @@ data class OrderExecutionSummary(
     @SerialName("tot_ccld_amt")
     val totalConcludedAmount: String, // 총체결금액
     @SerialName("prsm_tlex_smtl") // presumed tax, levy, and settlement total
-    val estimatedTaxAndFee: String, // 추정제비용합계 - 해당 값은 당일 데이터에 대해서만 제공됩니다.
+    val estimatedTaxAndFee: String, // 추정제비용합계 (당일 데이터에 대해서만 제공됨)
 )

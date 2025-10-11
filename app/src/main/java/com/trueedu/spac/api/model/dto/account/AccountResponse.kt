@@ -32,7 +32,7 @@ data class AccountAsset(
     @SerialName("bfdy_buy_qty")
     val prevDayBuyQuantity: String, // 전일매수수량
     @SerialName("bfdy_sll_qty")
-    val prevDaySellQuantity: String, // 금일매수수량
+    val prevDaySellQuantity: String, // 전일매도수량
     @SerialName("thdt_buyqty") // api 문서가 오타인데 실제로 값도 이렇게 옴
     val todayBuyQuantity: String, // 금일매수수량
     @SerialName("thdt_sll_qty")

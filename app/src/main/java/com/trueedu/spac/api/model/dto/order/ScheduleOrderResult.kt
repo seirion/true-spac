@@ -40,8 +40,6 @@ data class ScheduleOrderResultDetail(
     val cancelOrderDate: String, // 취소주문일자
     @SerialName("ord_tmd")
     val orderTime: String, // 주문시각
-    // -ctac_tlno	연락전화번호	String	N	20
-
     @SerialName("rjct_rson2")
     val rejectReason: String, // 거부사유2
     @SerialName("odno")
@@ -56,16 +54,12 @@ data class ScheduleOrderResultDetail(
     val price: String, // 주문예약단가
     @SerialName("tot_ccld_amt")
     val totalClearedAmount: String, // 총체결금액
-    // @SerialName("loan_dt")
-    // loan_dt	대출일자	String	N	8
     @SerialName("cncl_rcit_tmd")
     val cancelReceivedTime: String, // 취소접수시각
     @SerialName("prcs_rslt")
     val processResult: String, // 처리결과
     @SerialName("ord_dvsn_name")
     val orderDivisionName: String, // 주문구분명
-    // @SerialName("tmnl_mdia_kind_cd")
-    // val terminalMediaKindCode: String, // 단말매체종류코드
     @SerialName("rsvn_end_dt")
     val endDate: String, // 예약종료일자
 ) {
