@@ -79,6 +79,7 @@ dependencies {
     compileOnly(libs.ksp.gradle.plugin)
 
     implementation(libs.amplitude)
+    implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
 }
