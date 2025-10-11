@@ -27,11 +27,23 @@ interface ApiResponse {
     /**
      * API 호출 성공 여부
      */
-    fun isSuccess(): Boolean = rtCd == "0"
+    fun isSuccess(): Boolean = rtCd == RT_CD_SUCCESS
 
     /**
      * API 호출 실패 여부
      */
     fun isFailure(): Boolean = !isSuccess()
+
+    companion object {
+        /**
+         * 응답 성공 코드
+         */
+        const val RT_CD_SUCCESS = "0"
+
+        /**
+         * 응답 실패 코드
+         */
+        const val RT_CD_FAILURE = "1"
+    }
 }
 

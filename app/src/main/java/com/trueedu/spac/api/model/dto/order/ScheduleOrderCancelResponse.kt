@@ -20,4 +20,21 @@ data class ResponseResult(
     // 문서에는 소문자로 되어 있지만, 실제로 대문자로 오고 있음
     @SerialName("NRML_PRCS_YN")
     val result: String, // Y or N
-)
+) {
+    /**
+     * 정상 처리 여부
+     */
+    fun isSuccess() = result == YES
+
+    companion object {
+        /**
+         * 정상 처리
+         */
+        const val YES = "Y"
+
+        /**
+         * 실패
+         */
+        const val NO = "N"
+    }
+}

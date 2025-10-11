@@ -69,6 +69,15 @@ data class ScheduleOrderResultDetail(
     @SerialName("rsvn_end_dt")
     val endDate: String, // 예약종료일자
 ) {
-    // '처리' 상태인 예약은 삭제, 수정 불가
-    fun disabled() = processResult == "처리"
+    /**
+     * '처리' 상태인 예약은 삭제, 수정 불가
+     */
+    fun disabled() = processResult == PROCESS_RESULT_PROCESSED
+
+    companion object {
+        /**
+         * 처리 완료 상태
+         */
+        const val PROCESS_RESULT_PROCESSED = "처리"
+    }
 }
