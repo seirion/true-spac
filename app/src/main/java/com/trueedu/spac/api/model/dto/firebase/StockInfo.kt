@@ -3,26 +3,54 @@ package com.trueedu.spac.api.model.dto.firebase
 abstract class StockInfo(
     val code: String,
     val nameKr: String,
-    val attributes: String,
+    protected val attributes: String,
 ) {
-    abstract fun getAttribute(key: String): String?
-    abstract fun kospi(): Boolean
-    abstract fun kosdaq(): Boolean
+    protected abstract fun getAttribute(key: String): String?
 
-    abstract fun spac(): Boolean
-    abstract fun halt(): Boolean
-    abstract fun designated(): Boolean
-    abstract fun parValue(): String?
-    abstract fun listingDate(): String?
-    abstract fun listingShares(): String?
+    /** KOSPI 여부 */
+    abstract val isKospi: Boolean
 
-    abstract fun prevPrice(): String?
-    abstract fun prevVolume(): String?
-    abstract fun marketCap(): String? // 전일 기준 시총
-    abstract fun sales(): String?
-    abstract fun operatingProfit(): String?
-    abstract fun shortSellingOverheating(): Boolean // 공매도과열
-    abstract fun unusualPriceSurge(): Boolean // 이상급등
+    /** KOSDAQ 여부 */
+    abstract val isKosdaq: Boolean
+
+    /** SPAC 여부 */
+    abstract val isSpac: Boolean
+
+    /** 거래정지 여부 */
+    abstract val isHalt: Boolean
+
+    /** 관리종목 여부 */
+    abstract val isDesignated: Boolean
+
+    /** 액면가 */
+    abstract val parValue: String?
+
+    /** 상장일자 */
+    abstract val listingDate: String?
+
+    /** 상장주수 */
+    abstract val listingShares: String?
+
+    /** 전일 종가 */
+    abstract val prevPrice: String?
+
+    /** 전일 거래량 */
+    abstract val prevVolume: String?
+
+    /** 시가총액 (전일 기준) */
+    abstract val marketCap: String?
+
+    /** 매출액 */
+    abstract val sales: String?
+
+    /** 영업이익 */
+    abstract val operatingProfit: String?
+
+    /** 공매도과열 여부 */
+    abstract val isShortSellingOverheating: Boolean
+
+    /** 이상급등 여부 */
+    abstract val isUnusualPriceSurge: Boolean
 }
 
 /**
@@ -89,25 +117,59 @@ class StockInfoKospi(
     // No-argument constructor required for Firebase
     constructor() : this("000000", "", "")
 
-    override fun spac() = getAttribute("SPAC") == "Y"
-    override fun halt() = getAttribute("거래정지") == "Y"
-    override fun designated() = getAttribute("관리종목") == "Y"
-    override fun parValue() = getAttribute("액면가")
-    override fun listingDate() = getAttribute("상장일자")
-    override fun listingShares() = getAttribute("상장주수")
+    override val isKospi: Boolean = true
+    override val isKosdaq: Boolean = false
 
-    override fun prevPrice() = getAttribute("기준가")
-    override fun prevVolume() = getAttribute("전일거래량")
-    override fun marketCap() = getAttribute("시가총액")?.dropWhile { it == '0' } // 전일 기준
-    override fun sales() = getAttribute("매출액")
-    override fun operatingProfit() = getAttribute("영업이익")
-    override fun shortSellingOverheating() = getAttribute("공매도과열") == "Y"
-    override fun unusualPriceSurge() = getAttribute("이상급등") == "Y"
+    override val isSpac: Boolean
+        get() = getAttribute("SPAC") == "Y"
 
-    fun kospi100() = getAttribute("KOSPI100")
-    fun kospi50() = getAttribute("KOSPI50")
-    fun capitalStock() = getAttribute("자본금")
+    override val isHalt: Boolean
+        get() = getAttribute("거래정지") == "Y"
 
+    override val isDesignated: Boolean
+        get() = getAttribute("관리종목") == "Y"
+
+    override val parValue: String?
+        get() = getAttribute("액면가")
+
+    override val listingDate: String?
+        get() = getAttribute("상장일자")
+
+    override val listingShares: String?
+        get() = getAttribute("상장주수")
+
+    override val prevPrice: String?
+        get() = getAttribute("기준가")
+
+    override val prevVolume: String?
+        get() = getAttribute("전일거래량")
+
+    override val marketCap: String?
+        get() = getAttribute("시가총액")?.dropWhile { it == '0' } // 전일 기준
+
+    override val sales: String?
+        get() = getAttribute("매출액")
+
+    override val operatingProfit: String?
+        get() = getAttribute("영업이익")
+
+    override val isShortSellingOverheating: Boolean
+        get() = getAttribute("공매도과열") == "Y"
+
+    override val isUnusualPriceSurge: Boolean
+        get() = getAttribute("이상급등") == "Y"
+
+    /** KOSPI100 종목 여부 */
+    val isKospi100: Boolean
+        get() = getAttribute("KOSPI100") == "Y"
+
+    /** KOSPI50 종목 여부 */
+    val isKospi50: Boolean
+        get() = getAttribute("KOSPI50") == "Y"
+
+    /** 자본금 */
+    val capitalStock: String?
+        get() = getAttribute("자본금")
 
     // stock attributes
     override fun getAttribute(key: String): String? {
@@ -115,9 +177,6 @@ class StockInfoKospi(
             return attributes.substring(fieldSpecs[index], fieldSpecs[index + 1])
         }
     }
-
-    override fun kospi() = true
-    override fun kosdaq() = false
 }
 
 /**
@@ -184,33 +243,56 @@ class StockInfoKosdaq(
     // No-argument constructor required for Firebase
     constructor() : this("000000", "", "")
 
+    override val isKospi: Boolean = false
+    override val isKosdaq: Boolean = true
+
+    override val isSpac: Boolean
+        get() = nameKr.contains("스팩")
+
+    override val isHalt: Boolean
+        get() = getAttribute("거래정지 여부") == "Y"
+
+    override val isDesignated: Boolean
+        get() = getAttribute("관리 종목 여부") == "Y"
+
+    override val parValue: String?
+        get() = getAttribute("주식 액면가")
+
+    override val listingDate: String?
+        get() = getAttribute("주식 상장 일자")
+
+    override val listingShares: String?
+        get() = getAttribute("상장 주수(천)")
+
+    override val prevPrice: String?
+        get() = getAttribute("주식 기준가")
+
+    override val prevVolume: String?
+        get() = getAttribute("전일 거래량")
+
+    override val marketCap: String?
+        get() = getAttribute("전일기준 시가총액 (억)")?.dropWhile { it == '0' }
+
+    override val sales: String?
+        get() = getAttribute("매출액")
+
+    override val operatingProfit: String?
+        get() = getAttribute("영업이익")
+
+    override val isShortSellingOverheating: Boolean
+        get() = getAttribute("공매도과열종목여부") == "Y"
+
+    override val isUnusualPriceSurge: Boolean
+        get() = getAttribute("이상급등종목여부") == "Y"
+
+    /** KOSDAQ150 종목 여부 */
+    val isKosdaq150: Boolean
+        get() = getAttribute("KOSDAQ150지수여부 (Y,N)") == "Y"
+
     // stock attributes
     override fun getAttribute(key: String): String? {
         return columns[key]?.let { index ->
             return attributes.substring(fieldSpecs[index], fieldSpecs[index + 1])
         }
     }
-
-    fun kosdaq150() = getAttribute("KOSDAQ150지수여부 (Y,N)")
-
-    override fun spac() = nameKr.contains("스팩")
-    override fun halt() = getAttribute("거래정지 여부") == "Y"
-    override fun designated() = getAttribute("관리 종목 여부") == "Y"
-    override fun parValue() = getAttribute("주식 액면가")
-    override fun listingDate() = getAttribute("주식 상장 일자")
-    override fun listingShares() = getAttribute("상장 주수(천)")
-
-    override fun prevPrice() = getAttribute("주식 기준가")
-    override fun prevVolume() = getAttribute("전일 거래량")
-    override fun marketCap() = getAttribute("전일기준 시가총액 (억)")?.dropWhile { it == '0' }
-    override fun sales() = getAttribute("매출액")
-    override fun operatingProfit() = getAttribute("영업이익")
-
-    override fun shortSellingOverheating() = getAttribute("공매도과열종목여부") == "Y"
-    override fun unusualPriceSurge() = getAttribute("이상급등종목여부") == "Y"
-
-
-
-    override fun kospi() = false
-    override fun kosdaq() = true
 }
