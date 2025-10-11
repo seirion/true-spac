@@ -16,14 +16,13 @@ data class PriceResponse(
 @Serializable
 data class PriceDetail(
     @SerialName("iscd_stat_cls_code")
-    val stockState: String, // 00 : 그외 51 : 관리종목 52 : 투자위험 53 : 투자경고 54 : 투자주의 55 : 신용가능
-                            // 57 : 증거금 100% 58 : 거래정지 59 : 단기과열
+    @Serializable(with = StockStateSerializer::class)
+    val stockState: StockState, // 종목 상태 코드
     @SerialName("marg_rate")
     val marginRate: String, // 증거금 비율
 
     @SerialName("rprs_mrkt_kor_name")
-    val nameKr: String,
-    // -rprs_mrkt_kor_name	대표 시장 한글 명	String	Y	40
+    val nameKr: String, // 대표 시장 한글 명
 
     @SerialName("new_hgpr_lwpr_cls_code")
     val newHighLow: String?, // 신 고가 저가 구분 코드 조회하는 종목이 신고/신저에 도달했을 경우에만 조회됨
@@ -33,11 +32,12 @@ data class PriceDetail(
     val tempStop: String, // 임시 정지 여부
 
     @SerialName("stck_prpr")
-    val price: String,
+    val price: String, // 현재가
     @SerialName("prdy_vrss")
     val priceChange: String, // 전일 대비
     @SerialName("prdy_vrss_sign")
-    val priceChangeSign: String, // 전일 대비 부호 1 : 상한 2 : 상승 3 : 보합 4 : 하한 5 : 하락
+    @Serializable(with = PriceChangeSignSerializer::class)
+    val priceChangeSign: PriceChangeSign, // 전일 대비 부호
     @SerialName("prdy_ctrt")
     val priceChangeRate: String, // 전일 대비 등락률
     @SerialName("acml_tr_pbmn")
