@@ -1,5 +1,6 @@
 package com.trueedu.spac.api.model.dto.order
 
+import com.trueedu.spac.api.model.dto.common.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,12 +9,12 @@ data class OrderModifyResponse(
     @SerialName("output")
     val orderModifyDetail: OrderModifyDetail?,
     @SerialName("rt_cd")
-    val rtCd: String, // 성공 실패 여부 "0" 성공
+    override val rtCd: String,
     @SerialName("msg_cd")
-    val msgCd: String, // 응답코드 - "MCA00000"
-    val msg: String?, // 응답메세지 - "정상처리 되었습니다."
-    val msg1: String?,
-)
+    override val msgCd: String,
+    override val msg1: String?,
+    val msg: String?,
+) : ApiResponse
 
 @Serializable
 data class OrderModifyDetail(
