@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 android {
@@ -40,6 +41,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     hilt {
@@ -66,6 +68,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.androidx.lifecycle.process)
+
+    ksp(libs.symbol.processing.api)
+
     // Hilt
     implementation(libs.hilt)
     implementation(libs.hilt.navigation.compose)
@@ -73,4 +79,6 @@ dependencies {
     compileOnly(libs.ksp.gradle.plugin)
 
     implementation(libs.amplitude)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.timber)
 }
