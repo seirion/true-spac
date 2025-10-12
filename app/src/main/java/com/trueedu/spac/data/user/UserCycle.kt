@@ -6,6 +6,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.repo.local.Local
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +20,9 @@ class UserCycle @Inject constructor(
     private val local: Local,
     private val trueAnalytics: TrueAnalytics,
 ) {
-    private val loginEvent = MutableStateFlow<Boolean?>(null)
+    private val _loginEvent = MutableStateFlow<Boolean?>(null)
+    val loginEvent: StateFlow<Boolean?> = _loginEvent.asStateFlow()
+
     private val _email = mutableStateOf(local.email)
     val email: State<String> = _email
     private val _profileImageUrl = mutableStateOf(local.profileImageUrl)
@@ -33,7 +37,7 @@ class UserCycle @Inject constructor(
         this._email.value = email
         this._profileImageUrl.value = profileImageUrl
 
-        loginEvent.value = true
+        _loginEvent.value = true
         trueAnalytics.log("login")
     }
 
@@ -41,7 +45,7 @@ class UserCycle @Inject constructor(
         this._email.value = local.email
         this._profileImageUrl.value = local.profileImageUrl
 
-        loginEvent.value = true
+        _loginEvent.value = true
         trueAnalytics.log("silent_login")
         trueAnalytics.setUserId(local.email)
     }
@@ -50,6 +54,7 @@ class UserCycle @Inject constructor(
         _email.value = ""
         _profileImageUrl.value = ""
         local.logout()
+        _loginEvent.value = false
         trueAnalytics.log("logout")
     }
 
