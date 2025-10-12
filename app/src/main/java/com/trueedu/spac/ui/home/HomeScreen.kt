@@ -1,6 +1,7 @@
 package com.trueedu.spac.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -8,7 +9,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,8 +40,9 @@ fun HomeScreen(
         },
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
             .background(color = MaterialTheme.colorScheme.background),
+        contentWindowInsets =
+            ScaffoldDefaults.contentWindowInsets.exclude(NavigationBarDefaults.windowInsets),
     ) { innerPadding ->
         val spacManager = vm.spacManager
         val loading by spacManager.loading.collectAsState()
