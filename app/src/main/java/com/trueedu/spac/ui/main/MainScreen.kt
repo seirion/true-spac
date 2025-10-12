@@ -15,8 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
+import com.trueedu.spac.ui.search.SearchScreen
 
 @Composable
 fun MainScreen(
@@ -25,6 +27,10 @@ fun MainScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    val openSearch = { page: Int ->
+        navController.navigate(AppDestinations.Search(page))
+    }
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -79,6 +85,18 @@ fun MainScreen(
             ) {
                 ProfileScreen(
                     loginWithGoogle = loginWithGoogle
+                )
+            }
+
+            composable<AppDestinations.Search>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/search/{page}" }
+                )
+            ) { backStackEntry ->
+                val search: AppDestinations.Search = backStackEntry.toRoute()
+                SearchScreen(
+                    currentPage = search.page,
+                    onBack = { navController.popBackStack() },
                 )
             }
 
