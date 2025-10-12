@@ -3,6 +3,8 @@ package com.trueedu.spac.ui.following
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
@@ -36,11 +38,17 @@ class FollowingViewModel @Inject constructor(
      */
     val basePrices = mutableStateMapOf<String, PriceResponse?>()
 
+    private var lifecycleJob: Job? = null
+    private var isStarted = false
+
     var job: Job? = null
 
     fun pageCount() = FollowingManager.MAX_GROUP_SIZE
 
-    fun init() {
+    fun onStart() {
+        if (isStarted) return
+        isStarted = true
+
         if (!userCycle.loggedIn()) {
             loading.value = false
             return
@@ -69,8 +77,36 @@ class FollowingViewModel @Inject constructor(
     }
 
     fun onStop() {
+        if (!isStarted) return
+        isStarted = false
+
         job?.cancel()
         job = null
+    }
+
+    fun observeLifecycle(lifecycleOwner: LifecycleOwner) {
+        lifecycleJob?.cancel()
+
+        lifecycleJob = viewModelScope.launch {
+            lifecycleOwner.lifecycle.currentStateFlow
+                .collect { state ->
+                    when (state) {
+                        Lifecycle.State.STARTED, Lifecycle.State.RESUMED -> {
+                            logD("Lifecycle STARTED/RESUMED: onStart()")
+                            onStart()
+                        }
+                        Lifecycle.State.CREATED -> {
+                            logD("Lifecycle CREATED: onStop()")
+                            onStop()
+                        }
+                        Lifecycle.State.DESTROYED -> {
+                            logD("Lifecycle DESTROYED: onStop()")
+                            onStop()
+                        }
+                        else -> {}
+                    }
+                }
+        }
     }
 
     fun groupName(page: Int?): String {
@@ -123,5 +159,11 @@ class FollowingViewModel @Inject constructor(
 
     fun prevPrice(code: String): Double {
         return getStock(code)?.prevPrice.safeDouble()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        lifecycleJob?.cancel()
+        job?.cancel()
     }
 }
