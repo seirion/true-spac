@@ -1,5 +1,6 @@
 package com.trueedu.spac.data.stocks
 
+import com.trueedu.spac.data.log.logE
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -28,6 +29,8 @@ private val uploadTime = listOf(
  *
  */
 fun needUpdateRemoteData(localTimestamp: Long, remoteTimestamp: Long): Boolean {
+
+    if (localTimestamp == 0L) return true
 
     val localDate = localTimestamp / 10000L
     val remoteDate = remoteTimestamp / 10000L
