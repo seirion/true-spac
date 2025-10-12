@@ -67,7 +67,7 @@ fun FollowingScreen(
                 title = vm.groupName(vm.currentPage.value),
                 onBack = null,
                 actionIcon = Icons.Filled.Search,
-                onAction = { openSearch(pagerState.currentPage) },
+                onAction = { openSearch(pagerState.currentPage % vm.pageCount()) },
                 actionIcon2 = Icons.Filled.Edit,
                 onAction2 = openEdit,
             )
