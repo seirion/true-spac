@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -41,10 +42,29 @@ android {
         resValue("string", "amplitude_api_key", "fbd90a5783ee1310d686c7d25a916a65")
     }
 
+    signingConfigs {
+        named("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+        register("release") {
+            storeFile = file(gradleLocalProperties(rootDir, providers).getProperty("STORE_FILE", System.getenv("RELEASE_STORE_FILE")))
+            storePassword = gradleLocalProperties(rootDir, providers).getProperty("STORE_PASSWORD", System.getenv("RELEASE_STORE_PASSWORD"))
+            keyAlias = gradleLocalProperties(rootDir, providers).getProperty("KEY_ALIAS", System.getenv("RELEASE_KEY_ALIAS"))
+            keyPassword = gradleLocalProperties(rootDir, providers).getProperty("KEY_PASSWORD", System.getenv("RELEASE_KEY_PASSWORD"))
+        }
+    }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
