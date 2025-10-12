@@ -10,16 +10,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.trueedu.spac.ui.home.HomeScreen
 
 @Composable
-fun MainScreen() {
-    val navController = rememberNavController()
+fun MainScreen(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -37,7 +36,8 @@ fun MainScreen() {
                     selected = currentDestination?.hasRoute(destination::class) == true,
                     onClick = {
                         navController.navigate(destination) {
-                            popUpTo(navController.graph.findStartDestination().id) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -53,13 +53,25 @@ fun MainScreen() {
             startDestination = AppDestinations.Home,
             modifier = Modifier.fillMaxSize()
         ) {
-            composable<AppDestinations.Home> {
+            composable<AppDestinations.Home>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/home" }
+                )
+            ) {
                 HomeScreen()
             }
-            composable<AppDestinations.Favorites> {
+            composable<AppDestinations.Favorites>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/favorites" }
+                )
+            ) {
                 TodoScreen("Favorites")
             }
-            composable<AppDestinations.Profile> {
+            composable<AppDestinations.Profile>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/profile" }
+                )
+            ) {
                 TodoScreen("Profile")
             }
 
