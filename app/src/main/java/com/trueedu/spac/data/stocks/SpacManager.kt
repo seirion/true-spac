@@ -50,4 +50,11 @@ class SpacManager @Inject constructor(
 
         loading.value = false
     }
+
+    fun search(keyword: String): List<StockInfo> {
+        val key = keyword.lowercase()
+        return spacList.value.filter {
+            it.code.lowercase().contains(key) || it.nameKr.lowercase().contains(key)
+        }
+    }
 }

@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -31,6 +32,13 @@ sealed interface AppDestinations {
     data object Profile : AppDestinations {
         override val label: String = "프로필"
         override val icon: ImageVector = Icons.Default.AccountBox
+    }
+
+    @Serializable
+    data class Search(val page: Int): AppDestinations {
+        override val label: String = ""
+        @Transient
+        override val icon: ImageVector = Icons.Default.Search
     }
 
     // @Serializable
