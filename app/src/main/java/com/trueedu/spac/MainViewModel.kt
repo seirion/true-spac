@@ -1,0 +1,39 @@
+package com.trueedu.spac
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.trueedu.spac.analytics.TrueAnalytics
+import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val firebaseDatabase: FirebaseRealtimeDatabase,
+    private val trueAnalytics: TrueAnalytics,
+) : ViewModel() {
+    private val _forceUpdateVisible = MutableStateFlow(false)
+    val forceUpdateVisible: StateFlow<Boolean> = _forceUpdateVisible.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                if (firebaseDatabase.needForceUpdate()) {
+                    trueAnalytics.log(
+                        "force_update__need",
+                        mapOf("version" to BuildConfig.VERSION_NAME)
+                    )
+                    logD("need app update")
+                    _forceUpdateVisible.value = true
+                }
+            } catch (e: Exception) {
+                logD("Failed to check force update: ${e.message}")
+            }
+        }
+    }
+}
