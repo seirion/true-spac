@@ -80,7 +80,7 @@ fun TrueSpacApp() {
     ) {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Greeting(
-                name = "Android",
+                name = "Android: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 modifier = Modifier.padding(innerPadding)
             )
         }

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.googleServices)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.androidGitVersion)
 }
 
 android {
@@ -17,8 +18,8 @@ android {
         applicationId = "com.trueedu.spac"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = getVersionCodeProvider().get()
+        versionName = androidGitVersion.name()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -48,6 +49,70 @@ android {
     }
     hilt {
         enableAggregatingTask = false
+    }
+}
+
+androidGitVersion {
+    commitHashLength = 8
+    format = "%tag%"
+    prefix = ""
+    untrackedIsDirty = true
+}
+
+fun getVersionCodeProvider(): Provider<Int> {
+    return providers.exec {
+        commandLine("git", "tag", "--list")
+    }.standardOutput.asText.map { output ->
+        val tagList = output.trim()
+        if (tagList.isEmpty()) {
+            1
+        } else {
+            tagList.split("\n").filter { it.isNotEmpty() }.size
+        }
+    }
+}
+
+
+// 버전 정보 확인을 위한 Gradle Task
+tasks.register("printVersionInfo") {
+    group = "versioning"
+    description = "Print detailed version information"
+
+    doLast {
+        val tagListOutput = providers.exec {
+            commandLine("git", "tag", "--list")
+        }.standardOutput.asText.get()
+
+        val tagList = tagListOutput.trim()
+        val tagCount = if (tagList.isEmpty()) 1 else tagList.split("\n").filter { it.isNotEmpty() }.size
+
+        val tagOutput = providers.exec {
+            commandLine("git", "describe", "--tags", "--abbrev=0")
+            isIgnoreExitValue = true
+        }.standardOutput.asText.get()
+
+        val tag = tagOutput.trim().removePrefix("v")
+        val versionCode = getVersionCodeProvider().get()
+
+        println("=== Version Information ===")
+        println("Git tag: $tag")
+        println("Tag count: $tagCount")
+        println("Version code: $versionCode")
+        println("Version name: ${androidGitVersion.name()}")
+        println("========================")
+    }
+}
+
+// 버전 정보 출력 태스크
+tasks.register("printVersionName") {
+    doLast {
+        println(android.defaultConfig.versionName)
+    }
+}
+
+tasks.register("printVersionCode") {
+    doLast {
+        println(android.defaultConfig.versionCode)
     }
 }
 
