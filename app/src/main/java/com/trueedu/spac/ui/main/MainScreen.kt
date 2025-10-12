@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
@@ -24,11 +25,16 @@ fun MainScreen(
     navController: NavHostController,
     loginWithGoogle: () -> Unit,
 ) {
+    val userCycle = LocalUserCycle.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     val openSearch = { page: Int ->
-        navController.navigate(AppDestinations.Search(page))
+        if (userCycle.loggedIn()) {
+            navController.navigate(AppDestinations.Search(page))
+        } else {
+            loginWithGoogle()
+        }
     }
 
     NavigationSuiteScaffold(
