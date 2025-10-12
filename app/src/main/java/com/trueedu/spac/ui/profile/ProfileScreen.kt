@@ -16,11 +16,15 @@ import com.trueedu.spac.ui.profile.views.ProfileTopBar
 @Composable
 fun ProfileScreen(
     vm: ProfileViewModel = hiltViewModel(),
+    loginWithGoogle: () -> Unit,
 ) {
     Scaffold(
         topBar = {
-            ProfileTopBar {
-                // TODO
+            ProfileTopBar(
+                vm.email(),
+                vm.profileImageUrl(),
+            ) {
+                loginWithGoogle()
             }
         },
         contentWindowInsets =
