@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -20,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.home.views.HomeTopBar
+import com.trueedu.spac.ui.home.views.SearchBar
 import com.trueedu.spac.ui.home.views.SpacItem
 import com.trueedu.spac.ui.home.views.SpacSectionView
 
@@ -53,8 +53,8 @@ fun HomeScreen(
 
         val state = rememberLazyListState()
 
-        LaunchedEffect(key1 = loading) {
-            //state.scrollToItem(1)
+        LaunchedEffect(Unit) {
+            state.scrollToItem(1)
         }
 
         LazyColumn(
@@ -63,7 +63,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            //item { SearchBar(searchText = vm.searchInput) {} }
+            item { SearchBar(searchText = vm.searchInput) {} }
             stickyHeader { SpacSectionView(vm::setSort) }
 
             itemsIndexed(vm.stocks.value, key = { i, _ -> i }) { i, item ->
