@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.StockPool
@@ -43,8 +44,10 @@ fun FollowingScreen(
     openSearch: (Int) -> Unit = {}, // page
     openEdit: () -> Unit = {},
 ) {
-    LaunchedEffect(Unit) {
-        vm.init()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        vm.observeLifecycle(lifecycleOwner)
     }
 
     val pagerState = rememberPagerState(
