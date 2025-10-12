@@ -22,8 +22,10 @@ import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.user.GoogleAuthClient
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.data.user.UserCycle
+import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
+import com.trueedu.spac.ui.main.NoticePopupView
 import com.trueedu.spac.ui.theme.TrueSpacTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -33,6 +35,8 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     private val vm by viewModels<MainViewModel>()
+    @Inject
+    lateinit var local: Local
     @Inject
     lateinit var trueAnalytics: TrueAnalytics
     @Inject
@@ -52,6 +56,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             this.navController = navController
             val forceUpdateVisible by vm.forceUpdateVisible.collectAsState()
+            val appNotice by vm.appNotice.collectAsState()
 
             LaunchedEffect(Unit) {
                 intent?.let { navController.handleDeepLink(it) }
@@ -71,6 +76,27 @@ class MainActivity : ComponentActivity() {
                             loginWithGoogle = ::loginWithGoogle,
                         )
                     }
+
+                    val noticeVisible = appNotice.available() && local.appNoticeId < appNotice.id
+                    if (noticeVisible) {
+                        NoticePopupView(
+                            notice = appNotice,
+                            onDismiss = {
+                                if (appNotice.cancellable) {
+                                    vm.dismissNotice()
+                                }
+                            },
+                            onClick = {
+                                trueAnalytics.clickButton("main__notice_close__click")
+                                if (appNotice.cancellable) {
+                                    local.appNoticeId = appNotice.id
+                                    vm.dismissNotice()
+                                } else {
+                                    finishAffinity()
+                                }
+                            }
+                        )
+                    } // noticeVisible
                 }
             }
         }
