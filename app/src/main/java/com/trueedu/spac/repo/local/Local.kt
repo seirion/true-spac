@@ -39,6 +39,9 @@ class Local @Inject constructor(
     var email by preferences.string("")
     var profileImageUrl by preferences.string("")
 
+    // 확인한 notice 마지막 id
+    var appNoticeId by preferences.int(0)
+
     // 종목 다운로드 시각 yyyyMMddHHmm
     var stockUpdatedAt by preferences.long(0L)
 
