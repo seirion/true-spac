@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TrueSpac</string>
+    <string name="login_with_google">구글로 로그인 하기</string>
 </resources>

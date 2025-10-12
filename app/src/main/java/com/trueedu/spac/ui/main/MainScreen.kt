@@ -19,7 +19,10 @@ import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
 
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(
+    navController: NavHostController,
+    loginWithGoogle: () -> Unit,
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -59,7 +62,8 @@ fun MainScreen(navController: NavHostController) {
                     navDeepLink { uriPattern = "truespac://app/home" }
                 )
             ) {
-                HomeScreen()
+                HomeScreen(
+                )
             }
             composable<AppDestinations.Favorites>(
                 deepLinks = listOf(
@@ -73,7 +77,9 @@ fun MainScreen(navController: NavHostController) {
                     navDeepLink { uriPattern = "truespac://app/profile" }
                 )
             ) {
-                ProfileScreen()
+                ProfileScreen(
+                    loginWithGoogle = loginWithGoogle
+                )
             }
 
             // composable<AppDestinations.StockDetail> { backStackEntry ->

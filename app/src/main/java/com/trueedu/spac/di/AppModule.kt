@@ -3,6 +3,7 @@ package com.trueedu.spac.di
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.firebase.auth.FirebaseAuth
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.repo.local.Local
 import dagger.Module
@@ -37,5 +38,11 @@ object AppModuleProvider {
         application: Application
     ): TrueAnalytics {
         return TrueAnalytics(application)
+    }
+
+    @Provides
+    @Singleton
+    fun providesFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 }

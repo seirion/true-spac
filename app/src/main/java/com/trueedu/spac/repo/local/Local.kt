@@ -34,4 +34,13 @@ class Local @Inject constructor(
         private set
 
     var notificationToken by preferences.string("")
+
+    // user
+    var email by preferences.string("")
+    var profileImageUrl by preferences.string("")
+
+    fun logout() {
+        email = ""
+        profileImageUrl = ""
+    }
 }
