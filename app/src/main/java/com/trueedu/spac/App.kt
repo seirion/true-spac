@@ -6,7 +6,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.amplitude.BuildConfig
+import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.data.log.FileNameTree
 import com.trueedu.spac.data.log.ReleaseTree
 import com.trueedu.spac.repo.local.Local
