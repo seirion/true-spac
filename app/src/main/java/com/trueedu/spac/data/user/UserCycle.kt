@@ -52,4 +52,6 @@ class UserCycle @Inject constructor(
         local.logout()
         trueAnalytics.log("logout")
     }
+
+    fun loggedIn() = _email.value.isNotEmpty()
 }

@@ -65,6 +65,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version =
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
+firebase-database = { module = "com.google.firebase:firebase-database-ktx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -88,5 +89,6 @@ firebase = [
     "firebase-analytics",
     "firebase-crashlytics",
     "firebase-messaging",
+    "firebase-database",
 ]
 
