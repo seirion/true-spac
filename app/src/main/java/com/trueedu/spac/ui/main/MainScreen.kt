@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
 import com.trueedu.spac.ui.home.HomeScreen
+import com.trueedu.spac.ui.profile.ProfileScreen
 
 @Composable
 fun MainScreen(navController: NavHostController) {
@@ -72,7 +73,7 @@ fun MainScreen(navController: NavHostController) {
                     navDeepLink { uriPattern = "truespac://app/profile" }
                 )
             ) {
-                TodoScreen("Profile")
+                ProfileScreen()
             }
 
             // composable<AppDestinations.StockDetail> { backStackEntry ->
