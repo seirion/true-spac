@@ -179,4 +179,7 @@ dependencies {
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
+
+    implementation(platform(libs.coil.bom))
+    implementation(libs.coil.compose)
 }
