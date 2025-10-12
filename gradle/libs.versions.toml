@@ -67,6 +67,7 @@ devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version = "4.4.4" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.6" }
+androidGitVersion = { id = "com.gladed.androidgitversion", version = "0.4.14" }
 
 [bundles]
 ksps = [
