@@ -89,3 +89,44 @@ fun SharedPreferences.float(defaultValue: Float = 0f): ReadWriteProperty<Any, Fl
 
 fun SharedPreferences.boolean(defaultValue: Boolean = false): ReadWriteProperty<Any, Boolean> =
     BooleanPreference(this, defaultValue)
+
+private class StringSetPreference(
+    private val sharedPreferences: SharedPreferences,
+    private val defaultValue: Set<String>
+) : ReadWriteProperty<Any, Set<String>> {
+
+    override fun getValue(thisRef: Any, property: KProperty<*>): Set<String> =
+        sharedPreferences.getStringSet(property.name, defaultValue) ?: defaultValue
+
+    override fun setValue(thisRef: Any, property: KProperty<*>, value: Set<String>) =
+        sharedPreferences.edit {
+            putStringSet(property.name, value)
+        }
+}
+
+fun SharedPreferences.stringSet(defaultValue: Set<String> = emptySet()): ReadWriteProperty<Any, Set<String>> =
+    StringSetPreference(this, defaultValue)
+
+private class StringListPreference(
+    private val sharedPreferences: SharedPreferences,
+    private val defaultValue: List<String>,
+    private val separator: String = "|||"
+) : ReadWriteProperty<Any, List<String>> {
+
+    override fun getValue(thisRef: Any, property: KProperty<*>): List<String> {
+        val storedValue = sharedPreferences.getString(property.name, null)
+        return if (storedValue.isNullOrEmpty()) {
+            defaultValue
+        } else {
+            storedValue.split(separator)
+        }
+    }
+
+    override fun setValue(thisRef: Any, property: KProperty<*>, value: List<String>) =
+        sharedPreferences.edit {
+            putString(property.name, value.joinToString(separator))
+        }
+}
+
+fun SharedPreferences.stringList(defaultValue: List<String> = emptyList()): ReadWriteProperty<Any, List<String>> =
+    StringListPreference(this, defaultValue)

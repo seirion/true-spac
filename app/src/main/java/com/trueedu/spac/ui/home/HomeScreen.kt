@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.home.views.HomeTopBar
-import com.trueedu.spac.ui.home.views.SearchBar
+import com.trueedu.spac.ui.home.views.SearchBarWithSuggestions
 import com.trueedu.spac.ui.home.views.SpacItem
 import com.trueedu.spac.ui.home.views.SpacSectionView
 
@@ -63,7 +63,18 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            item { SearchBar(searchText = vm.searchInput) {} }
+            item {
+                SearchBarWithSuggestions(
+                    searchText = vm.searchInput,
+                    searchHistory = vm.searchHistory.value,
+                    showSuggestions = vm.showSuggestions.value,
+                    onSearch = { vm.onSearchSubmit() },
+                    onFocusChanged = { vm.onSearchFocusChanged(it) },
+                    onHistoryClick = { vm.onSearchHistoryClick(it) },
+                    onDeleteHistoryItem = { vm.deleteSearchHistoryItem(it) },
+                    onClearHistory = { vm.clearSearchHistory() }
+                )
+            }
             stickyHeader { SpacSectionView(vm::setSort) }
 
             itemsIndexed(vm.stocks.value, key = { i, _ -> i }) { i, item ->
