@@ -8,6 +8,7 @@ import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.UserCycle
+import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.ui.home.model.SpacFilter
 import com.trueedu.spac.ui.home.model.SpacSort
 import com.trueedu.spac.util.formatter.safeDouble
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val userCycle: UserCycle,
     private val stockPool: StockPool,
+    private val local: Local,
     val spacManager: SpacManager,
 ) : ViewModel() {
 
@@ -36,6 +38,8 @@ class HomeViewModel @Inject constructor(
     var spacFilter = SpacFilter()
 
     val searchInput = mutableStateOf("")
+    val searchHistory = mutableStateOf<List<String>>(emptyList())
+    val showSuggestions = mutableStateOf(false)
 
     private val sortFun = mapOf<SpacSort, (StockInfo) -> Double>(
         SpacSort.ISSUE_DATE to { it.listingDate.safeLong().toDouble() },
@@ -46,6 +50,8 @@ class HomeViewModel @Inject constructor(
     )
 
     init {
+        loadSearchHistory()
+
         viewModelScope.launch {
             launch {
                 spacManager.loading
@@ -117,5 +123,41 @@ class HomeViewModel @Inject constructor(
         val price = spacManager.priceMap.getOrDefault(code, prevPrice)
         val base = if (stock.parValue.safeLong() == 100L) 2_000 else 10_000
         return (price - base) * 100.0 / base
+    }
+
+    private fun loadSearchHistory() {
+        searchHistory.value = local.getSearchHistory()
+    }
+
+    fun onSearchSubmit() {
+        val query = searchInput.value.trim()
+        if (query.isNotEmpty()) {
+            local.addSearchHistory(query)
+            loadSearchHistory()
+            showSuggestions.value = false
+        }
+    }
+
+    fun onSearchHistoryClick(query: String) {
+        searchInput.value = query
+        showSuggestions.value = false
+        onSearchSubmit()
+    }
+
+    fun deleteSearchHistoryItem(query: String) {
+        local.removeSearchHistory(query)
+        loadSearchHistory()
+        if (searchHistory.value.isEmpty()) {
+            showSuggestions.value = false
+        }
+    }
+
+    fun clearSearchHistory() {
+        local.clearSearchHistory()
+        loadSearchHistory()
+    }
+
+    fun onSearchFocusChanged(isFocused: Boolean) {
+        showSuggestions.value = isFocused && searchHistory.value.isNotEmpty()
     }
 }

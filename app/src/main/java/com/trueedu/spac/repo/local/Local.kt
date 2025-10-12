@@ -48,6 +48,44 @@ class Local @Inject constructor(
     // 스팩 설정
     var spacAnnualProfit by preferences.boolean(false) // 청산 가치 1년 환산 표시
 
+    // 검색 기록 (최대 10개 저장)
+    private var searchHistoryList by preferences.stringList(emptyList())
+    private val maxSearchHistory = 10
+
+    fun getSearchHistory(): List<String> {
+        return searchHistoryList
+    }
+
+    fun addSearchHistory(query: String) {
+        if (query.isBlank()) return
+
+        val trimmedQuery = query.trim()
+        val currentHistory = searchHistoryList.toMutableList()
+
+        // 기존 항목 제거 (중복 방지)
+        currentHistory.remove(trimmedQuery)
+
+        // 맨 앞에 추가 (최신 항목)
+        currentHistory.add(0, trimmedQuery)
+
+        // 최대 개수 제한
+        if (currentHistory.size > maxSearchHistory) {
+            searchHistoryList = currentHistory.take(maxSearchHistory)
+        } else {
+            searchHistoryList = currentHistory
+        }
+    }
+
+    fun removeSearchHistory(query: String) {
+        val currentHistory = searchHistoryList.toMutableList()
+        currentHistory.remove(query.trim())
+        searchHistoryList = currentHistory
+    }
+
+    fun clearSearchHistory() {
+        searchHistoryList = emptyList()
+    }
+
     fun logout() {
         email = ""
         profileImageUrl = ""
