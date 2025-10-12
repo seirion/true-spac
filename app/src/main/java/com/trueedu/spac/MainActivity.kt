@@ -5,8 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +22,7 @@ import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.user.GoogleAuthClient
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.data.user.UserCycle
+import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
 import com.trueedu.spac.ui.theme.TrueSpacTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,6 +32,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private val vm by viewModels<MainViewModel>()
     @Inject
     lateinit var trueAnalytics: TrueAnalytics
     @Inject
@@ -41,9 +47,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             val navController = rememberNavController()
             this.navController = navController
+            val forceUpdateVisible by vm.forceUpdateVisible.collectAsState()
 
             LaunchedEffect(Unit) {
                 intent?.let { navController.handleDeepLink(it) }
@@ -55,10 +63,14 @@ class MainActivity : ComponentActivity() {
                 LocalUserCycle provides userCycle,
             ) {
                 TrueSpacTheme {
-                    MainScreen(
-                        navController = navController,
-                        loginWithGoogle = ::loginWithGoogle,
-                    )
+                    if (forceUpdateVisible) {
+                        ForceUpdateView(::gotoPlayStore)
+                    } else {
+                        MainScreen(
+                            navController = navController,
+                            loginWithGoogle = ::loginWithGoogle,
+                        )
+                    }
                 }
             }
         }
@@ -79,6 +91,19 @@ class MainActivity : ComponentActivity() {
             } else {
                 logD("loginWithGoogle() failed: ${signInResult.exceptionOrNull()?.message}")
             }
+        }
+    }
+
+    private fun gotoPlayStore() {
+        try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    addCategory(Intent.CATEGORY_DEFAULT)
+                    data = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}".toUri()
+                }
+            )
+        } catch (e: Exception) {
+            logD("Failed to open Play Store: ${e.message}")
         }
     }
 }
