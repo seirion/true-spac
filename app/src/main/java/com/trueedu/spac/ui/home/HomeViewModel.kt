@@ -1,6 +1,7 @@
 package com.trueedu.spac.ui.home
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
@@ -13,10 +14,14 @@ import com.trueedu.spac.util.formatter.safeDouble
 import com.trueedu.spac.util.formatter.safeLong
 import com.trueedu.spac.util.toDateCompactString
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val userCycle: UserCycle,
@@ -29,6 +34,8 @@ class HomeViewModel @Inject constructor(
     val sort = mutableStateOf(SpacSort.ISSUE_DATE)
 
     var spacFilter = SpacFilter()
+
+    val searchInput = mutableStateOf("")
 
     private val sortFun = mapOf<SpacSort, (StockInfo) -> Double>(
         SpacSort.ISSUE_DATE to { it.listingDate.safeLong().toDouble() },
@@ -49,6 +56,14 @@ class HomeViewModel @Inject constructor(
                                 .filterNot { stockPool.delisted(it.code) }
                                 .sortedBy(sortFun[sort.value]!!)
                         }
+                    }
+            }
+
+            launch {
+                snapshotFlow { searchInput.value }
+                    .debounce(200)
+                    .collectLatest {
+                        filterStocks()
                     }
             }
         }
@@ -87,14 +102,11 @@ class HomeViewModel @Inject constructor(
                     true
                 }
             }
-            /*
             .filter {
                 val searchKey = searchInput.value.trim().lowercase()
                 searchKey.isEmpty() ||
-                        it.nameKr.lowercase().contains(searchKey) ||
-                        it.code.lowercase().contains(searchKey)
+                        it.nameKr.lowercase().contains(searchKey)
             }
-             */
             .sortedBy(sortFun[sort.value]!!)
     }
 
