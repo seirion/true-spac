@@ -35,7 +35,6 @@ fun SpacItem(
     expectedProfitRate: Double? = null, // 청산 시 기대 수익률(%)
     holdingNum: Double = 1.0,
     hasDisclosure: Boolean = true, // 전자 공시 존재 여부
-    onPriceClick: (String) -> Unit = {},
     onClick: () -> Unit = {},
 ) {
     Row(
@@ -113,8 +112,7 @@ fun SpacItem(
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
-                    .width(60.dp)
-                    .clickable { onPriceClick(item.code) }
+                    .width(60.dp),
             ) {
                 val priceString = intFormatter.format(price)
                 TrueText(
