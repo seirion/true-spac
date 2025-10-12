@@ -17,19 +17,19 @@ sealed interface AppDestinations {
 
     @Serializable
     data object Home : AppDestinations {
-        override val label: String = "Home"
+        override val label: String = "홈"
         override val icon: ImageVector = Icons.Default.Home
     }
 
     @Serializable
-    data object Favorites : AppDestinations {
-        override val label: String = "Favorites"
+    data object Following : AppDestinations {
+        override val label: String = "관심"
         override val icon: ImageVector = Icons.Default.Favorite
     }
 
     @Serializable
     data object Profile : AppDestinations {
-        override val label: String = "Profile"
+        override val label: String = "프로필"
         override val icon: ImageVector = Icons.Default.AccountBox
     }
 
@@ -40,6 +40,6 @@ sealed interface AppDestinations {
     // }
 
     companion object {
-        val tabs = listOf(Home, Favorites, Profile)
+        val tabs = listOf(Home, Following, Profile)
     }
 }

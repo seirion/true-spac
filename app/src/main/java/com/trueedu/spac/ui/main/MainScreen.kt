@@ -65,9 +65,9 @@ fun MainScreen(
                 HomeScreen(
                 )
             }
-            composable<AppDestinations.Favorites>(
+            composable<AppDestinations.Following>(
                 deepLinks = listOf(
-                    navDeepLink { uriPattern = "truespac://app/favorites" }
+                    navDeepLink { uriPattern = "truespac://app/following" }
                 )
             ) {
                 TodoScreen("Favorites")
