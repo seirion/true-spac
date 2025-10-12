@@ -3,7 +3,7 @@ package com.trueedu.spac.api.model.dto.firebase
 abstract class StockInfo(
     val code: String,
     val nameKr: String,
-    protected val attributes: String,
+    val attributes: String,
 ) {
     protected abstract fun getAttribute(key: String): String?
 

@@ -6,9 +6,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.data.log.FileNameTree
 import com.trueedu.spac.data.log.ReleaseTree
+import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.repo.local.Local
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
@@ -24,6 +24,7 @@ class App : Application(), LifecycleEventObserver {
     @InstallIn(SingletonComponent::class)
     interface InjectModule {
         fun getLocal(): Local
+        fun getStockPool(): StockPool
     }
 
     override fun onCreate() {
@@ -44,9 +45,12 @@ class App : Application(), LifecycleEventObserver {
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        val stockPool = entryPointInjector(InjectModule::class.java).getStockPool()
+
         when (event) {
             Lifecycle.Event.ON_CREATE -> {}
             Lifecycle.Event.ON_START -> {
+                stockPool.loadStockInfo()
             }
             Lifecycle.Event.ON_STOP -> {
             }

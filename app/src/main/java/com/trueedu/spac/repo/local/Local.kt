@@ -39,6 +39,12 @@ class Local @Inject constructor(
     var email by preferences.string("")
     var profileImageUrl by preferences.string("")
 
+    // 종목 다운로드 시각 yyyyMMddHHmm
+    var stockUpdatedAt by preferences.long(0L)
+
+    // 스팩 설정
+    var spacAnnualProfit by preferences.boolean(false) // 청산 가치 1년 환산 표시
+
     fun logout() {
         email = ""
         profileImageUrl = ""
