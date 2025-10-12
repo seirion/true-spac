@@ -7,4 +7,6 @@ plugins {
     alias(libs.plugins.devtools.ksp) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.kotlinSerialization) apply false
+    alias(libs.plugins.googleServices) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }
