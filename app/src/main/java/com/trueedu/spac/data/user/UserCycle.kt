@@ -28,6 +28,12 @@ class UserCycle @Inject constructor(
     private val _profileImageUrl = mutableStateOf(local.profileImageUrl)
     val profileImageUrl: State<String> = _profileImageUrl
 
+    init {
+        if (loggedIn()) {
+            silentLogin()
+        }
+    }
+
     fun login(
         email: String,
         profileImageUrl: String,

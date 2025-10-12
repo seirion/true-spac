@@ -1,13 +1,11 @@
 package com.trueedu.spac.ui.main
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -16,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
 import com.trueedu.spac.ui.search.SearchScreen
@@ -76,7 +75,12 @@ fun MainScreen(
                     navDeepLink { uriPattern = "truespac://app/following" }
                 )
             ) {
-                TodoScreen("Favorites")
+                FollowingScreen(
+                    openSearch = openSearch,
+                    openEdit = {
+                        // TODO
+                    },
+                )
             }
             composable<AppDestinations.Profile>(
                 deepLinks = listOf(
@@ -105,15 +109,5 @@ fun MainScreen(
             //     StockDetailScreen(stockId = stockDetail.stockId)
             // }
         }
-    }
-}
-
-@Composable
-fun TodoScreen(screenName: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("TODO: $screenName Screen")
     }
 }
