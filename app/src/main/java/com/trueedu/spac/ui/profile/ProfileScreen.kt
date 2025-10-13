@@ -10,12 +10,15 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.profile.views.ProfileTopBar
+import com.trueedu.spac.ui.settings.views.SettingLabel
 
 @Composable
 fun ProfileScreen(
     vm: ProfileViewModel = hiltViewModel(),
+    gotoPlayStore: () -> Unit,
     loginWithGoogle: () -> Unit,
 ) {
     Scaffold(
@@ -41,6 +44,8 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-        ) {  }
+        ) {
+            SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
+        }
     }
 }

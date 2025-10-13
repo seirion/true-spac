@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
                         MainScreen(
                             navController = navController,
                             openUrl = ::openUrl,
+                            gotoPlayStore = ::gotoPlayStore,
                             loginWithGoogle = ::loginWithGoogle,
                         )
                     }
