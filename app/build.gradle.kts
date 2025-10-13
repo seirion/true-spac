@@ -30,7 +30,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = getVersionCodeProvider().get()
-        versionName = androidGitVersion.name()
+        versionName = getVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -59,6 +59,7 @@ android {
 
     buildTypes {
         debug {
+			versionNameSuffix = "-DEV"
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
@@ -107,6 +108,23 @@ fun getVersionCodeProvider(): Provider<Int> {
     }
 }
 
+fun getVersionName(): String {
+    return try {
+        val tagOutput = providers.exec {
+            commandLine("git", "describe", "--tags", "--abbrev=0")
+            isIgnoreExitValue = true
+        }.standardOutput.asText.get()
+
+        val tag = tagOutput.trim().removePrefix("v")
+        val version = if (tag.isNotEmpty()) tag else "0.0.1"
+        println("App versionName: $version")
+        version
+    } catch (e: Exception) {
+        println("App versionName: 0.0.1 (fallback)")
+        "0.0.1"
+    }
+}
+
 
 // 버전 정보 확인을 위한 Gradle Task
 tasks.register("printVersionInfo") {
@@ -133,7 +151,7 @@ tasks.register("printVersionInfo") {
         println("Git tag: $tag")
         println("Tag count: $tagCount")
         println("Version code: $versionCode")
-        println("Version name: ${androidGitVersion.name()}")
+        println("Version name: ${getVersionName()}")
         println("========================")
     }
 }
