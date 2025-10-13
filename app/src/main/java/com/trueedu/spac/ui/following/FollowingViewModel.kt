@@ -26,12 +26,14 @@ import javax.inject.Inject
 class FollowingViewModel @Inject constructor(
     private val trueAnalytics: TrueAnalytics,
     private val userCycle: UserCycle,
-    private val followingManager: FollowingManager,
+    val followingManager: FollowingManager,
     val stockPool: StockPool,
 ) : ViewModel() {
 
     val loading = mutableStateOf(true)
     val currentPage = mutableStateOf<Int?>(null)
+
+    val editMode = mutableStateOf(false)
 
     /**
      * 실시간 가격을 받기 전까지 사용함
@@ -114,8 +116,9 @@ class FollowingViewModel @Inject constructor(
         return followingManager.groupNames.value.getOrNull(page) ?: "관심 그룹 $page"
     }
 
-    fun getItems(index: Int): List<String> {
+    fun getItems(index: Int): List<StockInfo> {
         return followingManager.get(index)
+            .mapNotNull { stockPool.get(it) }
     }
 
     fun getStock(code: String): StockInfo? {
@@ -132,6 +135,14 @@ class FollowingViewModel @Inject constructor(
             followingManager.removeAt(currentPage.value!!, index)
             followingManager.add(to, code)
         }
+    }
+
+    fun updateGroupName(page: Int, name: String) {
+        followingManager.updateGroupName(page, name)
+    }
+
+    fun updateStocks(page: Int, stockIds: List<String>) {
+        followingManager.replace(page, stockIds)
     }
 
     fun removeStock(index: Int) {
