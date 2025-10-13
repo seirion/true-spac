@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.mapNotNull
 fun FollowingScreen(
     vm: FollowingViewModel = hiltViewModel(),
     openSearch: (Int) -> Unit = {}, // page
+    openStockDetail: (String) -> Unit = {}, // stockId
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -159,8 +160,7 @@ fun FollowingScreen(
                         halt = stock.isHalt,
                         designated = stock.isDesignated,
                         hasDisclosure = vm.hasDisclosure(stock.code),
-                        onTradingClick = { /* TODO: gotoTrading(stock) */ },
-                        onClick = { /* TODO: gotoStockDetail(stock) */ },
+                        onClick = { openStockDetail(stock.code) },
                     ) {
                         logD("long click: ${stock.nameKr}")
                         selectedStock = stock

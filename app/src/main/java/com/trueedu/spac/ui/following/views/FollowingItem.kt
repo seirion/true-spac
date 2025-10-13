@@ -41,7 +41,6 @@ fun FollowingItem(
     halt: Boolean,
     designated: Boolean,
     hasDisclosure: Boolean,
-    onTradingClick: () -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -108,8 +107,6 @@ fun FollowingItem(
             val priceColor = ChartColor.color(delta ?: 0.0)
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .clickable { onTradingClick() }
             ) {
                 val totalValueString = formatter.format(price)
                 TrueText(
