@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         MainScreen(
                             navController = navController,
+                            openUrl = ::openUrl,
                             loginWithGoogle = ::loginWithGoogle,
                         )
                     }
@@ -109,6 +110,15 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         navController?.handleDeepLink(intent)
+    }
+
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            startActivity(intent)
+        } catch (e: Exception) {
+            logD("Failed to open URL: $url", e)
+        }
     }
 
     private fun loginWithGoogle() {

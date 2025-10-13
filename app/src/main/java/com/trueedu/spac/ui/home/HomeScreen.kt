@@ -25,6 +25,7 @@ import com.trueedu.spac.ui.home.views.SpacSectionView
 
 @Composable
 fun HomeScreen(
+    openStockDetail: (String) -> Unit,
     vm: HomeViewModel = hiltViewModel()
 ) {
     Scaffold(
@@ -97,7 +98,7 @@ fun HomeScreen(
                     holdingNum,
                     false, // hasDisclosure,
                 ) {
-                    // TODO: stock detail
+                    openStockDetail(item.code)
                 }
             }
         }

@@ -2,9 +2,11 @@ package com.trueedu.spac.ui.main
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -41,11 +43,12 @@ sealed interface AppDestinations {
         override val icon: ImageVector = Icons.Default.Search
     }
 
-    // @Serializable
-    // data class StockDetail(val stockId: String) : AppDestinations {
-    //     override val label: String = "Stock Detail"
-    //     override val icon: ImageVector = Icons.Default.ShowChart
-    // }
+    @Serializable
+    data class StockDetail(val stockId: String) : AppDestinations {
+        override val label: String = ""
+        @Transient
+        override val icon: ImageVector = Icons.Default.BarChart
+    }
 
     companion object {
         val tabs = listOf(Home, Following, Profile)

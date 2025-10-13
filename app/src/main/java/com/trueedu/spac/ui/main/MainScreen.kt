@@ -14,17 +14,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
 import com.trueedu.spac.ui.search.SearchScreen
+import com.trueedu.spac.ui.stock.StockDetailScreen
 
 @Composable
 fun MainScreen(
     navController: NavHostController,
+    openUrl: (String) -> Unit,
     loginWithGoogle: () -> Unit,
 ) {
+    val trueAnalytics = LocalTrueAnalytics.current
     val userCycle = LocalUserCycle.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -35,6 +39,11 @@ fun MainScreen(
         } else {
             loginWithGoogle()
         }
+    }
+
+    val openStockDetail = { stockId: String ->
+        trueAnalytics.log("stock_detail", mapOf("stockId" to stockId))
+        navController.navigate(AppDestinations.StockDetail(stockId))
     }
 
     NavigationSuiteScaffold(
@@ -74,6 +83,7 @@ fun MainScreen(
                 )
             ) {
                 HomeScreen(
+                    openStockDetail = openStockDetail,
                 )
             }
             composable<AppDestinations.Following>(
@@ -107,10 +117,15 @@ fun MainScreen(
                 )
             }
 
-            // composable<AppDestinations.StockDetail> { backStackEntry ->
-            //     val stockDetail: AppDestinations.StockDetail = backStackEntry.toRoute()
-            //     StockDetailScreen(stockId = stockDetail.stockId)
-            // }
+            composable<AppDestinations.StockDetail> { backStackEntry ->
+                val stockDetail: AppDestinations.StockDetail = backStackEntry.toRoute()
+                StockDetailScreen(
+                    stockId = stockDetail.stockId,
+                    editAssets = { /* TODO */ },
+                    openUrl = openUrl,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 }
