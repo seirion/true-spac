@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import com.trueedu.spac.ui.home.views.SearchBarWithSuggestions
 import com.trueedu.spac.ui.home.views.SpacItem
 import com.trueedu.spac.ui.home.views.SpacSectionView
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     openStockDetail: (String) -> Unit,
