@@ -83,9 +83,6 @@ fun MainScreen(
             ) {
                 FollowingScreen(
                     openSearch = openSearch,
-                    openEdit = {
-                        // TODO
-                    },
                 )
             }
             composable<AppDestinations.Profile>(

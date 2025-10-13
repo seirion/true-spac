@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.following
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -35,6 +36,7 @@ import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.following.views.FollowingEditPopupBody
 import com.trueedu.spac.ui.following.views.FollowingItem
+import com.trueedu.spac.ui.home.views.FollowingEditView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.mapNotNull
 
@@ -42,12 +44,15 @@ import kotlinx.coroutines.flow.mapNotNull
 fun FollowingScreen(
     vm: FollowingViewModel = hiltViewModel(),
     openSearch: (Int) -> Unit = {}, // page
-    openEdit: () -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(lifecycleOwner) {
         vm.observeLifecycle(lifecycleOwner)
+    }
+
+    BackHandler(vm.editMode.value) {
+        vm.editMode.value = false
     }
 
     val pagerState = rememberPagerState(
@@ -64,6 +69,20 @@ fun FollowingScreen(
             }
     }
 
+    if (vm.editMode.value &&  vm.currentPage.value != null) {
+        FollowingEditView(
+            page = vm.currentPage.value!!,
+            groupName = vm.groupName(vm.currentPage.value),
+            stocks = vm.getItems(vm.currentPage.value!!),
+            onGroupNameChanged = vm::updateGroupName,
+            onSave = vm::updateStocks,
+            onBack = {
+                vm.editMode.value = false
+            }
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             BackTitleTopBar(
@@ -72,7 +91,9 @@ fun FollowingScreen(
                 actionIcon = Icons.Filled.Search,
                 onAction = { openSearch(pagerState.currentPage % vm.pageCount()) },
                 actionIcon2 = Icons.Filled.Edit,
-                onAction2 = openEdit,
+                onAction2 = {
+                    vm.editMode.value = true
+                },
             )
         },
         bottomBar = {
@@ -116,18 +137,17 @@ fun FollowingScreen(
                     .padding(innerPadding)
             ) {
                 val items = vm.getItems(position % vm.pageCount())
-                itemsIndexed(items, key = { _, item -> item }) { index, code ->
-                    val stock = vm.getStock(code) ?: return@itemsIndexed
-                    val basePrice = vm.basePrices[code]?.output
+                itemsIndexed(items, key = { _, item -> item.code }) { index, stock ->
+                    val basePrice = vm.basePrices[stock.code]?.output
 
-                    val price = basePrice?.price?.toDouble() ?: vm.prevPrice(code)
+                    val price = basePrice?.price?.toDouble() ?: vm.prevPrice(stock.code)
                     val delta = basePrice?.priceChange?.toDouble()
                     val rate = basePrice?.priceChangeRate?.toDouble()
                     val volume = basePrice?.volume?.toDouble() ?: 0.0
 
                     FollowingItem(
                         nameKr = stock.nameKr,
-                        code = code,
+                        code = stock.code,
                         price = price,
                         prevClose = basePrice?.previousClosePrice?.toDouble(),
                         open = basePrice?.open?.toDouble(),
@@ -138,7 +158,7 @@ fun FollowingScreen(
                         volume = volume,
                         halt = stock.isHalt,
                         designated = stock.isDesignated,
-                        hasDisclosure = vm.hasDisclosure(code),
+                        hasDisclosure = vm.hasDisclosure(stock.code),
                         onTradingClick = { /* TODO: gotoTrading(stock) */ },
                         onClick = { /* TODO: gotoStockDetail(stock) */ },
                     ) {
