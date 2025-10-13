@@ -93,6 +93,7 @@ fun MainScreen(
             ) {
                 FollowingScreen(
                     openSearch = openSearch,
+                    openStockDetail = openStockDetail,
                 )
             }
             composable<AppDestinations.Profile>(
