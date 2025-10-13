@@ -26,6 +26,7 @@ import com.trueedu.spac.ui.stock.StockDetailScreen
 fun MainScreen(
     navController: NavHostController,
     openUrl: (String) -> Unit,
+    gotoPlayStore: () -> Unit,
     loginWithGoogle: () -> Unit,
 ) {
     val trueAnalytics = LocalTrueAnalytics.current
@@ -102,7 +103,8 @@ fun MainScreen(
                 )
             ) {
                 ProfileScreen(
-                    loginWithGoogle = loginWithGoogle
+                    gotoPlayStore = gotoPlayStore,
+                    loginWithGoogle = loginWithGoogle,
                 )
             }
 
