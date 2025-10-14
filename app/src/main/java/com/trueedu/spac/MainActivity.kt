@@ -32,6 +32,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+typealias LoginCallback = (() -> Unit)?
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -122,12 +124,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun loginWithGoogle() {
+    private fun loginWithGoogle(
+        onSuccess: LoginCallback = null,
+    ) {
         logD("loginWithGoogle()")
         lifecycleScope.launch {
             val signInResult = googleAuthClient.signIn(this@MainActivity)
             if (signInResult.isSuccess) {
                 logD("loginWithGoogle() success")
+                onSuccess?.invoke()
             } else {
                 logD("loginWithGoogle() failed: ${signInResult.exceptionOrNull()?.message}")
             }
