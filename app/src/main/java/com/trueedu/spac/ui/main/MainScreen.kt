@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.main
 
+import com.trueedu.spac.LoginCallback
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,7 +28,7 @@ fun MainScreen(
     navController: NavHostController,
     openUrl: (String) -> Unit,
     gotoPlayStore: () -> Unit,
-    loginWithGoogle: () -> Unit,
+    loginWithGoogle: (LoginCallback) -> Unit,
 ) {
     val trueAnalytics = LocalTrueAnalytics.current
     val userCycle = LocalUserCycle.current
@@ -38,7 +39,9 @@ fun MainScreen(
         if (userCycle.loggedIn()) {
             navController.navigate(AppDestinations.Search(page))
         } else {
-            loginWithGoogle()
+            loginWithGoogle {
+                navController.navigate(AppDestinations.Search(page))
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.profile
 
+import com.trueedu.spac.LoginCallback
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,7 @@ import com.trueedu.spac.ui.settings.views.SettingLabel
 fun ProfileScreen(
     vm: ProfileViewModel = hiltViewModel(),
     gotoPlayStore: () -> Unit,
-    loginWithGoogle: () -> Unit,
+    loginWithGoogle: (LoginCallback) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -27,7 +28,7 @@ fun ProfileScreen(
                 vm.email(),
                 vm.profileImageUrl(),
             ) {
-                loginWithGoogle()
+                loginWithGoogle(null)
             }
         },
         contentWindowInsets =
