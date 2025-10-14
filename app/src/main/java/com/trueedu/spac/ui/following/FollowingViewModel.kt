@@ -177,4 +177,6 @@ class FollowingViewModel @Inject constructor(
         lifecycleJob?.cancel()
         job?.cancel()
     }
+
+    fun loggedIn() = userCycle.loggedIn()
 }
