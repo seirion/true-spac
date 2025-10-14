@@ -96,6 +96,7 @@ fun MainScreen(
                 )
             ) {
                 FollowingScreen(
+                    loginWithGoogle = loginWithGoogle,
                     openSearch = openSearch,
                     openStockDetail = openStockDetail,
                 )

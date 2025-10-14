@@ -29,6 +29,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.StockPool
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.mapNotNull
 @Composable
 fun FollowingScreen(
     vm: FollowingViewModel = hiltViewModel(),
+    loginWithGoogle: (LoginCallback) -> Unit,
     openSearch: (Int) -> Unit = {}, // page
     openStockDetail: (String) -> Unit = {}, // stockId
 ) {
@@ -70,6 +72,13 @@ fun FollowingScreen(
             }
     }
 
+    val status by vm.stockPool.status.collectAsState()
+    // 주식 정보와 관심 종목 정보를 모두 받아야 데이터 표시 가능
+    if (vm.loading.value || status != StockPool.Status.SUCCESS) {
+        LoadingView()
+        return
+    }
+
     if (vm.editMode.value &&  vm.currentPage.value != null) {
         FollowingEditView(
             page = vm.currentPage.value!!,
@@ -93,7 +102,15 @@ fun FollowingScreen(
                 onAction = { openSearch(pagerState.currentPage % vm.pageCount()) },
                 actionIcon2 = Icons.Filled.Edit,
                 onAction2 = {
-                    vm.editMode.value = true
+                    if (vm.loggedIn()) {
+                        // 관심 종목이 없으면 진입 안 함
+                        val currentPage = vm.currentPage.value
+                        if (currentPage != null && vm.getItems(currentPage).isNotEmpty()) {
+                            vm.editMode.value = true
+                        }
+                    } else {
+                        loginWithGoogle(null)
+                    }
                 },
             )
         },
@@ -116,13 +133,6 @@ fun FollowingScreen(
             ScaffoldDefaults.contentWindowInsets.exclude(NavigationBarDefaults.windowInsets),
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-
-        val status by vm.stockPool.status.collectAsState()
-        // 주식 정보와 관심 종목 정보를 모두 받아야 데이터 표시 가능
-        if (vm.loading.value || status != StockPool.Status.SUCCESS) {
-            LoadingView()
-            return@Scaffold
-        }
 
         HorizontalPager(
             state = pagerState,
