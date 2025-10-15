@@ -32,6 +32,7 @@ import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.settings.views.SettingItem
 import com.trueedu.spac.ui.stock.resources.priceChangeStr
 import com.trueedu.spac.ui.stock.views.SpacDetailView
+import com.trueedu.spac.ui.stock.views.SpacStatusView
 import com.trueedu.spac.ui.theme.ChartColor
 import com.trueedu.spac.util.formatter.intFormatter
 
@@ -52,6 +53,7 @@ fun StockDetailScreen(
     val stockInfo by vm.stockInfo.collectAsState()
     val basePrice by vm.basePrice.collectAsState()
     val infoList by vm.infoList.collectAsState()
+    val spacStatus by vm.spacStatus.collectAsState()
 
     if (stockInfo == null) {
         LoadingView()
@@ -102,6 +104,8 @@ fun StockDetailScreen(
                 .padding(innerPadding)
                 .verticalScroll(scrollState)
         ) {
+            SpacStatusView(spacStatus?.status)
+
             SettingItem("기업 공시 보기", true) {
                 trueAnalytics.clickButton(
                     "stock_detail__dart__click",
