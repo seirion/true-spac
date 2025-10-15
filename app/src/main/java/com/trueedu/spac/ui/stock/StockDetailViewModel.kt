@@ -1,12 +1,14 @@
 package com.trueedu.spac.ui.stock
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
+import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.price.PriceResponse
 import com.trueedu.spac.data.stocks.FollowingManager
-import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
+import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
 import com.trueedu.spac.util.formatter.safeDouble
@@ -14,19 +16,23 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class StockDetailViewModel @Inject constructor(
     private val trueAnalytics: TrueAnalytics,
     val followingManager: FollowingManager,
-    private val spacManager: SpacManager,
     private val stockPool: StockPool,
+    private val spacStatusDatabase: SpacStatusDatabase,
 ) : ViewModel() {
 
     // 가격 정보 (api)
     private val _basePrice = MutableStateFlow<PriceResponse?>(null)
     val basePrice: StateFlow<PriceResponse?> = _basePrice.asStateFlow()
+
+    private val _spacStatus = MutableStateFlow<SpacStatus?>(null)
+    val spacStatus: StateFlow<SpacStatus?> = _spacStatus.asStateFlow()
 
     private val _stockInfo = MutableStateFlow<StockInfo?>(null)
     val stockInfo: StateFlow<StockInfo?> = _stockInfo.asStateFlow()
@@ -37,6 +43,20 @@ class StockDetailViewModel @Inject constructor(
     fun init(code: String) {
         _stockInfo.value = stockPool.get(code)
         initInfoList()
+
+        viewModelScope.launch {
+            val stockInfo = _stockInfo.value
+            if (stockInfo?.isSpac == true) {
+                try {
+                    val list = spacStatusDatabase.load()
+                    val spacStatus = list.firstOrNull { it.code == stockInfo.code }
+                    _spacStatus.value = spacStatus
+                } catch (e: Exception) {
+                    // 로딩 실패 시 null로 유지
+                    _spacStatus.value = null
+                }
+            }
+        }
     }
 
     fun currentPrice(): Double {
