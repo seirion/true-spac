@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.data.log.logE
 import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.util.formatter.safeDouble
@@ -43,7 +44,14 @@ class SpacManager @Inject constructor(
         MainScope().launch {
             combine(
                 stockPool.status.filter { it == StockPool.Status.SUCCESS },
-                flow { emit(spacStatusDatabase.load()) }
+                flow {
+                    try {
+                        emit(spacStatusDatabase.load())
+                    } catch (e: Exception) {
+                        logE("Failed to load spac status", e)
+                        emit(emptyList())
+                    }
+                }
             ) { _, spacStatuses -> spacStatuses }
                 .collect {
                     spacList.value = stockPool.search(StockInfo::isSpac)
