@@ -1,16 +1,24 @@
 package com.trueedu.spac.ui.stock.views
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +33,12 @@ import com.trueedu.spac.ui.theme.ChartColor
 import com.trueedu.spac.util.formatter.rateFormatter
 import com.trueedu.spac.util.redemptionProfitRate
 import com.trueedu.spac.util.toLocalDate
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColumnScope.SpacDetailView(
     currentPrice: Int,
@@ -45,9 +56,15 @@ fun ColumnScope.SpacDetailView(
     )
 
     val listingDateStr = stock.listingDate ?: return
-    val targetDate = listingDateStr.toLocalDate()!!
-        .plusYears(3)
-        .plusDays(-41)
+    var targetDate by remember {
+        mutableStateOf(
+        listingDateStr.toLocalDate()!!
+            .plusYears(3)
+            .plusDays(-41)
+        )
+    }
+
+    var showDatePicker by remember { mutableStateOf(false) }
 
     val basePrice = baseInputString.value.text.toIntOrNull() ?: 0
     val targetPrice = targetInputString.value.text.toIntOrNull() ?: 0
@@ -61,14 +78,50 @@ fun ColumnScope.SpacDetailView(
             "$targetDate 청산 시",
             rateFormatter.format(profitRate, true),
             ChartColor.color(profitRate)
-        )
+        ) {
+            showDatePicker = true
+        }
         val days = ChronoUnit.DAYS.between(LocalDate.now(), targetDate)
         SpacDataView(
             "연환산 수익률 (${days}일)",
             rateFormatter.format(annualizedProfit, true),
-            ChartColor.color(annualizedProfit)
+            ChartColor.color(annualizedProfit),
+            null,
         )
     }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = targetDate
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        targetDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    TrueText(s = "확인", fontSize = 12)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    TrueText(s = "취소", fontSize = 12)
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
     DividerHorizontal()
 }
 
@@ -113,7 +166,12 @@ fun ColumnScope.SpacValueView(
 }
 
 @Composable
-fun ColumnScope.SpacDataView(title: String, value: String, valueColor: Color) {
+fun ColumnScope.SpacDataView(
+    title: String,
+    value: String,
+    valueColor: Color,
+    onClick: (() -> Unit)? = null
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,6 +183,10 @@ fun ColumnScope.SpacDataView(title: String, value: String, valueColor: Color) {
             s = title,
             fontSize = 16,
             color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable(enabled = onClick != null) {
+                    onClick?.invoke()
+                }
         )
         TrueText(
             s = value,
