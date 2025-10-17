@@ -3,6 +3,7 @@ package com.trueedu.spac.ui.main
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
@@ -48,6 +49,13 @@ sealed interface AppDestinations {
         override val label: String = ""
         @Transient
         override val icon: ImageVector = Icons.Default.BarChart
+    }
+
+    @Serializable
+    data class EditAsset(val stockId: String) : AppDestinations {
+        override val label: String = ""
+        @Transient
+        override val icon: ImageVector = Icons.Default.Edit
     }
 
     companion object {
