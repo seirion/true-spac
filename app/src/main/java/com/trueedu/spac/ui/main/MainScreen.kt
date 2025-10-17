@@ -149,6 +149,7 @@ fun MainScreen(
                 val editAsset = backStackEntry.toRoute<AppDestinations.EditAsset>()
                 EditAssetScreen(
                     stockId = editAsset.stockId,
+                    simpleSnackbar = simpleSnackbar,
                     onBack = { navController.popBackStack() },
                 )
             }

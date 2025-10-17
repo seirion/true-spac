@@ -34,6 +34,8 @@ class EditAssetViewModel @Inject constructor(
 
     val editMode = mutableStateOf(false)
 
+    val deleteConfirmDialogVisible = mutableStateOf(false)
+
     fun init(code: String) {
         manualAssets.assets.value.firstOrNull { it.code == code }?.let { myAsset ->
             // 이 종목을 이미 보유한 경우 원래 값을 입력 해 줌
@@ -84,22 +86,16 @@ class EditAssetViewModel @Inject constructor(
         )
     }
 
-    fun onDelete() {
-        // TODO
-        /*
-        trueAnalytics.clickButton("${screenName()}__delete__click")
-        PopupFragment.show(
-            title = "종목 삭제",
-            desc = "종목을 삭제합니다",
-            popupType = PopupType.DELETE_CANCEL,
-            buttonActions = listOf(
-                ButtonAction(label = "삭제", onClick = ::delete),
-                ButtonAction(label = "취소", onClick = {}),
-            ),
-            cancellable = true,
-            fragmentManager = parentFragmentManager,
-        )
-         */
+    fun showDeleteConfirmDialog() {
+        deleteConfirmDialogVisible.value = true
+    }
+
+    fun hideDeleteConfirmDialog() {
+        deleteConfirmDialogVisible.value = false
+    }
+
+    fun delete(code: String, onSuccess: () -> Unit) {
+        manualAssets.deleteAsset(code, onSuccess)
     }
 
     fun onSave() {
