@@ -7,11 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -24,6 +24,7 @@ import com.trueedu.spac.data.user.GoogleAuthClient
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
 import com.trueedu.spac.ui.main.NoticePopupView
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var googleAuthClient: GoogleAuthClient
 
+    private lateinit var simpleSnackbar: SimpleSnackbar
     private var navController: NavHostController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +58,8 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        simpleSnackbar = SimpleSnackbar(lifecycleScope)
 
         setContent {
             val navController = rememberNavController()
@@ -78,6 +82,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         MainScreen(
                             navController = navController,
+                            simpleSnackbar = simpleSnackbar,
                             openUrl = ::openUrl,
                             gotoPlayStore = ::gotoPlayStore,
                             loginWithGoogle = ::loginWithGoogle,
@@ -104,6 +109,8 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } // noticeVisible
+
+                    simpleSnackbar.Host()
                 }
             }
         }
