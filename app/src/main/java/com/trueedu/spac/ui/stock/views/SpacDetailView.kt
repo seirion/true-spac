@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.components.DigitInput
@@ -43,9 +44,9 @@ import java.time.temporal.ChronoUnit
 fun ColumnScope.SpacDetailView(
     currentPrice: Int,
     stock: StockInfo,
-    //spac: SpacStatus
+    spacStatus: SpacStatus?,
 ) {
-    val redemptionPrice = "2100" // 임시
+    val redemptionPrice = spacStatus?.redemptionPrice?.toString() ?: "2100"
     val baseInputString = remember { mutableStateOf(TextFieldValue(currentPrice.toString())) }
     val targetInputString = remember { mutableStateOf(TextFieldValue(redemptionPrice)) }
 

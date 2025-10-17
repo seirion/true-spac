@@ -116,7 +116,7 @@ fun StockDetailScreen(
                     "https://dart.fss.or.kr/dsab001/main.do?autoSearch=true&textCrpNM=${code}"
                 openUrl(url)
             }
-            SpacDetailView(vm.currentPrice().toInt(), stockInfo!!)
+            SpacDetailView(vm.currentPrice().toInt(), stockInfo!!, spacStatus)
 
             infoList.forEach {
                 Row(
