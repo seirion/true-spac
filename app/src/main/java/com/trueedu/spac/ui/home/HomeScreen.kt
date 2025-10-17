@@ -85,8 +85,8 @@ fun HomeScreen(
                 val expectedProfit = redemptionValue?.first
                 val expectedProfitRate = redemptionValue?.second
 
-                // 한투 계좌 보유가 있으면 표시하고, 없으면 수동 보유를 표시함
-                val holdingNum = 0.0
+                // 수동 보유 표시
+                val holdingNum = vm.holdingNum(item.code)
 
                 // TODO: 공시 정보
                 // val hasDisclosure = vm.hasDisclosure(item.code)

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
+import com.trueedu.spac.data.user.ManualAssets
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.ui.home.model.SpacFilter
@@ -28,6 +29,7 @@ class HomeViewModel @Inject constructor(
     private val userCycle: UserCycle,
     private val stockPool: StockPool,
     private val local: Local,
+    private val manualAssets: ManualAssets,
     val spacManager: SpacManager,
 ) : ViewModel() {
 
@@ -68,6 +70,13 @@ class HomeViewModel @Inject constructor(
             launch {
                 snapshotFlow { searchInput.value }
                     .debounce(200)
+                    .collectLatest {
+                        filterStocks()
+                    }
+            }
+
+            launch {
+                snapshotFlow { manualAssets.assets.value }
                     .collectLatest {
                         filterStocks()
                     }
@@ -116,6 +125,10 @@ class HomeViewModel @Inject constructor(
             .sortedBy(sortFun[sort.value]!!)
     }
 
+    fun holdingNum(code: String): Double {
+        return manualAssets.assets.value
+            .firstOrNull { it.code == code }?.quantity ?: 0.0
+    }
 
     private fun growthRate(stock: StockInfo): Double {
         val code = stock.code
