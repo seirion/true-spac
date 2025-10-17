@@ -1,6 +1,5 @@
 package com.trueedu.spac.ui.main
 
-import com.trueedu.spac.LoginCallback
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -15,8 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
+import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.ProfileScreen
@@ -128,8 +129,24 @@ fun MainScreen(
                 val stockDetail: AppDestinations.StockDetail = backStackEntry.toRoute()
                 StockDetailScreen(
                     stockId = stockDetail.stockId,
-                    editAssets = { /* TODO */ },
+                    editAssets = {
+                        if (userCycle.loggedIn()) {
+                            navController.navigate(AppDestinations.EditAsset(stockDetail.stockId))
+                        } else {
+                            loginWithGoogle {
+                                navController.navigate(AppDestinations.EditAsset(stockDetail.stockId))
+                            }
+                        }
+                    },
                     openUrl = openUrl,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
+            composable<AppDestinations.EditAsset> { backStackEntry ->
+                val editAsset = backStackEntry.toRoute<AppDestinations.EditAsset>()
+                EditAssetScreen(
+                    stockId = editAsset.stockId,
                     onBack = { navController.popBackStack() },
                 )
             }
