@@ -110,12 +110,12 @@ fun ColumnScope.SpacDetailView(
                     }
                     showDatePicker = false
                 }) {
-                    TrueText(s = "확인", fontSize = 12)
+                    TrueText(s = "확인", fontSize = 18)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    TrueText(s = "취소", fontSize = 12)
+                    TrueText(s = "취소", fontSize = 18)
                 }
             }
         ) {
