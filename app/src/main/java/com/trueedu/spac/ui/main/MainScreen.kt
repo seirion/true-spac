@@ -17,6 +17,7 @@ import androidx.navigation.toRoute
 import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
+import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
@@ -27,6 +28,7 @@ import com.trueedu.spac.ui.stock.StockDetailScreen
 @Composable
 fun MainScreen(
     navController: NavHostController,
+    simpleSnackbar: SimpleSnackbar,
     openUrl: (String) -> Unit,
     gotoPlayStore: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
