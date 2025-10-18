@@ -221,4 +221,13 @@ dependencies {
 
     implementation(platform(libs.coil.bom))
     implementation(libs.coil.compose)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.serialization)
+    debugImplementation(libs.chucker.debug)
+    releaseImplementation(libs.chucker.release)
+    implementation(libs.okhttp.logging.interceptor)
+    debugImplementation(libs.flipper)
+    debugImplementation(libs.flipper.network.plugin)
+    releaseImplementation(libs.flipper.noop)
 }

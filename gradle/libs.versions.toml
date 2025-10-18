@@ -16,6 +16,9 @@ room = "2.8.2"
 credentials = "1.5.0-rc01"
 googleid = "1.1.1"
 coil = "2.7.0"
+retrofit = "3.0.0"
+chucker = "4.0.0"
+flipper = "0.240.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -74,6 +77,15 @@ firebase-database = { module = "com.google.firebase:firebase-database-ktx" }
 # coil
 coil-bom = { group = "io.coil-kt", name = "coil-bom", version.ref = "coil" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose" }
+
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-serialization = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version = "1.0.0" }
+chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor" }
+flipper = { group = "com.facebook.flipper", name = "flipper", version.ref = "flipper" }
+flipper-network-plugin = { group = "com.facebook.flipper", name = "flipper-network-plugin", version.ref = "flipper" }
+flipper-noop = { group = "com.github.theGlenn", name = "flipper-android-no-op", version = "0.10.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
