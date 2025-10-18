@@ -119,24 +119,40 @@ fun StockDetailScreen(
             SpacDetailView(vm.currentPrice().toInt(), stockInfo!!, spacStatus)
 
             infoList.forEach {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    TrueText(s = it.first, fontSize = 15, color = MaterialTheme.colorScheme.primary)
-                    TrueText(
-                        s = it.second ?: "",
-                        fontSize = 15,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 2,
-                        textAlign = TextAlign.End,
-                    )
+                StockInfoRow(it.first, it.second ?: "")
+            }
+
+            vm.getManualAsset()?.let { asset ->
+                if (asset.quantity > 0.0) {
+                    val assetInfoString = buildString {
+                        append("${intFormatter.format(asset.price, false)}원 • ${intFormatter.format(asset.quantity, false)}주")
+                        if (asset.memo.isNotEmpty()) {
+                            append("\n${asset.memo}")
+                        }
+                    }
+                    StockInfoRow("보유", assetInfoString)
                 }
             }
-            // TODO: asset 정보 표시
         }
+    }
+}
+
+@Composable
+private fun StockInfoRow(title: String, content: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        TrueText(s = title, fontSize = 15, color = MaterialTheme.colorScheme.primary)
+        TrueText(
+            s = content,
+            fontSize = 15,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 2,
+            textAlign = TextAlign.End,
+        )
     }
 }

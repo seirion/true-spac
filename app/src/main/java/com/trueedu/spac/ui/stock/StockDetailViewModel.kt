@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.api.model.dto.firebase.UserAsset
 import com.trueedu.spac.api.model.dto.price.PriceResponse
 import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.StockPool
+import com.trueedu.spac.data.user.ManualAssets
 import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
@@ -23,6 +25,7 @@ import javax.inject.Inject
 class StockDetailViewModel @Inject constructor(
     private val trueAnalytics: TrueAnalytics,
     val followingManager: FollowingManager,
+    val manualAssets: ManualAssets,
     private val stockPool: StockPool,
     private val spacStatusDatabase: SpacStatusDatabase,
 ) : ViewModel() {
@@ -88,14 +91,10 @@ class StockDetailViewModel @Inject constructor(
             "상장일자" to dateFormat(stockInfo.listingDate),
 //            "상장주수" to numberFormatString(stockInfo.listingShares) + "K",
         )
-        /*
-        + if (stockInfo.isSpac) {
-            assets.get(stockInfo.code)?.let {
-                val priceQuantity = "${intFormatter.format(it.price)} • ${intFormatter.format(it.quantity)}주"
-                val memo = if (it.memo.isNotEmpty()) "\n${it.memo}" else ""
-                listOf("수동 입력 자산" to "${priceQuantity}${memo}")
-            } ?: emptyList()
-        }
-         */
+    }
+
+    fun getManualAsset(): UserAsset? {
+        val code = _stockInfo.value?.code ?: return null
+        return manualAssets.assets.value.firstOrNull { it.code == code }
     }
 }
