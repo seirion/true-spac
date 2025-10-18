@@ -19,7 +19,6 @@ private val holidays = setOf(
     LocalDate.of(2025, 12, 25),
     LocalDate.of(2025, 12, 31),
     LocalDate.of(2026, 1, 1),
-    LocalDate.of(2026, 1, 1),
     LocalDate.of(2026, 2, 16),
     LocalDate.of(2026, 2, 17),
     LocalDate.of(2026, 2, 18),

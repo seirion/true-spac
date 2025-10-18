@@ -12,6 +12,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.util.TradingTimeHelper
+import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -146,6 +147,7 @@ class StockPriceAlarmManager @Inject constructor(
 /**
  * 주기적 알람을 받아서 WorkManager 작업 실행
  */
+@AndroidEntryPoint
 class StockPriceAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         logD("Stock price alarm triggered")
@@ -172,25 +174,32 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
 /**
  * 거래 시작 시간 알람 수신
  */
+@AndroidEntryPoint
 class TradingStartReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var stockPriceAlarmManager: StockPriceAlarmManager
+
     override fun onReceive(context: Context, intent: Intent) {
         logD("Trading start time - starting alarms")
-        val alarmManager = StockPriceAlarmManager(context)
-        alarmManager.startTradingTimeAlarm()
+        stockPriceAlarmManager.startTradingTimeAlarm()
     }
 }
 
 /**
  * 거래 종료 시간 알람 수신
  */
+@AndroidEntryPoint
 class TradingEndReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var stockPriceAlarmManager: StockPriceAlarmManager
+
     override fun onReceive(context: Context, intent: Intent) {
         logD("Trading end time - stopping alarms")
-        val alarmManager = StockPriceAlarmManager(context)
-        alarmManager.stopAlarm()
+        stockPriceAlarmManager.stopAlarm()
 
         // 다음날 거래 시작 시간 스케줄링
-        alarmManager.startTradingTimeAlarm()
+        stockPriceAlarmManager.startTradingTimeAlarm()
     }
 }
-
