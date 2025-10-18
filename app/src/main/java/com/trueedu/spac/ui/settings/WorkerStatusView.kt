@@ -1,0 +1,155 @@
+package com.trueedu.spac.ui.settings
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+/**
+ * Worker 실행 상태를 표시하는 UI 컴포넌트
+ * 앱이 종료된 후에도 Worker가 실행되었는지 확인 가능
+ */
+@Composable
+fun WorkerStatusView(
+    isAdminMode: Boolean,
+    lastMasterFileUpdate: String,
+    masterFileExecutionCount: Int,
+    lastPriceUpdate: String,
+    priceExecutionCount: Int,
+    onReset: () -> Unit
+) {
+
+    // 관리자 모드가 아니면 아무것도 표시하지 않음
+    if (!isAdminMode) {
+        return
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        // 관리자 모드 표시
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFFEBEE)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "⚠️ 관리자 모드",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFFD32F2F)
+                )
+                Text(
+                    text = "백그라운드 작업이 활성화되어 있습니다",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF757575)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 마스터 파일 업데이트 상태
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "마스터 파일 업데이트",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                InfoRow("마지막 실행", lastMasterFileUpdate)
+                InfoRow("총 실행 횟수", "${masterFileExecutionCount}회")
+
+                Text(
+                    text = "• 15-20분 간격으로 자동 실행",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF757575),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 시세 업데이트 상태
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "시세 업데이트",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                InfoRow("마지막 실행", lastPriceUpdate)
+                InfoRow("총 실행 횟수", "${priceExecutionCount}회")
+
+                Text(
+                    text = "• 거래 시간 중 5분 간격으로 실행",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF757575),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+
+        // 도움말
+        Text(
+            text = "이 정보는 앱이 종료된 후에도 백그라운드 작업이 정상적으로 실행되었는지 확인할 수 있습니다.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF757575),
+            modifier = Modifier.padding(top = 16.dp)
+        )
+
+        // 통계 초기화 버튼
+        Button(
+            onClick = onReset,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF5722)
+            )
+        ) {
+            Text("통계 초기화")
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF757575)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
