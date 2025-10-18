@@ -2,7 +2,12 @@ package com.trueedu.spac.repo.local
 
 import android.content.SharedPreferences
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.trueedu.spac.api.model.dto.auth.TokenResponse
+import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.util.toLocalDateTime
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +33,51 @@ class Local @Inject constructor(
 
     fun migrate() {
         launchingCount++
+    }
+
+    // appKey, appSecret, accountNumber, htsId
+    var userKey by preferences.string("{}")
+        private set
+
+    fun setUserKey(userKey: UserKey) {
+        this.userKey = try {
+            json.encodeToString(userKey)
+        } catch (e: SerializationException) {
+            logD("Failed to serialize UserKey: ${e.message}")
+            "{}"
+        }
+    }
+
+    fun clearUserKey() {
+        this.userKey = "{}"
+    }
+
+    fun getUserKey(): UserKey {
+        return try {
+            json.decodeFromString<UserKey>(userKey)
+        } catch (e: SerializationException) {
+            UserKey(null, null, null, null)
+        }
+    }
+
+    var accessToken by preferences.string("")
+        private set
+    // 토큰 만료 예정 시각
+    var accessTokenExpiredAt by preferences.long(0L)
+        private set
+
+    fun setAccessToken(tokenResponse: TokenResponse?) {
+        if (tokenResponse == null) {
+            accessToken = ""
+            accessTokenExpiredAt = 0L
+        } else {
+            accessToken = tokenResponse.accessToken
+            val expiredTime = tokenResponse.accessTokenTokenExpired
+                .toLocalDateTime()
+                ?.toEpochSecond(ZoneOffset.of("+09:00"))
+                ?: 0L
+            accessTokenExpiredAt = expiredTime
+        }
     }
 
     var deviceId by preferences.string(UUID.randomUUID().toString()) // 고유 id
