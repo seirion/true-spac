@@ -11,8 +11,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 /**
- * 주기적으로 실행되는 백그라운드 작업을 처리하는 Worker
- * 앱이 꺼진 상태에서도 스케줄된 시간에 실행됩니다.
+ * 관리자 전용: 마스터 파일을 다운로드하고 Firebase에 업로드하는 Worker
+ * 앱이 꺼진 상태에서도 주기적으로 실행되어 최신 종목 정보를 유지합니다.
  */
 @HiltWorker
 class PeriodicSyncWorker @AssistedInject constructor(
@@ -23,20 +23,23 @@ class PeriodicSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            logD("PeriodicSyncWorker started")
+            logD("PeriodicSyncWorker started - checking if update needed")
 
-            // 여기에 주기적으로 수행할 작업을 추가합니다
-            // 예: 데이터 동기화, 알림 확인 등
+            // Firebase 데이터가 오늘 날짜보다 오래되었는지 확인
+            if (stockPool.needUpdateMasterFile()) {
+                logD("Update needed - downloading master files")
+                // 관리자 전용: 마스터 파일 다운로드 + Firebase 업로드
+                stockPool.downloadMasterFiles()
+                logD("PeriodicSyncWorker completed successfully - master files updated")
+            } else {
+                logD("PeriodicSyncWorker skipped - Firebase data is already up to date")
+            }
 
-            // 예제: StockPool 데이터 로드
-            stockPool.loadStockInfo()
-
-            logD("PeriodicSyncWorker completed successfully")
             Result.success()
         } catch (e: Exception) {
             logE(e, "PeriodicSyncWorker failed")
             // 재시도가 필요한 경우 Result.retry() 반환
-            Result.failure()
+            Result.retry()
         }
     }
 

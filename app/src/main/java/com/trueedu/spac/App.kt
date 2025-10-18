@@ -57,9 +57,28 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         val local = entryPointInjector(InjectModule::class.java).getLocal()
         local.migrate()
         init()
-        setupPeriodicWork()
-        setupStockPriceAlarm()
+
+        // UserKey가 유효하면 관리자 모드로 동작
+        if (isAdminMode(local)) {
+            // 관리자 모드: 마스터 파일 다운로드 + Firebase 업로드
+            setupPeriodicWork() // 종목 정보 업데이트
+            setupStockPriceAlarm() // 거래 시간 중 시세 업데이트
+            logD("Admin mode enabled - UserKey is valid, periodic updates active")
+        } else {
+            // 일반 사용자 모드: Firebase에서 읽기만
+            // 종목 정보는 앱 시작 시 자동으로 로드됨 (onStateChanged 참조)
+            logD("User mode - UserKey is invalid, read-only from Firebase")
+        }
+
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+    }
+
+    /**
+     * 관리자 모드 여부 확인
+     * UserKey가 유효하면 관리자로 간주
+     */
+    private fun isAdminMode(local: Local): Boolean {
+        return local.getUserKey().isValid()
     }
 
     private fun init() {
