@@ -209,6 +209,10 @@ dependencies {
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.room.ktx)
 
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+
     // Credentials & Google Sign In
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
