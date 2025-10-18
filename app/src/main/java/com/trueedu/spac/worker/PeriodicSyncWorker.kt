@@ -44,4 +44,3 @@ class PeriodicSyncWorker @AssistedInject constructor(
         const val WORK_NAME = "periodic_sync_work"
     }
 }
-

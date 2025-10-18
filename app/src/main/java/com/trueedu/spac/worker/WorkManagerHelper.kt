@@ -6,6 +6,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.trueedu.spac.data.log.logD
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.guava.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,4 +50,3 @@ class WorkManagerHelper @Inject constructor(
         return workInfos.any { !it.state.isFinished }
     }
 }
-

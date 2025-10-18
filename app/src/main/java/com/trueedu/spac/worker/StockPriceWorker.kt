@@ -67,4 +67,3 @@ class StockPriceWorker @AssistedInject constructor(
         const val WORK_NAME = "stock_price_work"
     }
 }
-
