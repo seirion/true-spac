@@ -51,7 +51,14 @@ fun EditAssetScreen(
                 onAction = onAction,
             )
         },
-        bottomBar = { BottomBar("저장", vm.buttonEnabled.value, vm::onSave) },
+        bottomBar = {
+            BottomBar("저장", vm.buttonEnabled.value) {
+                vm.save(stockId) {
+                    simpleSnackbar.normal("저장되었습니다")
+                    onBack()
+                }
+            }
+        },
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),

@@ -5,6 +5,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trueedu.spac.analytics.TrueAnalytics
+import com.trueedu.spac.api.model.dto.firebase.UserAsset
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
 import com.trueedu.spac.data.user.UserCycle
@@ -21,6 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EditAssetViewModel @Inject constructor(
     private val userCycle: UserCycle,
+    private val trueAnalytics: TrueAnalytics,
     private val manualAssets: ManualAssets,
     val stockPool: StockPool,
 ) : ViewModel() {
@@ -95,10 +98,22 @@ class EditAssetViewModel @Inject constructor(
     }
 
     fun delete(code: String, onSuccess: () -> Unit) {
+        trueAnalytics.clickButton("asset__delete__click")
         manualAssets.deleteAsset(code, onSuccess)
     }
 
-    fun onSave() {
-        // TODO
+    fun save(code: String, onSuccess: () -> Unit) {
+        trueAnalytics.clickButton("asset__save__click")
+        val stock = stockPool.get(code)
+        manualAssets.addAsset(
+            asset = UserAsset(
+                code = code,
+                nameKr = stock?.nameKr ?: "",
+                price = priceInput.value.text.toDouble(),
+                quantity = quantityInput.value.text.toDouble(),
+                memo = memoInput.value,
+            ),
+            onSuccess = onSuccess,
+        )
     }
 }
