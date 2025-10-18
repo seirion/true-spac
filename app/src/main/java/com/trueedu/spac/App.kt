@@ -19,6 +19,7 @@ import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.worker.PeriodicSyncWorker
+import com.trueedu.spac.worker.StockPriceAlarmManager
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
@@ -34,6 +35,10 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var stockPriceAlarmManager: StockPriceAlarmManager
+
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface InjectModule {
@@ -53,6 +58,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         local.migrate()
         init()
         setupPeriodicWork()
+        setupStockPriceAlarm()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
@@ -92,6 +98,15 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         )
 
         logD("Periodic work scheduled: ${PeriodicSyncWorker.WORK_NAME}")
+    }
+
+    /**
+     * 주식 시세 업데이트를 위한 알람 설정
+     * 거래 시간 중 5분 간격으로 실행
+     */
+    private fun setupStockPriceAlarm() {
+        stockPriceAlarmManager.startTradingTimeAlarm()
+        logD("Stock price alarm initialized")
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
