@@ -4,7 +4,10 @@ import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.trueedu.spac.repo.kis.AuthRemote
 import com.trueedu.spac.repo.kis.AuthRemoteImpl
+import com.trueedu.spac.repo.kis.PriceRemote
+import com.trueedu.spac.repo.kis.PriceRemoteImpl
 import com.trueedu.spac.repo.kis.services.AuthService
+import com.trueedu.spac.repo.kis.services.PriceService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,21 +29,12 @@ object RemoteModule {
         return retrofit.create(AuthService::class.java)
     }
 
-    /*
-    @Provides
-    @Singleton
-    @NormalService
-    fun providesAccountService(@KisRetrofit retrofit: Retrofit): AccountService {
-        return retrofit.create(AccountService::class.java)
-    }
-
     @Provides
     @Singleton
     @NormalService
     fun providesPriceService(@KisRetrofit retrofit: Retrofit): PriceService {
         return retrofit.create(PriceService::class.java)
     }
-     */
 
     @Provides
     @Singleton
@@ -77,19 +71,10 @@ object RemoteModule {
         authService: AuthService
     ): AuthRemote = AuthRemoteImpl(authService = authService)
 
-    /*
-    @Singleton
-    @Provides
-    fun providesAccountRemote(
-        @NormalService
-        accountService: AccountService
-    ): AccountRemote = AccountRemoteImpl(accountService = accountService)
-
     @Singleton
     @Provides
     fun providesPriceRemote(
         @NormalService
         priceService: PriceService
     ): PriceRemote = PriceRemoteImpl(priceService = priceService)
-     */
 }
