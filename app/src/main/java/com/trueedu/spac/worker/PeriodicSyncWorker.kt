@@ -19,10 +19,13 @@ class PeriodicSyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val stockPool: StockPool,
+    private val tracker: WorkerExecutionTracker,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
+            // 실행 기록 저장 (앱 종료 후에도 확인 가능)
+            tracker.recordMasterFileExecution()
             logD("PeriodicSyncWorker started - checking if update needed")
 
             // Firebase 데이터가 오늘 날짜보다 오래되었는지 확인

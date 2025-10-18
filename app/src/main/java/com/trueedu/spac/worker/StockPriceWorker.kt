@@ -22,11 +22,14 @@ class StockPriceWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val firebaseDatabase: FirebaseRealtimeDatabase,
+    private val tracker: WorkerExecutionTracker,
     // TODO: KIS API 또는 시세 API 서비스 주입
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
+            // 실행 기록 저장 (앱 종료 후에도 확인 가능)
+            tracker.recordPriceUpdateExecution()
             logD("StockPriceWorker started")
 
             // 거래 시간 체크

@@ -61,8 +61,8 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         // UserKey가 유효하면 관리자 모드로 동작
         if (isAdminMode(local)) {
             // 관리자 모드: 마스터 파일 다운로드 + Firebase 업로드
-            setupPeriodicWork() // 종목 정보 업데이트
-            setupStockPriceAlarm() // 거래 시간 중 시세 업데이트
+            setupPeriodicWork() // 15분 내외로 마스터 파일 업데이트
+            setupStockPriceAlarm() // 거래 시간 중 5분마다 시세 업데이트
             logD("Admin mode enabled - UserKey is valid, periodic updates active")
         } else {
             // 일반 사용자 모드: Firebase에서 읽기만
@@ -90,17 +90,17 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     }
 
     /**
-     * 주기적인 백그라운드 작업을 설정합니다.
-     * 앱이 종료되어도 WorkManager가 작업을 스케줄하고 실행합니다.
+     * 주기적인 마스터 파일 업데이트 작업 설정
+     * WorkManager를 사용하여 15-20분 간격으로 실행
+     * 배터리 최적화를 고려하여 정확한 시간이 아닐 수 있음
      */
     private fun setupPeriodicWork() {
         // 작업 실행 조건 설정
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED) // 네트워크 연결 필요
-            .setRequiresBatteryNotLow(true) // 배터리가 낮지 않을 때만 실행
             .build()
 
-        // 주기적 작업 요청 생성 (최소 15분 간격)
+        // 주기적 작업 요청 생성 (약 15분 간격)
         val periodicWorkRequest = PeriodicWorkRequestBuilder<PeriodicSyncWorker>(
             repeatInterval = 15, // 반복 간격
             repeatIntervalTimeUnit = TimeUnit.MINUTES // 시간 단위
