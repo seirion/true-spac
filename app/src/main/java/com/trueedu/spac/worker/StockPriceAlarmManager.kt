@@ -81,6 +81,14 @@ class StockPriceAlarmManager @Inject constructor(
      * 다음 거래 시작 시간에 알람 시작 스케줄링
      */
     private fun scheduleNextTradingStart() {
+        // Android 12+ 에서 정확한 알람 권한 체크
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                logD("Cannot schedule exact alarms for trading start - permission not granted")
+                return
+            }
+        }
+
         val millisUntilStart = TradingTimeHelper.getMillisUntilTradingStart()
         val startIntent = Intent(context, TradingStartReceiver::class.java)
         val startPendingIntent = PendingIntent.getBroadcast(
@@ -103,6 +111,14 @@ class StockPriceAlarmManager @Inject constructor(
      * 거래 종료 시간에 알람 중지 스케줄링
      */
     private fun scheduleTradingEnd() {
+        // Android 12+ 에서 정확한 알람 권한 체크
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                logD("Cannot schedule exact alarms for trading end - permission not granted")
+                return
+            }
+        }
+
         val millisUntilEnd = TradingTimeHelper.getMillisUntilTradingEnd()
         val endIntent = Intent(context, TradingEndReceiver::class.java)
         val endPendingIntent = PendingIntent.getBroadcast(
