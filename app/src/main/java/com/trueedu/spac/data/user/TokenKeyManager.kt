@@ -42,7 +42,16 @@ class TokenKeyManager @Inject constructor(
     init {
         userKey.value = local.getUserKey()
         if (userKey.value?.isValid() == true) {
-            issueAccessToken()
+            // accessToken 만료 여부 체크
+            if (local.accessTokenExpiredAt > 0 && !hasValidToken()) {
+                logD("Access token expired, issuing new token")
+                issueAccessToken()
+            } else if (local.accessTokenExpiredAt == 0L) {
+                logD("No access token found, issuing new token")
+                issueAccessToken()
+            } else {
+                logD("Access token is still valid")
+            }
         }
     }
 
