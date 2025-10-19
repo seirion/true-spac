@@ -30,7 +30,11 @@ fun WorkerStatusView(
     masterFileExecutionCount: Int,
     lastPriceUpdate: String,
     priceExecutionCount: Int,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    onTestPriceUpdate: () -> Unit = {},
+    onRestartAlarm: () -> Unit = {},
+    onTestMasterFileUpdate: () -> Unit = {},
+    onRescheduleWorker: () -> Unit = {}
 ) {
 
     // 관리자 모드가 아니면 아무것도 표시하지 않음
@@ -124,12 +128,71 @@ fun WorkerStatusView(
             modifier = Modifier.padding(top = 16.dp)
         )
 
+        // 테스트 버튼들
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 마스터 파일 수동 실행 버튼
+            Button(
+                onClick = onTestMasterFileUpdate,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF9800)
+                )
+            ) {
+                Text("마스터 실행")
+            }
+
+            // 시세 수동 실행 버튼
+            Button(
+                onClick = onTestPriceUpdate,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50)
+                )
+            ) {
+                Text("시세 실행")
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 알람 재시작 버튼
+            Button(
+                onClick = onRestartAlarm,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3)
+                )
+            ) {
+                Text("알람 재시작")
+            }
+
+            // Worker 재등록 버튼
+            Button(
+                onClick = onRescheduleWorker,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF9C27B0)
+                )
+            ) {
+                Text("Worker 재등록")
+            }
+        }
+
         // 통계 초기화 버튼
         Button(
             onClick = onReset,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF5722)
             )

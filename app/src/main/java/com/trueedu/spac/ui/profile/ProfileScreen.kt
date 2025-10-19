@@ -59,7 +59,11 @@ fun ProfileScreen(
                 masterFileExecutionCount = vm.getMasterFileExecutionCount(),
                 lastPriceUpdate = vm.getLastPriceUpdate(),
                 priceExecutionCount = vm.getPriceExecutionCount(),
-                onReset = { vm.resetWorkerStats() }
+                onReset = { vm.resetWorkerStats() },
+                onTestPriceUpdate = { vm.manuallyTriggerPriceUpdate() },
+                onRestartAlarm = { vm.restartStockPriceAlarm() },
+                onTestMasterFileUpdate = { vm.manuallyTriggerMasterFileUpdate() },
+                onRescheduleWorker = { vm.reschedulePeriodicSyncWorker() }
             )
         }
     }

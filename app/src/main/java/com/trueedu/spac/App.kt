@@ -59,15 +59,19 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         init()
 
         // UserKey가 유효하면 관리자 모드로 동작
-        if (isAdminMode(local)) {
+        val adminMode = isAdminMode(local)
+        logD("🔍 관리자 모드 체크: $adminMode")
+
+        if (adminMode) {
             // 관리자 모드: 마스터 파일 다운로드 + Firebase 업로드
+            logD("⚙️ 관리자 모드 - Worker 및 알람 설정 시작")
             setupPeriodicWork() // 15분 내외로 마스터 파일 업데이트
             setupStockPriceAlarm() // 거래 시간 중 5분마다 시세 업데이트
-            logD("Admin mode enabled - UserKey is valid, periodic updates active")
+            logD("✅ Admin mode enabled - UserKey is valid, periodic updates active")
         } else {
             // 일반 사용자 모드: Firebase에서 읽기만
             // 종목 정보는 앱 시작 시 자동으로 로드됨 (onStateChanged 참조)
-            logD("User mode - UserKey is invalid, read-only from Firebase")
+            logD("ℹ️ User mode - UserKey is invalid, read-only from Firebase")
         }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -95,6 +99,8 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
      * 배터리 최적화를 고려하여 정확한 시간이 아닐 수 있음
      */
     private fun setupPeriodicWork() {
+        logD("🔧 setupPeriodicWork() 호출됨")
+
         // 작업 실행 조건 설정
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED) // 네트워크 연결 필요
@@ -116,7 +122,10 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
             periodicWorkRequest
         )
 
-        logD("Periodic work scheduled: ${PeriodicSyncWorker.WORK_NAME}")
+        logD("✅ Periodic work scheduled: ${PeriodicSyncWorker.WORK_NAME}")
+        logD("📝 정책: KEEP (기존 작업이 있으면 유지)")
+        logD("⏰ 반복 간격: 15분")
+        logD("🌐 네트워크 제약: CONNECTED")
     }
 
     /**

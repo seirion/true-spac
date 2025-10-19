@@ -3,6 +3,7 @@ package com.trueedu.spac.data.stocks
 import com.trueedu.spac.api.model.dao.StockPriceDao
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
+import com.trueedu.spac.data.user.TokenKeyManager
 import com.trueedu.spac.repo.firebase.FirebasePriceDatabase
 import com.trueedu.spac.repo.kis.PriceRemote
 import com.trueedu.spac.repo.local.Local
@@ -19,7 +20,8 @@ class PriceManager @Inject constructor(
     private val local: Local,
     private val spacManager: SpacManager,
     private val priceRemote: PriceRemote,
-    private val firebasePriceManager: FirebasePriceDatabase
+    private val firebasePriceManager: FirebasePriceDatabase,
+    private val tokenKeyManager: TokenKeyManager
 ) {
     companion object {
         // API 호출 제약: 1초당 최대 20회
@@ -74,6 +76,14 @@ class PriceManager @Inject constructor(
     suspend fun getPriceMap(
         forceRefresh: Boolean = false
     ): Map<String, StockPriceDao> = coroutineScope {
+        // UserKey 유효성 체크
+        val userKey = tokenKeyManager.userKey.value
+        if (userKey?.isValid() != true) {
+            logE("❌ getPriceMap() - UserKey is not valid. Cannot fetch prices from API.")
+            return@coroutineScope emptyMap()
+        }
+        logD("✅ UserKey validated - proceeding with price fetch")
+
         // forceRefresh가 false이고 캐시가 있으면 캐시 반환
         if (!forceRefresh && cachedPriceMap.isNotEmpty()) {
             logD("getPriceMap() - returning cached data (${cachedPriceMap.size} items)")

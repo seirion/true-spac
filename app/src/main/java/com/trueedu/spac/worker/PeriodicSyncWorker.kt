@@ -26,21 +26,24 @@ class PeriodicSyncWorker @AssistedInject constructor(
         return try {
             // 실행 기록 저장 (앱 종료 후에도 확인 가능)
             tracker.recordMasterFileExecution()
-            logD("PeriodicSyncWorker started - checking if update needed")
+            logD("🔄 PeriodicSyncWorker started - checking if update needed")
 
             // Firebase 데이터가 오늘 날짜보다 오래되었는지 확인
-            if (stockPool.needUpdateMasterFile()) {
-                logD("Update needed - downloading master files")
+            val needUpdate = stockPool.needUpdateMasterFile()
+            logD("📊 needUpdateMasterFile() = $needUpdate")
+
+            if (needUpdate) {
+                logD("✅ Update needed - downloading master files")
                 // 관리자 전용: 마스터 파일 다운로드 + Firebase 업로드
                 stockPool.downloadMasterFiles()
-                logD("PeriodicSyncWorker completed successfully - master files updated")
+                logD("✅ PeriodicSyncWorker completed successfully - master files updated")
             } else {
-                logD("PeriodicSyncWorker skipped - Firebase data is already up to date")
+                logD("⏭️ PeriodicSyncWorker skipped - Firebase data is already up to date")
             }
 
             Result.success()
         } catch (e: Exception) {
-            logE(e, "PeriodicSyncWorker failed")
+            logE(e, "❌ PeriodicSyncWorker failed")
             // 재시도가 필요한 경우 Result.retry() 반환
             Result.retry()
         }
