@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.AppNotice
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.user.TokenKeyManager
 import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val firebaseDatabase: FirebaseRealtimeDatabase,
     private val trueAnalytics: TrueAnalytics,
+    private val tokenKeyManager: TokenKeyManager,
 ) : ViewModel() {
     private val _forceUpdateVisible = MutableStateFlow(false)
     val forceUpdateVisible: StateFlow<Boolean> = _forceUpdateVisible.asStateFlow()

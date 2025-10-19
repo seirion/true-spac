@@ -42,6 +42,13 @@ class StockPriceAlarmManager @Inject constructor(
             return
         }
 
+        startAlarmNow()
+    }
+
+    /**
+     * 거래 시간 체크 없이 알람을 바로 시작 (테스트용)
+     */
+    fun startAlarmNow() {
         logD("Starting trading time alarm (${INTERVAL_MINUTES}min interval)")
 
         val pendingIntent = createPendingIntent()
@@ -50,22 +57,46 @@ class StockPriceAlarmManager @Inject constructor(
         // Android 12+ 에서 정확한 알람 권한 체크
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                logD("Cannot schedule exact alarms - using inexact alarm")
+                logD("⚠️ Cannot schedule exact alarms - using inexact alarm. 설정에서 정확한 알람 권한을 허용해주세요.")
                 scheduleInexactRepeating(pendingIntent, intervalMillis)
                 return
+            } else {
+                logD("✅ Exact alarm permission granted")
             }
         }
 
-        // 정확한 반복 알람 설정
+        // 즉시 한 번 실행
+        triggerImmediately()
+
+        // 정확한 반복 알람 설정 (5분 후부터 반복)
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             System.currentTimeMillis() + intervalMillis,
             intervalMillis,
             pendingIntent
         )
+        logD("✅ Alarm set successfully - first run now, then every ${INTERVAL_MINUTES} minutes")
 
-        // 거래 종료 시간에 알람 중지 스케줄링
-        scheduleTradingEnd()
+        // 거래 종료 시간에 알람 중지 스케줄링 (거래 시간일 경우에만)
+        if (TradingTimeHelper.isTradingTime()) {
+            scheduleTradingEnd()
+        }
+    }
+
+    /**
+     * 즉시 Worker 실행
+     */
+    private fun triggerImmediately() {
+        logD("🚀 Triggering StockPriceWorker immediately")
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<StockPriceWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
 
     /**
@@ -166,12 +197,15 @@ class StockPriceAlarmManager @Inject constructor(
 @AndroidEntryPoint
 class StockPriceAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        logD("Stock price alarm triggered")
+        val currentTime = java.time.LocalDateTime.now()
+        logD("⏰ Stock price alarm triggered at $currentTime")
 
-        // 거래 시간 체크
+        // 거래 시간 체크 (경고만 하고 계속 진행)
         if (!TradingTimeHelper.isTradingTime()) {
-            logD("Not trading time, skipping")
+            logD("⚠️ Not trading time, but continuing for testing purposes")
             return
+        } else {
+            logD("✅ Trading time confirmed")
         }
 
         // WorkManager로 실제 작업 실행
@@ -184,6 +218,7 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
             .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)
+        logD("📋 StockPriceWorker enqueued to WorkManager")
     }
 }
 
