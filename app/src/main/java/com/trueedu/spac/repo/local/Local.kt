@@ -95,6 +95,8 @@ class Local @Inject constructor(
     // 종목 다운로드 시각 yyyyMMddHHmm
     var stockUpdatedAt by preferences.long(0L)
 
+    var priceUpdatedAt by preferences.long(0L)
+
     // 스팩 설정
     var spacAnnualProfit by preferences.boolean(false) // 청산 가치 1년 환산 표시
 
