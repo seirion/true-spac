@@ -22,8 +22,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.trueedu.spac.ui.components.TrueText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,15 +91,17 @@ fun WorkerStatusView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "⚠️ 관리자 모드",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFFD32F2F)
+                    TrueText(
+                        s = "⚠️ 관리자 모드",
+                        fontSize = 16,
+                        color = Color(0xFFD32F2F),
+                        maxLines = 1
                     )
-                    Text(
-                        text = "백그라운드 작업이 활성화되어 있습니다",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF757575)
+                    TrueText(
+                        s = "백그라운드 작업이 활성화되어 있습니다",
+                        fontSize = 12,
+                        color = Color(0xFF757575),
+                        maxLines = 1
                     )
                 }
                 IconButton(
@@ -137,20 +139,22 @@ fun WorkerStatusView(
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "마스터 파일 업데이트",
-                    style = MaterialTheme.typography.titleSmall
+                TrueText(
+                    s = "마스터 파일 업데이트",
+                    fontSize = 14,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 InfoRow("마지막 실행", lastMasterFileUpdate)
                 InfoRow("총 실행 횟수", "${masterFileExecutionCount}회")
 
-                Text(
-                    text = "• 15-20분 간격으로 자동 실행",
-                    style = MaterialTheme.typography.bodySmall,
+                TrueText(
+                    s = "• 15-20분 간격으로 자동 실행",
+                    fontSize = 12,
                     color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
+                    maxLines = 1
                 )
             }
         }
@@ -165,30 +169,33 @@ fun WorkerStatusView(
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "시세 업데이트",
-                    style = MaterialTheme.typography.titleSmall
+                TrueText(
+                    s = "시세 업데이트",
+                    fontSize = 14,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 InfoRow("마지막 실행", lastPriceUpdate)
                 InfoRow("총 실행 횟수", "${priceExecutionCount}회")
 
-                Text(
-                    text = "• 거래 시간 중 5분 간격으로 실행",
-                    style = MaterialTheme.typography.bodySmall,
+                TrueText(
+                    s = "• 거래 시간 중 5분 간격으로 실행",
+                    fontSize = 12,
                     color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
+                    maxLines = 1
                 )
             }
         }
 
         // 도움말
-        Text(
-            text = "이 정보는 앱이 종료된 후에도 백그라운드 작업이 정상적으로 실행되었는지 확인할 수 있습니다.",
-            style = MaterialTheme.typography.bodySmall,
+        TrueText(
+            s = "이 정보는 앱이 종료된 후에도 백그라운드 작업이 정상적으로 실행되었는지 확인할 수 있습니다.",
+            fontSize = 12,
             color = Color(0xFF757575),
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier.padding(top = 16.dp),
+            maxLines = 2
         )
 
         // 테스트 버튼들
@@ -206,7 +213,7 @@ fun WorkerStatusView(
                     containerColor = Color(0xFFFF9800)
                 )
             ) {
-                Text("마스터 실행")
+                TrueText(s = "마스터 실행", fontSize = 14, maxLines = 1)
             }
 
             // 시세 수동 실행 버튼
@@ -217,7 +224,7 @@ fun WorkerStatusView(
                     containerColor = Color(0xFF4CAF50)
                 )
             ) {
-                Text("시세 실행")
+                TrueText(s = "시세 실행", fontSize = 14, maxLines = 1)
             }
         }
 
@@ -235,7 +242,7 @@ fun WorkerStatusView(
                     containerColor = Color(0xFF2196F3)
                 )
             ) {
-                Text("알람 재시작")
+                TrueText(s = "알람 재시작", fontSize = 14, maxLines = 1)
             }
 
             // Worker 재등록 버튼
@@ -246,7 +253,7 @@ fun WorkerStatusView(
                     containerColor = Color(0xFF9C27B0)
                 )
             ) {
-                Text("Worker 재등록")
+                TrueText(s = "Worker 재등록", fontSize = 14, maxLines = 1)
             }
         }
 
@@ -260,7 +267,7 @@ fun WorkerStatusView(
                 containerColor = Color(0xFFFF5722)
             )
         ) {
-            Text("통계 초기화")
+            TrueText(s = "통계 초기화", fontSize = 14, maxLines = 1)
         }
     }
 }
@@ -268,14 +275,16 @@ fun WorkerStatusView(
 @Composable
 private fun InfoRow(label: String, value: String) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF757575)
+        TrueText(
+            s = label,
+            fontSize = 12,
+            color = Color(0xFF757575),
+            maxLines = 1
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
+        TrueText(
+            s = value,
+            fontSize = 14,
+            maxLines = 1
         )
     }
 }
