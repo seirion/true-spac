@@ -17,6 +17,7 @@ import androidx.navigation.toRoute
 import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
+import com.trueedu.spac.ui.admin.AdminScreen
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
@@ -112,6 +113,9 @@ fun MainScreen(
                 ProfileScreen(
                     gotoPlayStore = gotoPlayStore,
                     loginWithGoogle = loginWithGoogle,
+                    openAdmin = {
+                        navController.navigate(AppDestinations.Admin)
+                    }
                 )
             }
 
@@ -151,6 +155,12 @@ fun MainScreen(
                     stockId = editAsset.stockId,
                     simpleSnackbar = simpleSnackbar,
                     onBack = { navController.popBackStack() },
+                )
+            }
+
+            composable<AppDestinations.Admin> {
+                AdminScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
