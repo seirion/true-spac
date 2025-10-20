@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private const val REFRESH_ANIMATION_DURATION_MS = 600L
+
 /**
  * Worker 실행 상태를 표시하는 UI 컴포넌트
  * 앱이 종료된 후에도 Worker가 실행되었는지 확인 가능
@@ -45,8 +47,10 @@ import kotlinx.coroutines.launch
 fun WorkerStatusView(
     isAdminMode: Boolean,
     lastMasterFileUpdate: String,
+    lastMasterFileUpdate2: String,
     masterFileExecutionCount: Int,
     lastPriceUpdate: String,
+    lastPriceUpdate2: String,
     priceExecutionCount: Int,
     onRefresh: () -> Unit = {},
     onReset: () -> Unit = {},
@@ -55,7 +59,6 @@ fun WorkerStatusView(
     onTestMasterFileUpdate: () -> Unit = {},
     onRescheduleWorker: () -> Unit = {}
 ) {
-
     // 관리자 모드가 아니면 아무것도 표시하지 않음
     if (!isAdminMode) {
         return
@@ -109,7 +112,7 @@ fun WorkerStatusView(
                         isRefreshing = true
                         onRefresh()
                         coroutineScope.launch {
-                            delay(600) // 애니메이션이 보이도록 약간의 지연
+                            delay(REFRESH_ANIMATION_DURATION_MS) // 애니메이션이 보이도록 약간의 지연
                             isRefreshing = false
                         }
                     },
@@ -146,7 +149,15 @@ fun WorkerStatusView(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                InfoRow("마지막 실행", lastMasterFileUpdate)
+                TrueText(
+                    s = "최근 실행 기록",
+                    fontSize = 12,
+                    color = Color(0xFF757575),
+                    maxLines = 1
+                )
+                InfoRow("1번째", lastMasterFileUpdate)
+                InfoRow("2번째", lastMasterFileUpdate2)
+                Spacer(modifier = Modifier.height(4.dp))
                 InfoRow("총 실행 횟수", "${masterFileExecutionCount}회")
 
                 TrueText(
@@ -176,7 +187,15 @@ fun WorkerStatusView(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                InfoRow("마지막 실행", lastPriceUpdate)
+                TrueText(
+                    s = "최근 실행 기록",
+                    fontSize = 12,
+                    color = Color(0xFF757575),
+                    maxLines = 1
+                )
+                InfoRow("1번째", lastPriceUpdate)
+                InfoRow("2번째", lastPriceUpdate2)
+                Spacer(modifier = Modifier.height(4.dp))
                 InfoRow("총 실행 횟수", "${priceExecutionCount}회")
 
                 TrueText(

@@ -37,11 +37,17 @@ class AdminViewModel @Inject constructor(
     private val _lastMasterFileUpdate = mutableStateOf("")
     val lastMasterFileUpdate: State<String> = _lastMasterFileUpdate
 
+    private val _lastMasterFileUpdate2 = mutableStateOf("")
+    val lastMasterFileUpdate2: State<String> = _lastMasterFileUpdate2
+
     private val _masterFileExecutionCount = mutableStateOf(0)
     val masterFileExecutionCount: State<Int> = _masterFileExecutionCount
 
     private val _lastPriceUpdate = mutableStateOf("")
     val lastPriceUpdate: State<String> = _lastPriceUpdate
+
+    private val _lastPriceUpdate2 = mutableStateOf("")
+    val lastPriceUpdate2: State<String> = _lastPriceUpdate2
 
     private val _priceExecutionCount = mutableStateOf(0)
     val priceExecutionCount: State<Int> = _priceExecutionCount
@@ -63,8 +69,10 @@ class AdminViewModel @Inject constructor(
      */
     fun refreshWorkerStats() {
         _lastMasterFileUpdate.value = tracker.getLastMasterFileUpdate()
+        _lastMasterFileUpdate2.value = tracker.getLastMasterFileUpdate2()
         _masterFileExecutionCount.value = tracker.getMasterFileExecutionCount()
         _lastPriceUpdate.value = tracker.getLastPriceUpdate()
+        _lastPriceUpdate2.value = tracker.getLastPriceUpdate2()
         _priceExecutionCount.value = tracker.getPriceExecutionCount()
         logD("🔄 Worker 통계 새로고침 완료")
     }
