@@ -35,6 +35,9 @@ class Local @Inject constructor(
         launchingCount++
     }
 
+    // dart 정보
+    var dartApiKey by preferences.string("")
+
     // appKey, appSecret, accountNumber, htsId
     var userKey by preferences.string("{}")
         private set
