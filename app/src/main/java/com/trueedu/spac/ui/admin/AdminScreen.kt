@@ -19,7 +19,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.trueedu.spac.ui.settings.WorkerStatusView
+import com.trueedu.spac.ui.admin.views.WorkerStatusView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

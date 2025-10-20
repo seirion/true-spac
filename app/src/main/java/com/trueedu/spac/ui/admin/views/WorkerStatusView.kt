@@ -1,4 +1,4 @@
-package com.trueedu.spac.ui.settings
+package com.trueedu.spac.ui.admin.views
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
