@@ -55,8 +55,10 @@ fun AdminScreen(
             WorkerStatusView(
                 isAdminMode = vm.isAdminMode(),
                 lastMasterFileUpdate = vm.lastMasterFileUpdate.value,
+                lastMasterFileUpdate2 = vm.lastMasterFileUpdate2.value,
                 masterFileExecutionCount = vm.masterFileExecutionCount.value,
                 lastPriceUpdate = vm.lastPriceUpdate.value,
+                lastPriceUpdate2 = vm.lastPriceUpdate2.value,
                 priceExecutionCount = vm.priceExecutionCount.value,
                 onRefresh = { vm.refreshWorkerStats() },
                 onReset = { vm.resetWorkerStats() },
