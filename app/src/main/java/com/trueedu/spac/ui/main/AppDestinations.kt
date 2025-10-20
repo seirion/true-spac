@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
@@ -56,6 +57,12 @@ sealed interface AppDestinations {
         override val label: String = ""
         @Transient
         override val icon: ImageVector = Icons.Default.Edit
+    }
+
+    @Serializable
+    data object Admin: AppDestinations {
+        override val label: String = "Admin"
+        override val icon: ImageVector = Icons.Filled.Settings
     }
 
     companion object {

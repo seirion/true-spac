@@ -16,7 +16,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.profile.views.ProfileTopBar
-import com.trueedu.spac.ui.settings.WorkerStatusView
 import com.trueedu.spac.ui.settings.views.SettingLabel
 
 @Composable
@@ -24,6 +23,7 @@ fun ProfileScreen(
     vm: ProfileViewModel = hiltViewModel(),
     gotoPlayStore: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
+    openAdmin: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -52,20 +52,10 @@ fun ProfileScreen(
         ) {
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
-            // Worker 실행 상태 표시 (관리자 모드인 경우)
-            WorkerStatusView(
-                isAdminMode = vm.isAdminMode(),
-                lastMasterFileUpdate = vm.lastMasterFileUpdate.value,
-                masterFileExecutionCount = vm.masterFileExecutionCount.value,
-                lastPriceUpdate = vm.lastPriceUpdate.value,
-                priceExecutionCount = vm.priceExecutionCount.value,
-                onRefresh = { vm.refreshWorkerStats() },
-                onReset = { vm.resetWorkerStats() },
-                onTestPriceUpdate = { vm.manuallyTriggerPriceUpdate() },
-                onRestartAlarm = { vm.restartStockPriceAlarm() },
-                onTestMasterFileUpdate = { vm.manuallyTriggerMasterFileUpdate() },
-                onRescheduleWorker = { vm.reschedulePeriodicSyncWorker() }
-            )
+            // 관리자 모드인 경우 관리자 설정 버튼 표시
+            if (vm.isAdminMode()) {
+                SettingLabel("관리자 설정", "Worker 관리", openAdmin)
+            }
         }
     }
 }
