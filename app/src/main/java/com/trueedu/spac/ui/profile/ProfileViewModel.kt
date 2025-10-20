@@ -37,7 +37,22 @@ class ProfileViewModel @Inject constructor(
     private val _loading = mutableStateOf(false)
     val loading: State<Boolean> = _loading
 
+    // Worker 상태 State
+    private val _lastMasterFileUpdate = mutableStateOf("")
+    val lastMasterFileUpdate: State<String> = _lastMasterFileUpdate
+
+    private val _masterFileExecutionCount = mutableStateOf(0)
+    val masterFileExecutionCount: State<Int> = _masterFileExecutionCount
+
+    private val _lastPriceUpdate = mutableStateOf("")
+    val lastPriceUpdate: State<String> = _lastPriceUpdate
+
+    private val _priceExecutionCount = mutableStateOf(0)
+    val priceExecutionCount: State<Int> = _priceExecutionCount
+
     init {
+        // 초기 데이터 로드
+        refreshWorkerStats()
         // Worker 실행 통계 로그 출력
         logWorkerStats()
         // Worker 스케줄링 상태 확인
@@ -49,16 +64,24 @@ class ProfileViewModel @Inject constructor(
 
     // Worker 상태 조회 메서드
     fun isAdminMode(): Boolean = local.getUserKey().isValid()
-    fun getLastMasterFileUpdate(): String = tracker.getLastMasterFileUpdate()
-    fun getMasterFileExecutionCount(): Int = tracker.getMasterFileExecutionCount()
-    fun getLastPriceUpdate(): String = tracker.getLastPriceUpdate()
-    fun getPriceExecutionCount(): Int = tracker.getPriceExecutionCount()
+
+    /**
+     * Worker 통계 새로고침
+     */
+    fun refreshWorkerStats() {
+        _lastMasterFileUpdate.value = tracker.getLastMasterFileUpdate()
+        _masterFileExecutionCount.value = tracker.getMasterFileExecutionCount()
+        _lastPriceUpdate.value = tracker.getLastPriceUpdate()
+        _priceExecutionCount.value = tracker.getPriceExecutionCount()
+        logD("🔄 Worker 통계 새로고침 완료")
+    }
 
     /**
      * Worker 통계 초기화
      */
     fun resetWorkerStats() {
         tracker.resetStats()
+        refreshWorkerStats() // 초기화 후 자동으로 새로고침
         logD("Worker 통계가 초기화되었습니다")
     }
 
@@ -113,10 +136,6 @@ class ProfileViewModel @Inject constructor(
      */
     private fun logWorkerStats() {
         logD(tracker.getExecutionStats())
-
-        // 개별 정보도 출력
-        logD("마스터 파일 - 마지막 실행: ${tracker.getLastMasterFileUpdate()}, 총 ${tracker.getMasterFileExecutionCount()}회")
-        logD("시세 업데이트 - 마지막 실행: ${tracker.getLastPriceUpdate()}, 총 ${tracker.getPriceExecutionCount()}회")
     }
 
     /**

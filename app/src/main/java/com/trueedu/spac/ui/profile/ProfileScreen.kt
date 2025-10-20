@@ -55,10 +55,11 @@ fun ProfileScreen(
             // Worker 실행 상태 표시 (관리자 모드인 경우)
             WorkerStatusView(
                 isAdminMode = vm.isAdminMode(),
-                lastMasterFileUpdate = vm.getLastMasterFileUpdate(),
-                masterFileExecutionCount = vm.getMasterFileExecutionCount(),
-                lastPriceUpdate = vm.getLastPriceUpdate(),
-                priceExecutionCount = vm.getPriceExecutionCount(),
+                lastMasterFileUpdate = vm.lastMasterFileUpdate.value,
+                masterFileExecutionCount = vm.masterFileExecutionCount.value,
+                lastPriceUpdate = vm.lastPriceUpdate.value,
+                priceExecutionCount = vm.priceExecutionCount.value,
+                onRefresh = { vm.refreshWorkerStats() },
                 onReset = { vm.resetWorkerStats() },
                 onTestPriceUpdate = { vm.manuallyTriggerPriceUpdate() },
                 onRestartAlarm = { vm.restartStockPriceAlarm() },
