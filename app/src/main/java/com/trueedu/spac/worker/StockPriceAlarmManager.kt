@@ -30,6 +30,9 @@ class StockPriceAlarmManager @Inject constructor(
     companion object {
         private const val ALARM_REQUEST_CODE = 1001
         private const val INTERVAL_MINUTES = 5L // 5분 간격
+
+        // 재시도 전략: AlarmManager가 INTERVAL_MINUTES 마다 자동으로 재시도
+        // WorkManager는 재시도하지 않고 실패 시 다음 스케줄에서 재시도
     }
 
     /**
@@ -37,7 +40,7 @@ class StockPriceAlarmManager @Inject constructor(
      */
     fun startTradingTimeAlarm() {
         if (!TradingTimeHelper.isTradingTime()) {
-            logD("Not trading time, scheduling for next trading start")
+            logD("거래 시간이 아닙니다. 다음 거래 시작 시간에 알람을 예약합니다")
             scheduleNextTradingStart()
             return
         }
@@ -49,7 +52,7 @@ class StockPriceAlarmManager @Inject constructor(
      * 거래 시간 체크 없이 알람을 바로 시작 (테스트용)
      */
     fun startAlarmNow() {
-        logD("Starting trading time alarm (${INTERVAL_MINUTES}min interval)")
+        logD("시세 업데이트 알람 시작 (${INTERVAL_MINUTES}분 간격)")
 
         val pendingIntent = createPendingIntent()
         val intervalMillis = INTERVAL_MINUTES * 60 * 1000
@@ -61,7 +64,7 @@ class StockPriceAlarmManager @Inject constructor(
                 scheduleInexactRepeating(pendingIntent, intervalMillis)
                 return
             } else {
-                logD("✅ Exact alarm permission granted")
+                logD("✅ 정확한 알람 권한이 허용되었습니다")
             }
         }
 
@@ -75,7 +78,7 @@ class StockPriceAlarmManager @Inject constructor(
             intervalMillis,
             pendingIntent
         )
-        logD("✅ Alarm set successfully - first run now, then every ${INTERVAL_MINUTES} minutes")
+        logD("✅ 알람이 성공적으로 설정되었습니다 - 즉시 실행 후 ${INTERVAL_MINUTES}분마다 반복")
 
         // 거래 종료 시간에 알람 중지 스케줄링 (거래 시간일 경우에만)
         if (TradingTimeHelper.isTradingTime()) {
@@ -87,7 +90,7 @@ class StockPriceAlarmManager @Inject constructor(
      * 즉시 Worker 실행
      */
     private fun triggerImmediately() {
-        logD("🚀 Triggering StockPriceWorker immediately")
+        logD("🚀 시세 업데이트 Worker를 즉시 실행합니다")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -96,14 +99,20 @@ class StockPriceAlarmManager @Inject constructor(
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(context).enqueue(workRequest)
+        // REPLACE 정책으로 중복 실행 방지
+        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            StockPriceWorker.WORK_NAME,
+            androidx.work.ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 
     /**
      * 알람 중지
      */
     fun stopAlarm() {
-        logD("Stopping stock price alarm")
+        logD("시세 업데이트 알람 중지")
         val pendingIntent = createPendingIntent()
         alarmManager.cancel(pendingIntent)
     }
@@ -115,7 +124,7 @@ class StockPriceAlarmManager @Inject constructor(
         // Android 12+ 에서 정확한 알람 권한 체크
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                logD("Cannot schedule exact alarms for trading start - permission not granted")
+                logD("정확한 알람 권한이 없어 거래 시작 알람을 예약할 수 없습니다")
                 return
             }
         }
@@ -135,7 +144,7 @@ class StockPriceAlarmManager @Inject constructor(
             startPendingIntent
         )
 
-        logD("Scheduled trading start alarm in ${millisUntilStart / 1000 / 60} minutes")
+        logD("거래 시작 알람이 ${millisUntilStart / 1000 / 60}분 후로 예약되었습니다")
     }
 
     /**
@@ -145,7 +154,7 @@ class StockPriceAlarmManager @Inject constructor(
         // Android 12+ 에서 정확한 알람 권한 체크
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                logD("Cannot schedule exact alarms for trading end - permission not granted")
+                logD("정확한 알람 권한이 없어 거래 종료 알람을 예약할 수 없습니다")
                 return
             }
         }
@@ -165,7 +174,7 @@ class StockPriceAlarmManager @Inject constructor(
             endPendingIntent
         )
 
-        logD("Scheduled trading end alarm in ${millisUntilEnd / 1000 / 60} minutes")
+        logD("거래 종료 알람이 ${millisUntilEnd / 1000 / 60}분 후로 예약되었습니다")
     }
 
     /**
@@ -253,14 +262,16 @@ class StockPriceAlarmManager @Inject constructor(
 class StockPriceAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val currentTime = java.time.LocalDateTime.now()
-        logD("⏰ Stock price alarm triggered at $currentTime")
+        logD("⏰ 시세 업데이트 알람 트리거: $currentTime")
 
-        // 거래 시간 체크 (경고만 하고 계속 진행)
+        // 거래 시간 체크 (경고만 하고 계속 진행 - 테스트 목적)
         if (!TradingTimeHelper.isTradingTime()) {
-            logD("⚠️ Not trading time, but continuing for testing purposes")
-            return
+            logD("⚠️ 거래 시간이 아닙니다 (테스트 모드에서는 계속 진행)")
+            // 테스트 목적으로 거래 시간이 아니어도 계속 진행
+            // 프로덕션 배포 시 아래 return 주석을 해제하세요
+            // return
         } else {
-            logD("✅ Trading time confirmed")
+            logD("✅ 거래 시간 확인됨")
         }
 
         // WorkManager로 실제 작업 실행
@@ -272,8 +283,15 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(context).enqueue(workRequest)
-        logD("📋 StockPriceWorker enqueued to WorkManager")
+        // REPLACE 정책: 이전 작업이 실행 중이면 취소하고 새 작업 실행
+        // 중복 실행 방지 및 최신 데이터 우선
+        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            StockPriceWorker.WORK_NAME,
+            androidx.work.ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+        logD("📋 시세 업데이트 Worker가 큐에 추가되었습니다 (REPLACE 정책)")
     }
 }
 
@@ -287,7 +305,7 @@ class TradingStartReceiver : BroadcastReceiver() {
     lateinit var stockPriceAlarmManager: StockPriceAlarmManager
 
     override fun onReceive(context: Context, intent: Intent) {
-        logD("Trading start time - starting alarms")
+        logD("거래 시작 시간 도달 - 알람 시작")
         stockPriceAlarmManager.startTradingTimeAlarm()
     }
 }
@@ -302,7 +320,7 @@ class TradingEndReceiver : BroadcastReceiver() {
     lateinit var stockPriceAlarmManager: StockPriceAlarmManager
 
     override fun onReceive(context: Context, intent: Intent) {
-        logD("Trading end time - stopping alarms")
+        logD("거래 종료 시간 도달 - 알람 중지")
         stockPriceAlarmManager.stopAlarm()
 
         // 다음날 거래 시작 시간 스케줄링
