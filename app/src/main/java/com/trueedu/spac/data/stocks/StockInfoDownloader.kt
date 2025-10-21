@@ -1,22 +1,15 @@
 package com.trueedu.spac.data.stocks
 
-import android.annotation.SuppressLint
-import android.app.DownloadManager
 import android.content.Context
-import android.net.Uri
-import android.os.Environment
-import androidx.core.net.toUri
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKosdaq
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
 import com.trueedu.spac.data.log.logD
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
 import java.io.File
@@ -25,6 +18,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import javax.inject.Inject
@@ -38,80 +32,70 @@ class StockInfoDownloader @Inject constructor(
     @ApplicationContext
     private val context: Context
 ) {
-    private val downloadEvent = MutableSharedFlow<Long>(1)
-
-    fun pushDownloadIntent(downloadId: Long) {
-        CoroutineScope(Dispatchers.IO).launch {
-            logD("download completed signal: $downloadId")
-            downloadEvent.emit(downloadId)
-        }
-    }
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
 
     suspend fun getStockInfoList(): List<StockInfo> {
         val stocks = ArrayList<StockInfo>()
         listOf(kospi, kosdaq).forEach { exchange ->
-            val url = download(exchange) ?: return@forEach
-            val unzipped = unzipFile(url) ?: return@forEach
+            val file = download(exchange) ?: return@forEach
+            val unzipped = unzipFile(file) ?: return@forEach
             val stockInfo = readUnzippedFile(unzipped, exchange)
             stocks.addAll(stockInfo)
         }
         return stocks
     }
 
-    @SuppressLint("Range")
-    suspend fun download(exchange: String): String? {
+    private suspend fun download(exchange: String): File? = withContext(Dispatchers.IO) {
         logD("begin download(): $exchange")
 
-        val url =  "https://new.real.download.dws.co.kr/common/master/${exchange}_code.mst.zip"
+        val url = "https://new.real.download.dws.co.kr/common/master/${exchange}_code.mst.zip"
         val fileName = "${exchange}_code.mst.zip"
 
-        val context = context.applicationContext
-        val request = DownloadManager.Request(url.toUri())
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
-            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, fileName)
-            .setTitle("$fileName 다운로드")
-            .setDescription("Downloading...")
+        try {
+            // 캐시 디렉토리에 파일 저장
+            val outputFile = File(context.cacheDir, fileName)
 
-        val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val downloadId = downloadManager.enqueue(request)
+            // HTTP 요청 생성
+            val request = Request.Builder()
+                .url(url)
+                .build()
 
-        // 타임아웃 추가 (60초)
-        val downloadCompleted = withTimeoutOrNull(60000) {
-            downloadEvent.firstOrNull { it == downloadId }
-        }
-
-        if (downloadCompleted == null) {
-            throw RuntimeException("Download Failed: $exchange - timeout")
-        }
-
-        val query = DownloadManager.Query().setFilterById(downloadId)
-
-        downloadManager.query(query).use { cursor ->
-            if (cursor.moveToFirst()) {
-                val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    // 다운로드 성공
-                    logD("download completed: $exchange")
-                    return cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
-                } else {
-                    // 다운로드 실패
-                    throw IOException("Download Failed: $exchange")
+            // 다운로드 실행
+            okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    logD("Download failed: $exchange - HTTP ${response.code}")
+                    return@withContext null
                 }
-            } else {
-                throw IOException("Download Failed: $exchange")
+
+                // 파일로 저장
+                response.body?.byteStream()?.use { inputStream ->
+                    FileOutputStream(outputFile).use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+
+                logD("download completed: $exchange")
+                return@withContext outputFile
             }
+        } catch (e: Exception) {
+            logD("Download failed: $exchange - ${e.message}")
+            e.printStackTrace()
+            return@withContext null
         }
     }
 
-    private fun unzipFile(uriStr: String): String? {
-        logD("unzip $uriStr")
-        val uri = uriStr.toUri()
-        val contentResolver = context.contentResolver
+    private fun unzipFile(zipFile: File): String? {
+        logD("unzip ${zipFile.path}")
 
         var unzippedFile: String? = null
+        val destDir = context.cacheDir
 
         try {
-            contentResolver.openInputStream(uri)?.use { inputStream ->
+            FileInputStream(zipFile).use { inputStream ->
                 ZipInputStream(inputStream).use { zis ->
                     var entry: ZipEntry? = zis.nextEntry
                     while (entry != null) {
@@ -124,13 +108,10 @@ class StockInfoDownloader @Inject constructor(
                                 entry = zis.nextEntry
                                 continue
                             }
-                            // 경로 정규화
-                            val path = uri.path?.let { File(it).parent }
-                            //val currentFile = File(Environment.DIRECTORY_DOWNLOADS, entry.name)
-                            val currentFile = File(path, entry.name)
+
+                            val currentFile = File(destDir, entry.name)
 
                             // 현재 경로가 대상 디렉터리의 하위 요소인지 확인
-                            val destDir = File(path!!)
                             val canonicalPath = currentFile.canonicalPath
                             if (!canonicalPath.startsWith(destDir.canonicalPath + File.separator)) {
                                 logD("Skipping file outside destination directory: $fileName")
@@ -156,7 +137,7 @@ class StockInfoDownloader @Inject constructor(
                             zis.closeEntry()
                             entry = zis.nextEntry
                         } catch (e: Exception) {
-                            logD("Error processing entry: ${entry?.name}, $e")
+                            logD("Error processing entry: ${entry.name}, $e")
                             zis.closeEntry()
                             entry = zis.nextEntry
                         }
@@ -168,19 +149,16 @@ class StockInfoDownloader @Inject constructor(
             logD("unzip failed: $e")
             e.printStackTrace()
         } finally {
-            deleteFile(uri)
+            // zip 파일 삭제
+            try {
+                if (zipFile.exists() && zipFile.delete()) {
+                    logD("zip file deleted: ${zipFile.path}")
+                }
+            } catch (e: Exception) {
+                logD("failed to delete zip file: $e")
+            }
         }
         return unzippedFile
-    }
-
-    private fun deleteFile(uri: Uri) {
-        val file = uri.path?.let { File(it) } ?: return
-        try {
-            file.delete()
-            logD("file deleted")
-        } catch (e: IOException) {
-            logD("file not deleted : $e")
-        }
     }
 
     private fun readUnzippedFile(url: String, exchange: String): List<StockInfo> {
