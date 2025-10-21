@@ -131,14 +131,20 @@ class AdminViewModel @Inject constructor(
      * 시세 업데이트 Worker를 수동으로 실행 (테스트용)
      */
     fun manuallyTriggerPriceUpdate() {
-        logD("수동으로 시세 업데이트 Worker 실행")
+        logD("🧪 수동으로 시세 업데이트 Worker 실행")
 
         val workRequest = OneTimeWorkRequestBuilder<StockPriceWorker>()
             .setConstraints(createNetworkConstraints())
             .build()
 
-        WorkManager.getInstance(context).enqueue(workRequest)
-        logD("시세 업데이트 Worker가 큐에 추가되었습니다")
+        // REPLACE 정책으로 중복 실행 방지
+        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            StockPriceWorker.WORK_NAME,
+            androidx.work.ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+        logD("✅ 시세 업데이트 Worker가 큐에 추가되었습니다 (REPLACE 정책)")
     }
 
     /**
