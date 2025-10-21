@@ -44,8 +44,8 @@ class PeriodicSyncWorker @AssistedInject constructor(
             Result.success()
         } catch (e: Exception) {
             logE(e, "❌ PeriodicSyncWorker failed")
-            // 재시도가 필요한 경우 Result.retry() 반환
-            Result.retry()
+            // 실패해도 다음 주기에 다시 시도 (백오프 정책 없이 정규 주기 유지)
+            Result.failure()
         }
     }
 

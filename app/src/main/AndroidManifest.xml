@@ -60,15 +60,6 @@
         <receiver
             android:name=".worker.TradingEndReceiver"
             android:exported="false" />
-
-        <!-- 다운로드 완료 Receiver -->
-        <receiver
-            android:name=".broadcast.DownloadCompleteReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>
