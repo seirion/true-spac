@@ -54,13 +54,15 @@ fun WorkerStatusView(
     priceExecutionCount: Int,
     isAlarmScheduled: Boolean,
     canScheduleExactAlarms: Boolean = true,
+    isBatteryOptimizationIgnored: Boolean = true,
     onRefresh: () -> Unit = {},
     onReset: () -> Unit = {},
     onTestPriceUpdate: () -> Unit = {},
     onRestartAlarm: () -> Unit = {},
     onTestMasterFileUpdate: () -> Unit = {},
     onRescheduleWorker: () -> Unit = {},
-    onOpenAlarmPermission: () -> Unit = {}
+    onOpenAlarmPermission: () -> Unit = {},
+    onOpenBatteryOptimization: () -> Unit = {}
 ) {
     // 관리자 모드가 아니면 아무것도 표시하지 않음
     if (!isAdminMode) {
@@ -189,6 +191,50 @@ fun WorkerStatusView(
                         color = Color(0xFF757575),
                         modifier = Modifier.padding(top = 8.dp),
                         maxLines = 2
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 배터리 최적화 경고 (제외되지 않았을 때만 표시)
+        if (!isBatteryOptimizationIgnored) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFE3F2FD)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TrueText(
+                        s = "🔋 배터리 최적화 제외 권장",
+                        fontSize = 16,
+                        color = Color(0xFF1976D2),
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TrueText(
+                        s = "배터리 최적화가 활성화되어 있으면 백그라운드 작업이 제한될 수 있습니다.",
+                        fontSize = 12,
+                        color = Color(0xFF757575),
+                        maxLines = 3
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onOpenBatteryOptimization,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1976D2)
+                        )
+                    ) {
+                        TrueText(s = "배터리 최적화 제외 설정", fontSize = 14, maxLines = 1)
+                    }
+                    TrueText(
+                        s = "※ 백그라운드 작업의 안정적인 실행을 위해 배터리 최적화를 제외하는 것을 권장합니다.",
+                        fontSize = 10,
+                        color = Color(0xFF757575),
+                        modifier = Modifier.padding(top = 8.dp),
+                        maxLines = 3
                     )
                 }
             }

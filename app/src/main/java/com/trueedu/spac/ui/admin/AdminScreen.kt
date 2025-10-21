@@ -62,13 +62,15 @@ fun AdminScreen(
                 priceExecutionCount = vm.priceExecutionCount.value,
                 isAlarmScheduled = vm.isAlarmScheduled.value,
                 canScheduleExactAlarms = vm.canScheduleExactAlarms.value,
+                isBatteryOptimizationIgnored = vm.isBatteryOptimizationIgnored.value,
                 onRefresh = { vm.refreshWorkerStats() },
                 onReset = { vm.resetWorkerStats() },
                 onTestPriceUpdate = { vm.manuallyTriggerPriceUpdate() },
                 onRestartAlarm = { vm.restartStockPriceAlarm() },
                 onTestMasterFileUpdate = { vm.manuallyTriggerMasterFileUpdate() },
                 onRescheduleWorker = { vm.reschedulePeriodicSyncWorker() },
-                onOpenAlarmPermission = { vm.openAlarmPermissionSettings() }
+                onOpenAlarmPermission = { vm.openAlarmPermissionSettings() },
+                onOpenBatteryOptimization = { vm.openBatteryOptimizationSettings() }
             )
         }
     }
