@@ -1,6 +1,11 @@
 package com.trueedu.spac.ui.admin
 
+import android.app.AlarmManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -52,6 +57,15 @@ class AdminViewModel @Inject constructor(
     private val _priceExecutionCount = mutableStateOf(0)
     val priceExecutionCount: State<Int> = _priceExecutionCount
 
+    private val _isAlarmScheduled = mutableStateOf(false)
+    val isAlarmScheduled: State<Boolean> = _isAlarmScheduled
+
+    private val _alarmDiagnostics = mutableStateOf("")
+    val alarmDiagnostics: State<String> = _alarmDiagnostics
+
+    private val _canScheduleExactAlarms = mutableStateOf(true)
+    val canScheduleExactAlarms: State<Boolean> = _canScheduleExactAlarms
+
     init {
         // 초기 데이터 로드
         refreshWorkerStats()
@@ -74,7 +88,19 @@ class AdminViewModel @Inject constructor(
         _lastPriceUpdate.value = tracker.getLastPriceUpdate()
         _lastPriceUpdate2.value = tracker.getLastPriceUpdate2()
         _priceExecutionCount.value = tracker.getPriceExecutionCount()
-        logD("🔄 Worker 통계 새로고침 완료")
+        _isAlarmScheduled.value = stockPriceAlarmManager.isAlarmScheduled()
+        _alarmDiagnostics.value = stockPriceAlarmManager.getAlarmDiagnostics()
+
+        // 정확한 알람 권한 체크
+        _canScheduleExactAlarms.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        // 알람 진단 정보 출력
+        logD(stockPriceAlarmManager.getAlarmDiagnostics())
     }
 
     /**
@@ -184,6 +210,29 @@ class AdminViewModel @Inject constructor(
 
         // 3. 재등록 확인
         checkWorkerSchedulingStatus()
+    }
+
+    /**
+     * 알람 권한 설정 페이지로 이동
+     * Android 12+ 에서만 동작
+     */
+    fun openAlarmPermissionSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                val intent = Intent(
+                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    Uri.parse("package:${context.packageName}")
+                ).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+                logD("⚙️ 알람 권한 설정 페이지로 이동")
+            } catch (e: Exception) {
+                logD("⚠️ 알람 권한 설정 페이지 열기 실패: ${e.message}")
+            }
+        } else {
+            logD("ℹ️ Android 12 미만에서는 알람 권한이 필요하지 않습니다")
+        }
     }
 }
 

@@ -189,6 +189,61 @@ class StockPriceAlarmManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
+
+    /**
+     * 알람이 현재 설정되어 있는지 확인
+     * @return true: 알람이 활성화되어 있음, false: 알람이 중단된 상태
+     */
+    fun isAlarmScheduled(): Boolean {
+        val intent = Intent(context, StockPriceAlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            ALARM_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        return pendingIntent != null
+    }
+
+    /**
+     * 알람 상태 진단 정보 반환
+     */
+    fun getAlarmDiagnostics(): String {
+        val isScheduled = isAlarmScheduled()
+        val isTradingTime = TradingTimeHelper.isTradingTime()
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+        val nextTradingStart = TradingTimeHelper.getNextTradingStartTime()
+        val nextTradingEnd = TradingTimeHelper.getNextTradingEndTime()
+
+        return buildString {
+            appendLine("📊 알람 진단 정보")
+            appendLine("━━━━━━━━━━━━━━━━")
+            appendLine("알람 상태: ${if (isScheduled) "✅ 활성화" else "❌ 중단됨"}")
+            appendLine("현재 거래 시간: ${if (isTradingTime) "✅ YES" else "❌ NO"}")
+            appendLine("정확한 알람 권한: ${if (canScheduleExact) "✅ 허용됨" else "❌ 거부됨"}")
+            appendLine("다음 거래 시작: $nextTradingStart")
+            appendLine("다음 거래 종료: $nextTradingEnd")
+            appendLine("━━━━━━━━━━━━━━━━")
+            if (!isScheduled) {
+                appendLine("\n⚠️ 알람이 중단된 이유:")
+                if (!isTradingTime) {
+                    appendLine("• 현재 거래 시간이 아님")
+                    appendLine("  → 앱이 거래 시간 외에 실행됨")
+                }
+                if (!canScheduleExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    appendLine("• 정확한 알람 권한 없음")
+                    appendLine("  → 설정 > 앱 > 권한에서 알람 권한 허용 필요")
+                }
+                appendLine("\n💡 해결 방법:")
+                appendLine("• '알람 재시작' 버튼을 눌러주세요")
+                appendLine("  (거래 시간 체크를 우회하여 즉시 시작)")
+            }
+        }
+    }
 }
 
 /**

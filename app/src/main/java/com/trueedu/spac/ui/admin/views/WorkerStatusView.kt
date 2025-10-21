@@ -52,12 +52,15 @@ fun WorkerStatusView(
     lastPriceUpdate: String,
     lastPriceUpdate2: String,
     priceExecutionCount: Int,
+    isAlarmScheduled: Boolean,
+    canScheduleExactAlarms: Boolean = true,
     onRefresh: () -> Unit = {},
     onReset: () -> Unit = {},
     onTestPriceUpdate: () -> Unit = {},
     onRestartAlarm: () -> Unit = {},
     onTestMasterFileUpdate: () -> Unit = {},
-    onRescheduleWorker: () -> Unit = {}
+    onRescheduleWorker: () -> Unit = {},
+    onOpenAlarmPermission: () -> Unit = {}
 ) {
     // 관리자 모드가 아니면 아무것도 표시하지 않음
     if (!isAdminMode) {
@@ -134,6 +137,64 @@ fun WorkerStatusView(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 알람 권한 경고 (권한이 없을 때만 표시)
+        if (!canScheduleExactAlarms && !isAlarmScheduled) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFF3E0)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TrueText(
+                        s = "⚠️ 알람 권한 필요",
+                        fontSize = 16,
+                        color = Color(0xFFFF6F00),
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TrueText(
+                        s = "정확한 알람 권한이 없어서 시세 업데이트 알람을 설정할 수 없습니다.",
+                        fontSize = 12,
+                        color = Color(0xFF757575),
+                        maxLines = 2
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onOpenAlarmPermission,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFF6F00)
+                            )
+                        ) {
+                            TrueText(s = "권한 설정", fontSize = 14, maxLines = 1)
+                        }
+                        Button(
+                            onClick = onRestartAlarm,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3)
+                            )
+                        ) {
+                            TrueText(s = "알람 재시작", fontSize = 14, maxLines = 1)
+                        }
+                    }
+                    TrueText(
+                        s = "※ 권한이 없어도 '알람 재시작'을 누르면 부정확한 알람으로 작동합니다.",
+                        fontSize = 10,
+                        color = Color(0xFF757575),
+                        modifier = Modifier.padding(top = 8.dp),
+                        maxLines = 2
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // 마스터 파일 업데이트 상태
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -180,11 +241,24 @@ fun WorkerStatusView(
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                TrueText(
-                    s = "시세 업데이트",
-                    fontSize = 14,
-                    maxLines = 1
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TrueText(
+                        s = "시세 업데이트",
+                        fontSize = 14,
+                        maxLines = 1
+                    )
+                    // 알람 상태 표시
+                    TrueText(
+                        s = if (isAlarmScheduled) "✅ 알람 활성" else "❌ 알람 중단",
+                        fontSize = 12,
+                        color = if (isAlarmScheduled) Color(0xFF4CAF50) else Color(0xFFFF5722),
+                        maxLines = 1
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TrueText(
