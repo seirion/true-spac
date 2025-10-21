@@ -60,12 +60,15 @@ fun AdminScreen(
                 lastPriceUpdate = vm.lastPriceUpdate.value,
                 lastPriceUpdate2 = vm.lastPriceUpdate2.value,
                 priceExecutionCount = vm.priceExecutionCount.value,
+                isAlarmScheduled = vm.isAlarmScheduled.value,
+                canScheduleExactAlarms = vm.canScheduleExactAlarms.value,
                 onRefresh = { vm.refreshWorkerStats() },
                 onReset = { vm.resetWorkerStats() },
                 onTestPriceUpdate = { vm.manuallyTriggerPriceUpdate() },
                 onRestartAlarm = { vm.restartStockPriceAlarm() },
                 onTestMasterFileUpdate = { vm.manuallyTriggerMasterFileUpdate() },
-                onRescheduleWorker = { vm.reschedulePeriodicSyncWorker() }
+                onRescheduleWorker = { vm.reschedulePeriodicSyncWorker() },
+                onOpenAlarmPermission = { vm.openAlarmPermissionSettings() }
             )
         }
     }
