@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,9 @@ class AdminViewModel @Inject constructor(
     private val _canScheduleExactAlarms = mutableStateOf(true)
     val canScheduleExactAlarms: State<Boolean> = _canScheduleExactAlarms
 
+    private val _isBatteryOptimizationIgnored = mutableStateOf(true)
+    val isBatteryOptimizationIgnored: State<Boolean> = _isBatteryOptimizationIgnored
+
     init {
         // 초기 데이터 로드
         refreshWorkerStats()
@@ -98,6 +102,10 @@ class AdminViewModel @Inject constructor(
         } else {
             true
         }
+
+        // 배터리 최적화 제외 여부 체크
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        _isBatteryOptimizationIgnored.value = powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
         // 알람 진단 정보 출력
         logD(stockPriceAlarmManager.getAlarmDiagnostics())
@@ -232,6 +240,24 @@ class AdminViewModel @Inject constructor(
             }
         } else {
             logD("ℹ️ Android 12 미만에서는 알람 권한이 필요하지 않습니다")
+        }
+    }
+
+    /**
+     * 배터리 최적화 제외 설정 페이지로 이동
+     */
+    fun openBatteryOptimizationSettings() {
+        try {
+            val intent = Intent(
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:${context.packageName}")
+            ).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            logD("⚙️ 배터리 최적화 설정 페이지로 이동")
+        } catch (e: Exception) {
+            logD("⚠️ 배터리 최적화 설정 페이지 열기 실패: ${e.message}")
         }
     }
 }
