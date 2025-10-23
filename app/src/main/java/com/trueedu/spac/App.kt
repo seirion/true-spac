@@ -18,6 +18,7 @@ import com.trueedu.spac.data.log.ReleaseTree
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.worker.DartAlarmManager
 import com.trueedu.spac.worker.PeriodicSyncWorker
 import com.trueedu.spac.worker.StockPriceAlarmManager
 import dagger.hilt.EntryPoint
@@ -38,6 +39,9 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
 
     @Inject
     lateinit var stockPriceAlarmManager: StockPriceAlarmManager
+
+    @Inject
+    lateinit var dartAlarmManager: DartAlarmManager
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
@@ -67,6 +71,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
             logD("⚙️ 관리자 모드 - Worker 및 알람 설정 시작")
             setupPeriodicWork() // 15분 내외로 마스터 파일 업데이트
             setupStockPriceAlarm() // 거래 시간 중 5분마다 시세 업데이트
+            setupDartUpdateAlarm() // 평일 9:00-23:00, 30분마다 DART 공시 업데이트
             logD("✅ Admin mode enabled - UserKey is valid, periodic updates active")
         } else {
             // 일반 사용자 모드: Firebase에서 읽기만
@@ -135,6 +140,15 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     private fun setupStockPriceAlarm() {
         stockPriceAlarmManager.startTradingTimeAlarm()
         logD("Stock price alarm initialized")
+    }
+
+    /**
+     * DART 공시 업데이트를 위한 알람 설정
+     * 평일 9:00-23:00 사이에 30분 간격으로 실행
+     */
+    private fun setupDartUpdateAlarm() {
+        dartAlarmManager.startUpdateTimeAlarm()
+        logD("DART update alarm initialized")
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {

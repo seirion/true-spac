@@ -61,6 +61,17 @@
         <receiver
             android:name=".worker.TradingEndReceiver"
             android:exported="false" />
+
+        <!-- DART 공시 업데이트 알람 Receivers -->
+        <receiver
+            android:name=".worker.DartAlarmReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".worker.DartUpdateStartReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".worker.DartUpdateEndReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>
