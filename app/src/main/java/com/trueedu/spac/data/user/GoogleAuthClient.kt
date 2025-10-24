@@ -78,6 +78,37 @@ class GoogleAuthClient @Inject constructor(
         userCycle.logout()
     }
 
+    /**
+     * 계정 삭제
+     * Firebase Authentication에서 사용자 계정을 완전히 삭제합니다.
+     * 삭제 성공 시 로컬 데이터도 함께 정리됩니다.
+     *
+     * @return Result<Unit> 성공 시 success, 실패 시 failure with exception
+     */
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser
+            if (user == null) {
+                logE("계정 삭제 실패: 현재 로그인된 사용자가 없습니다")
+                return Result.failure(Exception("No user is currently signed in"))
+            }
+
+            logD("계정 삭제 시작: ${user.email}")
+
+            // Firebase에서 계정 삭제
+            user.delete().await()
+
+            // 로컬 데이터 정리
+            userCycle.logout()
+
+            logD("✅ 계정 삭제 완료")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            logE("❌ 계정 삭제 실패", e)
+            Result.failure(e)
+        }
+    }
+
     fun getCurrentUser(): FirebaseUser? {
         return firebaseAuth.currentUser
     }
