@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.profile
 
+import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -34,26 +35,49 @@ class ProfileViewModel @Inject constructor(
     fun loggedIn(): Boolean = userCycle.loggedIn()
 
     fun deleteAccount(
+        context: Context,
         onSuccess: () -> Unit,
         onFail: () -> Unit,
     ) {
+        if (_loading.value) {
+            return
+        }
+
         viewModelScope.launch {
-            firebaseRealtimeDatabase.deleteUser(
-                onSuccess = {
-                    viewModelScope.launch {
-                        googleAuthClient.deleteAccount()
-                            .onSuccess {
-                                onSuccess()
-                            }
-                            .onFailure { exception ->
-                                logE("Firebase Authentication 계정 삭제 실패: ${exception.message}")
-                                trueAnalytics.log("delete_account_fail")
-                                onFail()
-                            }
+            _loading.value = true
+            try {
+                // 1. Firebase Realtime Database 데이터 삭제 (인증된 상태에서)
+                firebaseRealtimeDatabase.deleteUser(
+                    onSuccess = {
+                        // 2. Firebase Authentication 계정 삭제 (재인증 포함)
+                        viewModelScope.launch {
+                            googleAuthClient.deleteAccount(context)
+                                .onSuccess {
+                                    _loading.value = false
+                                    trueAnalytics.log("delete_account_success")
+                                    onSuccess()
+                                }
+                                .onFailure { exception ->
+                                    _loading.value = false
+                                    logE("Firebase Authentication 계정 삭제 실패: ${exception.message}")
+                                    trueAnalytics.log("delete_account_fail")
+                                    onFail()
+                                }
+                        }
+                    },
+                    onFail = {
+                        _loading.value = false
+                        logE("Firebase Realtime Database 데이터 삭제 실패")
+                        trueAnalytics.log("delete_account_fail")
+                        onFail()
                     }
-                },
-                onFail = onFail
-            )
+                )
+            } catch (e: Exception) {
+                _loading.value = false
+                logE("계정 삭제 중 예외 발생", e)
+                trueAnalytics.log("delete_account_fail")
+                onFail()
+            }
         }
     }
 }

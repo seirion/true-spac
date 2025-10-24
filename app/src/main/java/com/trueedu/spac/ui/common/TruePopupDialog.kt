@@ -13,7 +13,7 @@ fun DeleteAccountDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    SettingDialog(
+    TrueDialog(
         title = "계정 탈퇴 및 데이터 삭제",
         description = "모든 데이터를 삭제합니다. 삭제된 데이터는 복구할 수 없습니다",
         confirmText = "계정 삭제",
@@ -25,7 +25,7 @@ fun DeleteAccountDialog(
 
 @Preview(showBackground = true)
 @Composable
-fun SettingDialog(
+fun TrueDialog(
     title: String = "Delete account",
     description: String = "Are you sure you want to delete account?",
     confirmText: String = "Delete",

@@ -79,13 +79,39 @@ class GoogleAuthClient @Inject constructor(
     }
 
     /**
+     * 재인증
+     * 보안에 민감한 작업(계정 삭제 등)을 수행하기 전에 사용자를 재인증합니다.
+     *
+     * @param activityContext Activity context for credential manager
+     * @return Result<Unit> 성공 시 success, 실패 시 failure with exception
+     */
+    private suspend fun reauthenticate(activityContext: Context): Result<Unit> {
+        return try {
+            logD("재인증 시작")
+            val signInResult = signIn(activityContext)
+            if (signInResult.isSuccess) {
+                logD("재인증 성공")
+                Result.success(Unit)
+            } else {
+                logE("재인증 실패")
+                Result.failure(signInResult.exceptionOrNull() ?: Exception("Reauthentication failed"))
+            }
+        } catch (e: Exception) {
+            logE("재인증 중 오류 발생", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * 계정 삭제
      * Firebase Authentication에서 사용자 계정을 완전히 삭제합니다.
      * 삭제 성공 시 로컬 데이터도 함께 정리됩니다.
+     * 재인증이 필요한 경우 자동으로 재인증을 시도합니다.
      *
+     * @param activityContext Activity context (재인증이 필요한 경우 사용)
      * @return Result<Unit> 성공 시 success, 실패 시 failure with exception
      */
-    suspend fun deleteAccount(): Result<Unit> {
+    suspend fun deleteAccount(activityContext: Context): Result<Unit> {
         return try {
             val user = firebaseAuth.currentUser
             if (user == null) {
@@ -95,8 +121,25 @@ class GoogleAuthClient @Inject constructor(
 
             logD("계정 삭제 시작: ${user.email}")
 
-            // Firebase에서 계정 삭제
-            user.delete().await()
+            try {
+                // Firebase에서 계정 삭제
+                user.delete().await()
+            } catch (e: Exception) {
+                // 재인증이 필요한 경우 재인증 후 다시 시도
+                if (e.message?.contains("requires recent authentication") == true ||
+                    e.message?.contains("CREDENTIAL_TOO_OLD_LOGIN_AGAIN") == true) {
+                    logD("재인증 필요 - 재인증 후 재시도")
+                    val reauthResult = reauthenticate(activityContext)
+                    if (reauthResult.isFailure) {
+                        return Result.failure(reauthResult.exceptionOrNull() ?: e)
+                    }
+                    // 재인증 성공 후 다시 삭제 시도
+                    firebaseAuth.currentUser?.delete()?.await()
+                        ?: return Result.failure(Exception("User is null after reauthentication"))
+                } else {
+                    throw e
+                }
+            }
 
             // 로컬 데이터 정리
             userCycle.logout()

@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.LoginCallback
@@ -34,6 +35,7 @@ fun ProfileScreen(
     loginWithGoogle: (LoginCallback) -> Unit,
     openAdmin: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     val trueAnalytics = LocalTrueAnalytics.current
     var deleteAccountDialogVisible by remember { mutableStateOf(false) }
 
@@ -80,7 +82,9 @@ fun ProfileScreen(
         if (deleteAccountDialogVisible) {
             DeleteAccountDialog(
                 onConfirm = {
+                    deleteAccountDialogVisible = false
                     vm.deleteAccount(
+                        context = context,
                         onSuccess = {
                             simpleSnackbar.normal("계정이 삭제 되었습니다")
                         },
