@@ -111,6 +111,7 @@ fun MainScreen(
                 )
             ) {
                 ProfileScreen(
+                    simpleSnackbar = simpleSnackbar,
                     gotoPlayStore = gotoPlayStore,
                     loginWithGoogle = loginWithGoogle,
                     openAdmin = {
