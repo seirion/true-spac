@@ -23,6 +23,21 @@ fun DeleteAccountDialog(
     )
 }
 
+@Composable
+fun LogoutDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TrueDialog(
+        title = "로그아웃",
+        description = "로그아웃 하시겠습니까?",
+        confirmText = "로그아웃",
+        dismissText = "취소",
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TrueDialog(

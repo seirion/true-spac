@@ -34,6 +34,23 @@ class ProfileViewModel @Inject constructor(
 
     fun loggedIn(): Boolean = userCycle.loggedIn()
 
+    fun logout(
+        onSuccess: () -> Unit = {},
+        onFail: () -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            try {
+                googleAuthClient.signOut()
+                trueAnalytics.log("logout")
+                onSuccess()
+            } catch (e: Exception) {
+                logE("로그아웃 실패", e)
+                trueAnalytics.log("logout_fail", mapOf("error" to (e.message ?: "unknown")))
+                onFail()
+            }
+        }
+    }
+
     fun deleteAccount(
         context: Context,
         onSuccess: () -> Unit,
