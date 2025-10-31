@@ -87,5 +87,12 @@ object TradingTimeHelper {
         val nextEnd = getNextTradingEndTime(dateTime)
         return java.time.Duration.between(now, nextEnd).toMillis()
     }
+
+    /**
+     * 오늘 날짜의 장 종료 시각(15:30) 반환
+     */
+    fun getTodayMarketCloseTime(): LocalDateTime {
+        return LocalDateTime.of(LocalDate.now(), MARKET_CLOSE_TIME)
+    }
 }
 

@@ -11,9 +11,14 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.log.logE
+import com.trueedu.spac.data.stocks.PriceManager
+import com.trueedu.spac.di.ApplicationScope
 import com.trueedu.spac.util.TradingTimeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -319,11 +324,49 @@ class TradingEndReceiver : BroadcastReceiver() {
     @Inject
     lateinit var stockPriceAlarmManager: StockPriceAlarmManager
 
-    override fun onReceive(context: Context, intent: Intent) {
-        logD("거래 종료 시간 도달 - 알람 중지")
-        stockPriceAlarmManager.stopAlarm()
+    @Inject
+    lateinit var priceManager: PriceManager
 
-        // 다음날 거래 시작 시간 스케줄링
-        stockPriceAlarmManager.startTradingTimeAlarm()
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
+
+    override fun onReceive(context: Context, intent: Intent) {
+        logD("거래 종료 시간 도달 - 종가 업데이트 후 알람 중지")
+
+        // BroadcastReceiver의 goAsync()를 사용하여 비동기 작업 수행
+        val pendingResult = goAsync()
+
+        // Application 스코프에서 종가 업데이트
+        applicationScope.launch {
+            try {
+                // 오늘 날짜의 장 종료 시각(15:30)으로 종가 업데이트
+                val marketCloseTime = TradingTimeHelper.getTodayMarketCloseTime()
+
+                logD("📊 장 종가 업데이트 시작 (시각: $marketCloseTime)")
+
+                // KIS API에서 현재 시세 가져오기
+                val priceMap = priceManager.getPriceMap(forceRefresh = true)
+
+                // Firebase에 15:30 시각으로 저장
+                if (priceMap.isNotEmpty()) {
+                    priceManager.writePriceToFirebase(priceMap, marketCloseTime)
+                    logD("✅ 장 종가 업데이트 완료: ${priceMap.size}개 종목")
+                } else {
+                    logD("⚠️ 종가 업데이트할 데이터가 없습니다")
+                }
+            } catch (e: Exception) {
+                logE(e, "❌ 장 종가 업데이트 실패")
+            } finally {
+                // 알람 중지
+                stockPriceAlarmManager.stopAlarm()
+
+                // 다음날 거래 시작 시간 스케줄링
+                stockPriceAlarmManager.startTradingTimeAlarm()
+
+                // BroadcastReceiver 완료
+                pendingResult.finish()
+            }
+        }
     }
 }
