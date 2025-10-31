@@ -65,7 +65,7 @@ class FirebasePriceDatabase @Inject constructor(
         }
     }
 
-    suspend fun write(m: Map<String, StockPriceDao>) {
+    suspend fun write(m: Map<String, StockPriceDao>, customTimestamp: LocalDateTime? = null) {
         logD("write Price data: ${m.size}")
 
         withAuthCheck(Unit) {
@@ -77,16 +77,17 @@ class FirebasePriceDatabase @Inject constructor(
                 snapshot.setValue(m).await()
 
                 // 마지막 업데이트 시간 기록 (yyyyMMddHHmm 형식)
-                val timestamp = LocalDateTime.now()
+                val timestamp = customTimestamp ?: LocalDateTime.now()
+                val formattedTimestamp = timestamp
                     .format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
                     .toLong()
 
                 database.getReference(META_KEY)
                     .child("priceLastUpdatedAt")
-                    .setValue(timestamp)
+                    .setValue(formattedTimestamp)
                     .await()
 
-                logD("write() completed: ${m.size} items, timestamp: $timestamp")
+                logD("write() completed: ${m.size} items, timestamp: $formattedTimestamp")
             } catch (e: Exception) {
                 logE("Failed to write price to Firebase", e)
             }

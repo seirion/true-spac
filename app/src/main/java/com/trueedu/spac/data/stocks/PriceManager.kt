@@ -12,6 +12,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -159,13 +160,15 @@ class PriceManager @Inject constructor(
     /**
      * 시세 데이터를 Firebase에 저장
      * @param priceMap 저장할 시세 데이터 Map<종목코드, StockPriceDao>
+     * @param customTimestamp 커스텀 타임스탬프 (null이면 현재 시각 사용)
      */
     suspend fun writePriceToFirebase(
-        priceMap: Map<String, StockPriceDao>
+        priceMap: Map<String, StockPriceDao>,
+        customTimestamp: LocalDateTime? = null
     ) {
         logD("writePriceToFirebase() - writing ${priceMap.size} prices")
         try {
-            firebasePriceManager.write(priceMap)
+            firebasePriceManager.write(priceMap, customTimestamp)
             // Firebase에 저장 성공 후 로컬 타임스탬프 업데이트
             val timestamp = firebasePriceManager.lastUpdatedAt()
             local.priceUpdatedAt = timestamp
