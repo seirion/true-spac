@@ -59,7 +59,7 @@ class FirebasePriceDatabase @Inject constructor(
 
                 m ?: emptyMap()
             } catch (e: Exception) {
-                logE("Failed to load price from Firebase", e)
+                logE("Failed to load price from Firebase $e")
                 emptyMap()
             }
         }

@@ -14,6 +14,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,6 +46,10 @@ class PriceManager @Inject constructor(
     private var cachedPriceMap: Map<String, StockPriceDao> = emptyMap()
     private var cacheTimestamp: Long = 0L
 
+    // 가격 데이터 업데이트 알림용 Flow
+    private val _priceUpdated = MutableStateFlow(0L)
+    val priceUpdated: StateFlow<Long> = _priceUpdated.asStateFlow()
+
     // 주기적 업데이트를 위한 Job
     private var periodicLoadJob: Job? = null
     private var isStarted = false
@@ -70,7 +77,8 @@ class PriceManager @Inject constructor(
                 val timestamp = firebasePriceManager.lastUpdatedAt()
                 local.priceUpdatedAt = timestamp
                 cachedPriceMap = priceMap
-                cacheTimestamp = System.currentTimeMillis()
+                cacheTimestamp = timestamp // Firebase timestamp와 동일한 형식 사용
+                _priceUpdated.value = timestamp // UI 업데이트 트리거
                 logD("loadPriceFromFirebase() - ${priceMap.size} prices loaded, timestamp: $timestamp")
             }
             priceMap
@@ -160,8 +168,12 @@ class PriceManager @Inject constructor(
             val priceMap = allPrices.toMap()
             // 캐시 업데이트
             cachedPriceMap = priceMap
-            cacheTimestamp = System.currentTimeMillis()
-            logD("getPriceMap() completed - ${priceMap.size} prices fetched")
+            // 현재 시간을 yyyyMMddHHmm 형식으로 저장
+            cacheTimestamp = LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
+                .toLong()
+            _priceUpdated.value = cacheTimestamp // UI 업데이트 트리거
+            logD("getPriceMap() completed - ${priceMap.size} prices fetched, cache timestamp: $cacheTimestamp")
             priceMap
         } catch (e: Exception) {
             logE("Failed to get price map", e)
@@ -204,13 +216,18 @@ class PriceManager @Inject constructor(
         logD("PriceManager.onStart() - starting periodic price loading")
 
         periodicLoadJob = applicationScope.launch {
-            // 즉시 한 번 실행 (업데이트 필요 여부 체크)
+            // 즉시 한 번 실행
             try {
-                if (needToUpdatePrice()) {
-                    logD("Price update needed - loading from Firebase")
+                // 캐시가 비어있거나 Firebase가 더 최신인 경우 로드
+                val firebaseTimestamp = firebasePriceManager.lastUpdatedAt()
+                val needsLoad = cachedPriceMap.isEmpty() ||
+                    firebaseTimestamp > cacheTimestamp
+
+                if (needsLoad) {
+                    logD("Price update needed - loading from Firebase (cache empty: ${cachedPriceMap.isEmpty()}, firebase timestamp: $firebaseTimestamp, cache timestamp: $cacheTimestamp)")
                     loadPriceFromFirebase()
                 } else {
-                    logD("Price is up to date - skipping load")
+                    logD("Price is up to date - skipping load (cache size: ${cachedPriceMap.size})")
                 }
             } catch (e: Exception) {
                 logE("Failed to check or load price on start", e)
@@ -222,8 +239,12 @@ class PriceManager @Inject constructor(
 
                 // 업데이트 필요 여부 체크
                 try {
-                    if (needToUpdatePrice()) {
-                        logD("Price update needed - loading from Firebase")
+                    val firebaseTimestamp = firebasePriceManager.lastUpdatedAt()
+                    val needsLoad = cachedPriceMap.isEmpty() ||
+                        firebaseTimestamp > cacheTimestamp
+
+                    if (needsLoad) {
+                        logD("Price update needed - loading from Firebase (periodic check)")
                         loadPriceFromFirebase()
                     } else {
                         logD("Price is up to date - skipping load")
