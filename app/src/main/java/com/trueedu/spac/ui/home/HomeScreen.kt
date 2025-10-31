@@ -91,9 +91,9 @@ fun HomeScreen(
                 val hasDisclosure = vm.hasDisclosure(item.code)
 
                 SpacItem(i, item,
-                    spacManager.priceMap[item.code] ?: 0.0,
-                    spacManager.priceChangeMap[item.code],
-                    spacManager.volumeMap[item.code] ?: 0L,
+                    vm.price(item.code),
+                    vm.priceChange(item.code),
+                    vm.volume(item.code),
                     expectedProfit,
                     expectedProfitRate,
                     holdingNum,
