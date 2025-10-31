@@ -16,6 +16,7 @@ import androidx.work.WorkManager
 import com.trueedu.spac.data.log.FileNameTree
 import com.trueedu.spac.data.log.ReleaseTree
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.worker.DartAlarmManager
@@ -48,6 +49,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     interface InjectModule {
         fun getLocal(): Local
         fun getStockPool(): StockPool
+        fun getPriceManager(): PriceManager
     }
 
     override val workManagerConfiguration: Configuration
@@ -152,14 +154,18 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        val stockPool = entryPointInjector(InjectModule::class.java).getStockPool()
+        val injector = entryPointInjector(InjectModule::class.java)
+        val stockPool = injector.getStockPool()
+        val priceManager = injector.getPriceManager()
 
         when (event) {
             Lifecycle.Event.ON_CREATE -> {}
             Lifecycle.Event.ON_START -> {
                 stockPool.loadStockInfo()
+                priceManager.onStart()
             }
             Lifecycle.Event.ON_STOP -> {
+                priceManager.onStop()
             }
             Lifecycle.Event.ON_DESTROY -> {}
             Lifecycle.Event.ON_RESUME -> {}

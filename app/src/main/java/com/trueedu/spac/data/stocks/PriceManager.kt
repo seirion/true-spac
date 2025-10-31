@@ -4,14 +4,19 @@ import com.trueedu.spac.api.model.dao.StockPriceDao
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
 import com.trueedu.spac.data.user.TokenKeyManager
+import com.trueedu.spac.di.ApplicationScope
 import com.trueedu.spac.repo.firebase.FirebasePriceDatabase
 import com.trueedu.spac.repo.kis.PriceRemote
 import com.trueedu.spac.repo.local.Local
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,18 +27,25 @@ class PriceManager @Inject constructor(
     private val spacManager: SpacManager,
     private val priceRemote: PriceRemote,
     private val firebasePriceManager: FirebasePriceDatabase,
-    private val tokenKeyManager: TokenKeyManager
+    private val tokenKeyManager: TokenKeyManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     companion object {
         // API 호출 제약: 1초당 최대 20회
         private const val MAX_API_CALLS_PER_SECOND = 20
         // 1초당 20회 제한을 준수하기 위해 여유를 두고 1.1초 대기
         private const val API_CALL_DELAY_MS = 1100L
+        // Firebase에서 시세 데이터를 주기적으로 로드하는 간격 (5분)
+        private const val PRICE_LOAD_INTERVAL_MS = 5 * 60 * 1000L
     }
 
     // 캐시된 시세 데이터
     private var cachedPriceMap: Map<String, StockPriceDao> = emptyMap()
     private var cacheTimestamp: Long = 0L
+
+    // 주기적 업데이트를 위한 Job
+    private var periodicLoadJob: Job? = null
+    private var isStarted = false
 
     /**
      * Firebase의 시세 데이터가 로컬보다 최신인지 확인
@@ -176,5 +188,66 @@ class PriceManager @Inject constructor(
         } catch (e: Exception) {
             logE("Failed to write prices to Firebase", e)
         }
+    }
+
+    /**
+     * 앱이 foreground로 전환될 때 호출
+     * Firebase에서 5분마다 시세 데이터를 읽어 캐시에 저장
+     */
+    fun onStart() {
+        if (isStarted) {
+            logD("PriceManager.onStart() - already started, skipping")
+            return
+        }
+        isStarted = true
+
+        logD("PriceManager.onStart() - starting periodic price loading")
+
+        periodicLoadJob = applicationScope.launch {
+            // 즉시 한 번 실행 (업데이트 필요 여부 체크)
+            try {
+                if (needToUpdatePrice()) {
+                    logD("Price update needed - loading from Firebase")
+                    loadPriceFromFirebase()
+                } else {
+                    logD("Price is up to date - skipping load")
+                }
+            } catch (e: Exception) {
+                logE("Failed to check or load price on start", e)
+            }
+
+            // 5분마다 반복 실행
+            while (isActive) {
+                delay(PRICE_LOAD_INTERVAL_MS)
+
+                // 업데이트 필요 여부 체크
+                try {
+                    if (needToUpdatePrice()) {
+                        logD("Price update needed - loading from Firebase")
+                        loadPriceFromFirebase()
+                    } else {
+                        logD("Price is up to date - skipping load")
+                    }
+                } catch (e: Exception) {
+                    logE("Failed to check or load price during periodic update", e)
+                }
+            }
+        }
+    }
+
+    /**
+     * 앱이 background로 전환될 때 호출
+     * 주기적 로딩 중지
+     */
+    fun onStop() {
+        if (!isStarted) {
+            logD("PriceManager.onStop() - not started, skipping")
+            return
+        }
+        isStarted = false
+
+        logD("PriceManager.onStop() - stopping periodic price loading")
+        periodicLoadJob?.cancel()
+        periodicLoadJob = null
     }
 }
