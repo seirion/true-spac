@@ -88,8 +88,7 @@ fun HomeScreen(
                 // 수동 보유 표시
                 val holdingNum = vm.holdingNum(item.code)
 
-                // TODO: 공시 정보
-                // val hasDisclosure = vm.hasDisclosure(item.code)
+                val hasDisclosure = vm.hasDisclosure(item.code)
 
                 SpacItem(i, item,
                     spacManager.priceMap[item.code] ?: 0.0,
@@ -98,7 +97,7 @@ fun HomeScreen(
                     expectedProfit,
                     expectedProfitRate,
                     holdingNum,
-                    false, // hasDisclosure,
+                    hasDisclosure,
                 ) {
                     openStockDetail(item.code)
                 }

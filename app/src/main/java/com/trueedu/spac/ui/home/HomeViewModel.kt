@@ -5,6 +5,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
@@ -31,6 +32,7 @@ class HomeViewModel @Inject constructor(
     private val local: Local,
     private val manualAssets: ManualAssets,
     val spacManager: SpacManager,
+    private val dartManager: DartManager,
 ) : ViewModel() {
 
     val stocks = mutableStateOf<List<StockInfo>>(emptyList())
@@ -52,6 +54,7 @@ class HomeViewModel @Inject constructor(
     )
 
     init {
+        dartManager.init()
         loadSearchHistory()
 
         viewModelScope.launch {
@@ -128,6 +131,10 @@ class HomeViewModel @Inject constructor(
     fun holdingNum(code: String): Double {
         return manualAssets.assets.value
             .firstOrNull { it.code == code }?.quantity ?: 0.0
+    }
+
+    fun hasDisclosure(code: String): Boolean {
+        return dartManager.hasDisclosure(code)
     }
 
     private fun growthRate(stock: StockInfo): Double {
