@@ -22,6 +22,7 @@ import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
+import com.trueedu.spac.ui.common.LogoutDialog
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.profile.views.ProfileTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
@@ -37,6 +38,7 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val trueAnalytics = LocalTrueAnalytics.current
+    var logoutDialogVisible by remember { mutableStateOf(false) }
     var deleteAccountDialogVisible by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -67,6 +69,11 @@ fun ProfileScreen(
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
             if (vm.loggedIn()) {
+                SettingItem("로그아웃", true) {
+                    trueAnalytics.enterView("profile__logout__click")
+                    logoutDialogVisible = true
+                }
+
                 SettingItem("탈퇴 및 데이터 삭제", true) {
                     trueAnalytics.enterView("profile__withdraw__click")
                     deleteAccountDialogVisible = true
@@ -77,6 +84,25 @@ fun ProfileScreen(
             if (vm.isAdminMode()) {
                 SettingLabel("관리자 설정", "Worker 관리", openAdmin)
             }
+        }
+
+        if (logoutDialogVisible) {
+            LogoutDialog(
+                onConfirm = {
+                    logoutDialogVisible = false
+                    vm.logout(
+                        onSuccess = {
+                            simpleSnackbar.normal("로그아웃 되었습니다")
+                        },
+                        onFail = {
+                            simpleSnackbar.error("로그아웃에 실패했습니다. 다시 시도해 주세요")
+                        }
+                    )
+                },
+                onDismiss = {
+                    logoutDialogVisible = false
+                }
+            )
         }
 
         if (deleteAccountDialogVisible) {
