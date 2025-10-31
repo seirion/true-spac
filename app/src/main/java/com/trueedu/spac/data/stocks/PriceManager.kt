@@ -8,6 +8,8 @@ import com.trueedu.spac.di.ApplicationScope
 import com.trueedu.spac.repo.firebase.FirebasePriceDatabase
 import com.trueedu.spac.repo.kis.PriceRemote
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.util.formatter.safeDouble
+import com.trueedu.spac.util.formatter.safeLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -53,6 +55,18 @@ class PriceManager @Inject constructor(
     // 주기적 업데이트를 위한 Job
     private var periodicLoadJob: Job? = null
     private var isStarted = false
+
+    fun price(code: String): Double {
+        return cachedPriceMap[code]?.price.safeDouble()
+    }
+
+    fun priceChange(code: String): Double {
+        return cachedPriceMap[code]?.priceChange.safeDouble()
+    }
+
+    fun volume(code: String): Long {
+        return cachedPriceMap[code]?.volume.safeLong()
+    }
 
     /**
      * Firebase의 시세 데이터가 로컬보다 최신인지 확인

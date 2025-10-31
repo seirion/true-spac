@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.stocks.DartManager
+import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
@@ -33,6 +34,7 @@ class HomeViewModel @Inject constructor(
     private val manualAssets: ManualAssets,
     val spacManager: SpacManager,
     private val dartManager: DartManager,
+    private val priceManager: PriceManager,
 ) : ViewModel() {
 
     val stocks = mutableStateOf<List<StockInfo>>(emptyList())
@@ -136,6 +138,17 @@ class HomeViewModel @Inject constructor(
     fun hasDisclosure(code: String): Boolean {
         return dartManager.hasDisclosure(code)
     }
+
+    fun price(code: String): Double =
+        priceManager.price(code).takeIf { it != 0.0 }
+            ?: stockPool.get(code)?.prevPrice.safeDouble()
+
+    fun priceChange(code: String): Double =
+        priceManager.priceChange(code)
+
+    fun volume(code: String): Long =
+        priceManager.volume(code).takeIf { it != 0L }
+            ?: stockPool.get(code)?.prevVolume.safeLong()
 
     private fun growthRate(stock: StockInfo): Double {
         val code = stock.code
