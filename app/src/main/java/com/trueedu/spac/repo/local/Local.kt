@@ -65,7 +65,7 @@ class Local @Inject constructor(
 
     var accessToken by preferences.string("")
         private set
-    // 토큰 만료 예정 시각
+    // 토큰 만료 예정 시각 - Date.time 값 저장
     var accessTokenExpiredAt by preferences.long(0L)
         private set
 

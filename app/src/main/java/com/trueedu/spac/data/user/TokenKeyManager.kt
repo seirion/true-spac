@@ -59,8 +59,7 @@ class TokenKeyManager @Inject constructor(
 
         if (local.accessToken.isEmpty()) return false
 
-        // accessTokenExpiredAt는 초(seconds) 단위이므로 밀리초(milliseconds)로 변환
-        val tokenExpirationTime = Date(local.accessTokenExpiredAt * 1000)
+        val tokenExpirationTime = Date(local.accessTokenExpiredAt)
         val calendar = Calendar.getInstance()
         calendar.time = tokenExpirationTime
         calendar.add(Calendar.MINUTE, -5) // 5 minutes to the token expiration time
