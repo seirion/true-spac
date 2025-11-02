@@ -149,21 +149,21 @@ fun FollowingScreen(
             ) {
                 val items = vm.getItems(position % vm.pageCount())
                 itemsIndexed(items, key = { _, item -> item.code }) { index, stock ->
-                    val basePrice = vm.basePrices[stock.code]?.output
 
-                    val price = basePrice?.price?.toDouble() ?: vm.prevPrice(stock.code)
-                    val delta = basePrice?.priceChange?.toDouble()
-                    val rate = basePrice?.priceChangeRate?.toDouble()
-                    val volume = basePrice?.volume?.toDouble() ?: 0.0
+                    val price = vm.price(stock.code)
+                    val delta = vm.priceChange(stock.code)
+                    val rate = vm.priceChangeRate(stock.code)
+                    val volume = vm.volume(stock.code)
+                    val prevPrice = vm.prevPrice(stock.code)
 
                     FollowingItem(
                         nameKr = stock.nameKr,
                         code = stock.code,
                         price = price,
-                        prevClose = basePrice?.previousClosePrice?.toDouble(),
-                        open = basePrice?.open?.toDouble(),
-                        high = basePrice?.high?.toDouble(),
-                        low = basePrice?.low?.toDouble(),
+                        prevClose = prevPrice,
+                        open = null, // TODO
+                        high = null, // TODO
+                        low = null, // TODO
                         delta = delta,
                         rate = rate,
                         volume = volume,
