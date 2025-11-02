@@ -16,9 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.ui.common.LoadingView
+import com.trueedu.spac.ui.home.bottomsheet.SortOptionBottomSheet
 import com.trueedu.spac.ui.home.views.HomeTopBar
 import com.trueedu.spac.ui.home.views.SearchBarWithSuggestions
 import com.trueedu.spac.ui.home.views.SpacItem
@@ -30,9 +34,21 @@ fun HomeScreen(
     openStockDetail: (String) -> Unit,
     vm: HomeViewModel = hiltViewModel()
 ) {
+    var sortOptionSheetVisible by remember { mutableStateOf(false) }
+
+    val spacManager = vm.spacManager
+    val loading by spacManager.loading.collectAsState()
+
     Scaffold(
         topBar = {
-            HomeTopBar(vm.sort.value)
+            HomeTopBar(
+                sortType = vm.sort.value,
+                onSortOption = {
+                    if (!loading) {
+                        sortOptionSheetVisible = true
+                    }
+                }
+            )
         },
         bottomBar = {
             /*
@@ -47,8 +63,6 @@ fun HomeScreen(
         contentWindowInsets =
             ScaffoldDefaults.contentWindowInsets.exclude(NavigationBarDefaults.windowInsets),
     ) { innerPadding ->
-        val spacManager = vm.spacManager
-        val loading by spacManager.loading.collectAsState()
         if (loading) {
             LoadingView()
             return@Scaffold
@@ -103,5 +117,15 @@ fun HomeScreen(
                 }
             }
         }
+
+        SortOptionBottomSheet(
+            visible = sortOptionSheetVisible,
+            onDismiss = { sortOptionSheetVisible = false },
+            currentSelected = vm.sort.value,
+            onSelected = { option ->
+                vm.setSort(option)
+                sortOptionSheetVisible = false
+            },
+        )
     }
 }
