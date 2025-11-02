@@ -140,15 +140,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun price(code: String): Double =
-        priceManager.price(code).takeIf { it != 0.0 }
-            ?: stockPool.get(code)?.prevPrice.safeDouble()
+        priceManager.price(code) ?: stockPool.get(code)?.prevPrice.safeDouble()
 
     fun priceChange(code: String): Double =
-        priceManager.priceChange(code)
+        priceManager.priceChange(code) ?: 0.0
 
     fun volume(code: String): Long =
-        priceManager.volume(code).takeIf { it != 0L }
-            ?: stockPool.get(code)?.prevVolume.safeLong()
+        priceManager.volume(code) ?: stockPool.get(code)?.prevVolume.safeLong()
 
     private fun growthRate(stock: StockInfo): Double {
         val code = stock.code

@@ -56,20 +56,20 @@ class PriceManager @Inject constructor(
     private var periodicLoadJob: Job? = null
     private var isStarted = false
 
-    fun prevPrice(code: String): Double {
-        return cachedPriceMap[code]?.previousClosePrice.safeDouble()
+    fun prevPrice(code: String): Double? {
+        return cachedPriceMap[code]?.previousClosePrice?.safeDouble()
     }
 
-    fun price(code: String): Double {
-        return cachedPriceMap[code]?.price.safeDouble()
+    fun price(code: String): Double? {
+        return cachedPriceMap[code]?.price?.safeDouble()
     }
 
-    fun priceChange(code: String): Double {
-        return cachedPriceMap[code]?.priceChange.safeDouble()
+    fun priceChange(code: String): Double? {
+        return cachedPriceMap[code]?.priceChange?.safeDouble()
     }
 
-    fun volume(code: String): Long {
-        return cachedPriceMap[code]?.volume.safeLong()
+    fun volume(code: String): Long? {
+        return cachedPriceMap[code]?.volume?.safeLong()
     }
 
     /**

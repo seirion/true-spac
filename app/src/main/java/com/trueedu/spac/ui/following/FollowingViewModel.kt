@@ -124,20 +124,16 @@ class FollowingViewModel @Inject constructor(
             .mapNotNull { stockPool.get(it) }
     }
 
-    fun getStock(code: String): StockInfo? {
-        return stockPool.get(code)
-    }
-
     fun prevPrice(code: String): Double =
-        priceManager.prevPrice(code).takeIf { it != 0.0 }
+        priceManager.prevPrice(code)
             ?: stockPool.get(code)?.prevPrice.safeDouble()
 
     fun price(code: String): Double =
-        priceManager.price(code).takeIf { it != 0.0 }
+        priceManager.price(code)
             ?: stockPool.get(code)?.prevPrice.safeDouble()
 
     fun priceChange(code: String): Double =
-        priceManager.priceChange(code)
+        priceManager.priceChange(code) ?: 0.0
 
     fun priceChangeRate(code: String): Double {
         val prev = prevPrice(code)
@@ -147,7 +143,7 @@ class FollowingViewModel @Inject constructor(
     }
 
     fun volume(code: String): Long =
-        priceManager.volume(code).takeIf { it != 0L }
+        priceManager.volume(code)
             ?: stockPool.get(code)?.prevVolume.safeLong()
 
     /**
