@@ -161,9 +161,9 @@ fun FollowingScreen(
                         code = stock.code,
                         price = price,
                         prevClose = prevPrice,
-                        open = null, // TODO
-                        high = null, // TODO
-                        low = null, // TODO
+                        open = vm.open(stock.code),
+                        high = vm.high(stock.code),
+                        low = vm.low(stock.code),
                         delta = delta,
                         rate = rate,
                         volume = volume,
