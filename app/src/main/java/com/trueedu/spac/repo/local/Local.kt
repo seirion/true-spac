@@ -77,7 +77,8 @@ class Local @Inject constructor(
             accessToken = tokenResponse.accessToken
             val expiredTime = tokenResponse.accessTokenTokenExpired
                 .toLocalDateTime()
-                ?.toEpochSecond(ZoneOffset.of("+09:00"))
+                ?.toInstant(ZoneOffset.of("+09:00"))
+                ?.toEpochMilli()
                 ?: 0L
             accessTokenExpiredAt = expiredTime
         }
