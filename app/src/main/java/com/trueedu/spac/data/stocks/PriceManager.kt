@@ -72,6 +72,18 @@ class PriceManager @Inject constructor(
         return cachedPriceMap[code]?.volume?.safeLong()
     }
 
+    fun open(code: String): Double? {
+        return cachedPriceMap[code]?.open?.safeDouble()
+    }
+
+    fun high(code: String): Double? {
+        return cachedPriceMap[code]?.high?.safeDouble()
+    }
+
+    fun low(code: String): Double? {
+        return cachedPriceMap[code]?.low?.safeDouble()
+    }
+
     /**
      * Firebase의 시세 데이터가 로컬보다 최신인지 확인
      * @return Firebase 쪽이 더 최신이면 true, 그렇지 않으면 false

@@ -142,6 +142,10 @@ class FollowingViewModel @Inject constructor(
         return (delta / prev) * 100.0
     }
 
+    fun open(code: String): Double? = priceManager.open(code)
+    fun high(code: String): Double? = priceManager.high(code)
+    fun low(code: String): Double? = priceManager.low(code)
+
     fun volume(code: String): Long =
         priceManager.volume(code)
             ?: stockPool.get(code)?.prevVolume.safeLong()
