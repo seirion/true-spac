@@ -1,11 +1,14 @@
 package com.trueedu.spac.ui.home
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.stocks.DartManager
+import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
@@ -35,13 +38,14 @@ class HomeViewModel @Inject constructor(
     val spacManager: SpacManager,
     private val dartManager: DartManager,
     private val priceManager: PriceManager,
+    private val followingManager: FollowingManager,
 ) : ViewModel() {
 
     val stocks = mutableStateOf<List<StockInfo>>(emptyList())
 
     val sort = mutableStateOf(SpacSort.ISSUE_DATE)
 
-    var spacFilter = SpacFilter()
+    var spacFilter by mutableStateOf(SpacFilter())
 
     val searchInput = mutableStateOf("")
     val searchHistory = mutableStateOf<List<String>>(emptyList())
@@ -94,39 +98,44 @@ class HomeViewModel @Inject constructor(
         filterStocks()
     }
 
+    fun updateFilter(newFilter: SpacFilter) {
+        if (spacFilter != newFilter) {
+            spacFilter = newFilter
+            filterStocks()
+        }
+    }
+
+    private fun matchesListingDateFilter(stock: StockInfo): Boolean {
+        if (!spacFilter.listedOverTwoYears) return true
+        val listingDate = stock.listingDate.safeDouble()
+        val today = LocalDate.now().toDateCompactString().safeLong()
+        return listingDate + 20000L < today
+    }
+
+    private fun matchesPriceFilter(stock: StockInfo): Boolean {
+        if (!spacFilter.underParValue) return true
+        val price = spacManager.priceMap.getOrDefault(stock.code, 0.0).toInt()
+        val base = if (stock.parValue.safeLong() == 100L) 2_000 else 10_000
+        return price != 0 && price <= base
+    }
+
+    private fun matchesFollowingFilter(stock: StockInfo): Boolean {
+        if (!spacFilter.filterFollowing) return true
+        return followingManager.contains(stock.code)
+    }
+
+    private fun matchesSearchFilter(stock: StockInfo): Boolean {
+        val searchKey = searchInput.value.trim().lowercase()
+        return searchKey.isEmpty() || stock.nameKr.lowercase().contains(searchKey)
+    }
+
     fun filterStocks() {
         stocks.value = spacManager.spacList.value
             .filterNot { stockPool.delisted(it.code) }
-            .filter {
-                if (spacFilter.listedOverTwoYears) {
-                    val listingDate = it.listingDate.safeDouble()
-                    val today = LocalDate.now().toDateCompactString().safeLong()
-                    listingDate + 20000L < today
-                } else {
-                    true
-                }
-            }
-            .filter {
-                if (spacFilter.underParValue) {
-                    val price = spacManager.priceMap.getOrDefault(it.code, 0.0).toInt()
-                    val base = if (it.parValue.safeLong() == 100L) 2_000 else 10_000
-                    price != 0 && price <= base
-                } else {
-                    true
-                }
-            }
-            .filter {
-                if (spacFilter.onlyWatching) {
-                    false // TODO: watchList.contains(it.code)
-                } else {
-                    true
-                }
-            }
-            .filter {
-                val searchKey = searchInput.value.trim().lowercase()
-                searchKey.isEmpty() ||
-                        it.nameKr.lowercase().contains(searchKey)
-            }
+            .filter { matchesListingDateFilter(it) }
+            .filter { matchesPriceFilter(it) }
+            .filter { matchesFollowingFilter(it) }
+            .filter { matchesSearchFilter(it) }
             .sortedBy(sortFun[sort.value]!!)
     }
 

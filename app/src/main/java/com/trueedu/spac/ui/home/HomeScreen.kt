@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.ui.common.LoadingView
+import com.trueedu.spac.ui.home.bottomsheet.FilterOptionBottomSheet
 import com.trueedu.spac.ui.home.bottomsheet.SortOptionBottomSheet
 import com.trueedu.spac.ui.home.views.HomeTopBar
 import com.trueedu.spac.ui.home.views.SearchBarWithSuggestions
@@ -35,6 +36,7 @@ fun HomeScreen(
     vm: HomeViewModel = hiltViewModel()
 ) {
     var sortOptionSheetVisible by remember { mutableStateOf(false) }
+    var filterSheetVisible by remember { mutableStateOf(false) }
 
     val spacManager = vm.spacManager
     val loading by spacManager.loading.collectAsState()
@@ -46,6 +48,11 @@ fun HomeScreen(
                 onSortOption = {
                     if (!loading) {
                         sortOptionSheetVisible = true
+                    }
+                },
+                onFilterOption = {
+                    if (!loading) {
+                        filterSheetVisible = true
                     }
                 }
             )
@@ -126,6 +133,13 @@ fun HomeScreen(
                 vm.setSort(option)
                 sortOptionSheetVisible = false
             },
+        )
+
+        FilterOptionBottomSheet(
+            visible = filterSheetVisible,
+            current = vm.spacFilter,
+            onDismiss = { filterSheetVisible = false },
+            onValueChanged = vm::updateFilter,
         )
     }
 }
