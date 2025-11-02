@@ -12,9 +12,11 @@ import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.price.PriceResponse
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.FollowingManager
+import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.util.formatter.safeDouble
+import com.trueedu.spac.util.formatter.safeLong
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
@@ -28,6 +30,7 @@ class FollowingViewModel @Inject constructor(
     private val userCycle: UserCycle,
     val followingManager: FollowingManager,
     val stockPool: StockPool,
+    private val priceManager: PriceManager,
 ) : ViewModel() {
 
     val loading = mutableStateOf(true)
@@ -125,6 +128,28 @@ class FollowingViewModel @Inject constructor(
         return stockPool.get(code)
     }
 
+    fun prevPrice(code: String): Double =
+        priceManager.prevPrice(code).takeIf { it != 0.0 }
+            ?: stockPool.get(code)?.prevPrice.safeDouble()
+
+    fun price(code: String): Double =
+        priceManager.price(code).takeIf { it != 0.0 }
+            ?: stockPool.get(code)?.prevPrice.safeDouble()
+
+    fun priceChange(code: String): Double =
+        priceManager.priceChange(code)
+
+    fun priceChangeRate(code: String): Double {
+        val prev = prevPrice(code)
+        if (prev == 0.0) return 0.0
+        val delta = priceChange(code)
+        return (delta / prev) * 100.0
+    }
+
+    fun volume(code: String): Long =
+        priceManager.volume(code).takeIf { it != 0L }
+            ?: stockPool.get(code)?.prevVolume.safeLong()
+
     /**
      * 관심 종목을 다른 그룹으로 이동하기
      */
@@ -156,20 +181,6 @@ class FollowingViewModel @Inject constructor(
         // TODO
         //return dartManager.hasDisclosure(code)
         return false
-    }
-
-    // 현재 페이지의 관심 종목에 대해서 실시간 가격 요청하기
-    private fun requestRealtimePrice() {
-        if (loading.value || currentPage.value == null) return
-        // TODO
-    }
-
-    private fun cancelRealtimePrice() {
-        // TODO
-    }
-
-    fun prevPrice(code: String): Double {
-        return getStock(code)?.prevPrice.safeDouble()
     }
 
     override fun onCleared() {

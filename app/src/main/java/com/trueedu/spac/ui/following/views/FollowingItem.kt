@@ -37,7 +37,7 @@ fun FollowingItem(
     low: Double?,
     delta: Double?,
     rate: Double?,
-    volume: Double,
+    volume: Long,
     halt: Boolean,
     designated: Boolean,
     hasDisclosure: Boolean,
