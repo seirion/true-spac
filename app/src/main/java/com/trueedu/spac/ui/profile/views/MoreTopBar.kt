@@ -23,7 +23,7 @@ import com.trueedu.spac.ui.components.TouchIcon32
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar(
+fun MoreTopBar(
     email: String,
     profileImageUrl: String,
     onClick: () -> Unit = {},
@@ -63,3 +63,4 @@ fun ProfileTopBar(
         ),
     )
 }
+

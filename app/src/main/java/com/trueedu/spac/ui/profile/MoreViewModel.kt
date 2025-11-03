@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
+class MoreViewModel @Inject constructor(
     private val userCycle: UserCycle,
     private val local: Local,
     private val trueAnalytics: TrueAnalytics,
@@ -98,3 +98,4 @@ class ProfileViewModel @Inject constructor(
         }
     }
 }
+

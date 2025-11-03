@@ -1,11 +1,11 @@
 package com.trueedu.spac.ui.main
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,9 +32,9 @@ sealed interface AppDestinations {
     }
 
     @Serializable
-    data object Profile : AppDestinations {
-        override val label: String = "프로필"
-        override val icon: ImageVector = Icons.Default.AccountBox
+    data object More : AppDestinations {
+        override val label: String = "더보기"
+        override val icon: ImageVector = Icons.Default.MoreVert
     }
 
     @Serializable
@@ -72,6 +72,6 @@ sealed interface AppDestinations {
     }
 
     companion object {
-        val tabs = listOf(Home, Following, Profile)
+        val tabs = listOf(Home, Following, More)
     }
 }

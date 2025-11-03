@@ -24,14 +24,14 @@ import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.LogoutDialog
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
-import com.trueedu.spac.ui.profile.views.ProfileTopBar
+import com.trueedu.spac.ui.profile.views.MoreTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
 import com.trueedu.spac.ui.settings.views.SettingLabel
 
 @Composable
-fun ProfileScreen(
+fun MoreScreen(
     simpleSnackbar: SimpleSnackbar,
-    vm: ProfileViewModel = hiltViewModel(),
+    vm: MoreViewModel = hiltViewModel(),
     gotoPlayStore: () -> Unit,
     openDartScreen: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
@@ -44,7 +44,7 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = {
-            ProfileTopBar(
+            MoreTopBar(
                 vm.email(),
                 vm.profileImageUrl(),
             ) {
@@ -132,3 +132,4 @@ fun ProfileScreen(
         }
     }
 }
+
