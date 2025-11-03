@@ -19,6 +19,7 @@ import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.ui.admin.AdminScreen
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
+import com.trueedu.spac.ui.dart.DartScreen
 import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
@@ -113,6 +114,9 @@ fun MainScreen(
                 ProfileScreen(
                     simpleSnackbar = simpleSnackbar,
                     gotoPlayStore = gotoPlayStore,
+                    openDartScreen = {
+                        navController.navigate(AppDestinations.Dart)
+                    },
                     loginWithGoogle = loginWithGoogle,
                     openAdmin = {
                         navController.navigate(AppDestinations.Admin)
@@ -145,6 +149,17 @@ fun MainScreen(
                             }
                         }
                     },
+                    openUrl = openUrl,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
+            composable<AppDestinations.Dart>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/dart" }
+                )
+            ) {
+                DartScreen(
                     openUrl = openUrl,
                     onBack = { navController.popBackStack() },
                 )
