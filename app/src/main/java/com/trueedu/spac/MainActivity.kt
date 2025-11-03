@@ -24,6 +24,7 @@ import com.trueedu.spac.data.user.GoogleAuthClient
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.repo.local.LocalMelLocal
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
@@ -72,6 +73,7 @@ class MainActivity : ComponentActivity() {
             }
 
             CompositionLocalProvider(
+                LocalMelLocal provides local,
                 LocalTrueAnalytics provides trueAnalytics,
                 LocalFeatureConfig provides localFeature,
                 LocalUserCycle provides userCycle,

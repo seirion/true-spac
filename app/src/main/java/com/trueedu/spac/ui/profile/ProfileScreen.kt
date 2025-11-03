@@ -33,6 +33,7 @@ fun ProfileScreen(
     simpleSnackbar: SimpleSnackbar,
     vm: ProfileViewModel = hiltViewModel(),
     gotoPlayStore: () -> Unit,
+    openDartScreen: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
     openAdmin: () -> Unit = {},
 ) {
@@ -67,6 +68,11 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
+
+            SettingItem("전자 공시 보기", true) {
+                trueAnalytics.enterView("profile__dart__click")
+                openDartScreen()
+            }
 
             if (vm.loggedIn()) {
                 SettingItem("로그아웃", true) {
