@@ -23,7 +23,7 @@ import com.trueedu.spac.ui.dart.DartScreen
 import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
-import com.trueedu.spac.ui.profile.ProfileScreen
+import com.trueedu.spac.ui.profile.MoreScreen
 import com.trueedu.spac.ui.search.SearchScreen
 import com.trueedu.spac.ui.stock.StockDetailScreen
 
@@ -106,12 +106,12 @@ fun MainScreen(
                     openStockDetail = openStockDetail,
                 )
             }
-            composable<AppDestinations.Profile>(
+            composable<AppDestinations.More>(
                 deepLinks = listOf(
-                    navDeepLink { uriPattern = "truespac://app/profile" }
+                    navDeepLink { uriPattern = "truespac://app/more" }
                 )
             ) {
-                ProfileScreen(
+                MoreScreen(
                     simpleSnackbar = simpleSnackbar,
                     gotoPlayStore = gotoPlayStore,
                     openDartScreen = {
