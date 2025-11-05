@@ -114,7 +114,12 @@ class HomeViewModel @Inject constructor(
             "전일 종가"
         } else {
             val time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HHmm"))
-            DateTimeFormatter.ofPattern("HH:mm").format(time)
+            val limitTime = LocalTime.of(15, 30)
+            if (time.isAfter(limitTime)) {
+                "15:30"
+            } else {
+                DateTimeFormatter.ofPattern("HH:mm").format(time)
+            }
         }
     }
 
