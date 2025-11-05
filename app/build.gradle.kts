@@ -40,6 +40,9 @@ android {
             "\"${localProperties.getProperty("GOOGLE_OAUTH_CLIENT_ID") ?: ""}\""
         )
         resValue("string", "amplitude_api_key", "fbd90a5783ee1310d686c7d25a916a65")
+
+        resValue("string", "admob_id", "ca-app-pub-3613096182343800~6316364040")
+        resValue("string", "native_ad_unit_id", "ca-app-pub-3613096182343800/9414134829")
     }
 
     signingConfigs {
@@ -235,4 +238,13 @@ dependencies {
     debugImplementation(libs.flipper)
     debugImplementation(libs.flipper.network.plugin)
     releaseImplementation(libs.flipper.noop)
+
+    // Google Mobile Ads (AdMob)
+    implementation(libs.play.services.ads)
+
+    // ConstraintLayout
+    implementation(libs.androidx.constraintlayout)
+
+    // CardView
+    implementation(libs.androidx.cardview)
 }

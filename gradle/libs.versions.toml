@@ -21,6 +21,9 @@ coil = "2.7.0"
 retrofit = "3.0.0"
 chucker = "4.0.0"
 flipper = "0.240.0"
+playServicesAds = "23.6.0"
+constraintlayout = "2.2.0"
+cardview = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -93,6 +96,15 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 flipper = { group = "com.facebook.flipper", name = "flipper", version.ref = "flipper" }
 flipper-network-plugin = { group = "com.facebook.flipper", name = "flipper-network-plugin", version.ref = "flipper" }
 flipper-noop = { group = "com.github.theGlenn", name = "flipper-android-no-op", version = "0.10.0" }
+
+# Google Mobile Ads
+play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+
+# ConstraintLayout
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+# CardView
+androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
