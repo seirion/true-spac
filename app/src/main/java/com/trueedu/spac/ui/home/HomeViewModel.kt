@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.PriceManager
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -90,6 +93,28 @@ class HomeViewModel @Inject constructor(
                         filterStocks()
                     }
             }
+        }
+    }
+
+    fun priceUpdateTimeStr(): String {
+        val timestamp = priceManager.cacheTimestamp
+        logD("priceUpdateTimeStr: $timestamp")
+        if (timestamp == 0L) return "전일 종가"
+
+        val timestampStr = timestamp.toString()
+        if (timestampStr.length != 12) return "전일 종가"
+
+        val dateStr = timestampStr.take(8)
+        val timeStr = timestampStr.substring(8, 12)
+
+        val cacheDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val today = LocalDate.now()
+
+        return if (cacheDate.isBefore(today)) {
+            "전일 종가"
+        } else {
+            val time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HHmm"))
+            DateTimeFormatter.ofPattern("HH:mm").format(time)
         }
     }
 

@@ -1,5 +1,8 @@
 package com.trueedu.spac.data.stocks
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.trueedu.spac.api.model.dao.StockPriceDao
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
@@ -46,7 +49,7 @@ class PriceManager @Inject constructor(
 
     // 캐시된 시세 데이터
     private var cachedPriceMap: Map<String, StockPriceDao> = emptyMap()
-    private var cacheTimestamp: Long = 0L
+    var cacheTimestamp by mutableStateOf(0L)
 
     // 가격 데이터 업데이트 알림용 Flow
     private val _priceUpdated = MutableStateFlow(0L)

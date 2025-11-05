@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.ui.common.CustomTopBar
+import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TouchIcon24
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.home.model.SpacSort
@@ -25,6 +26,7 @@ import com.trueedu.spac.ui.home.model.SpacSort
 @Preview(showBackground = true)
 @Composable
 internal fun HomeTopBar(
+    updateTimeStr: String = "13:00",
     sortType: SpacSort = SpacSort.ISSUE_DATE,
     onSortOption: () -> Unit = {},
     onFilterOption: () -> Unit = {},
@@ -32,11 +34,21 @@ internal fun HomeTopBar(
     CustomTopBar(
         navigationIcon = {},
         titleView = {
-            TrueText(
-                s = "스팩",
-                fontSize = 20,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TrueText(
+                    s = "스팩",
+                    fontSize = 20,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Margin(12)
+                TrueText(
+                    s = "가격 기준 - $updateTimeStr",
+                    fontSize = 12,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
         },
         actionsView = {
             Row(
