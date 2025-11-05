@@ -18,6 +18,7 @@ import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.ui.admin.AdminScreen
+import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.dart.DartScreen
 import com.trueedu.spac.ui.edit.EditAssetScreen
@@ -31,6 +32,7 @@ import com.trueedu.spac.ui.stock.StockDetailScreen
 @Composable
 fun MainScreen(
     navController: NavHostController,
+    admobManager: AdmobManager,
     simpleSnackbar: SimpleSnackbar,
     openUrl: (String) -> Unit,
     gotoPlayStore: () -> Unit,
@@ -93,6 +95,7 @@ fun MainScreen(
                 )
             ) {
                 HomeScreen(
+                    admobManager = admobManager,
                     openStockDetail = openStockDetail,
                 )
             }

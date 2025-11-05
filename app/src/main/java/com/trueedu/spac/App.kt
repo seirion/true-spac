@@ -50,6 +50,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         fun getLocal(): Local
         fun getStockPool(): StockPool
         fun getPriceManager(): PriceManager
+        fun getAdmobManager(): com.trueedu.spac.ui.ads.AdmobManager
     }
 
     override val workManagerConfiguration: Configuration
@@ -157,15 +158,18 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         val injector = entryPointInjector(InjectModule::class.java)
         val stockPool = injector.getStockPool()
         val priceManager = injector.getPriceManager()
+        val admobManager = injector.getAdmobManager()
 
         when (event) {
             Lifecycle.Event.ON_CREATE -> {}
             Lifecycle.Event.ON_START -> {
                 stockPool.loadStockInfo()
                 priceManager.onStart()
+                admobManager.start()
             }
             Lifecycle.Event.ON_STOP -> {
                 priceManager.onStop()
+                admobManager.stop()
             }
             Lifecycle.Event.ON_DESTROY -> {}
             Lifecycle.Event.ON_RESUME -> {}

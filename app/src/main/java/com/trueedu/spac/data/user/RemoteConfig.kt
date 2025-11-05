@@ -1,6 +1,8 @@
 package com.trueedu.spac.data.user
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.api.model.dto.firebase.UserRemoteConfig
@@ -24,14 +26,14 @@ class RemoteConfig @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    val adVisible = mutableStateOf(false)
+    var adVisible by mutableStateOf(false)
 
     init {
         scope.launch {
             try {
                 val config = firebaseRealtimeDatabase.loadUserConfig()
                 logD("config: $config")
-                adVisible.value = config.adVisible
+                adVisible = config.adVisible
             } catch (e: Exception) {
                 logD("Failed to load config", e)
                 // 기본값 유지
@@ -40,9 +42,9 @@ class RemoteConfig @Inject constructor(
     }
 
     fun updateAdVisible(visible: Boolean) {
-        if (adVisible.value != visible) {
-            val previousValue = adVisible.value
-            adVisible.value = visible
+        if (adVisible != visible) {
+            val previousValue = adVisible
+            adVisible = visible
             scope.launch {
                 try {
                     val config = UserRemoteConfig(adVisible = visible)
@@ -50,7 +52,7 @@ class RemoteConfig @Inject constructor(
                 } catch (e: Exception) {
                     logD("Failed to save config", e)
                     // 실패 시 상태 복원
-                    adVisible.value = previousValue
+                    adVisible = previousValue
                 }
             }
         }

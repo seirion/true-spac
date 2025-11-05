@@ -21,6 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.trueedu.spac.data.user.LocalRemoteConfig
+import com.trueedu.spac.ui.ads.AdmobManager
+import com.trueedu.spac.ui.ads.NativeAdView
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.home.bottomsheet.FilterOptionBottomSheet
 import com.trueedu.spac.ui.home.bottomsheet.SortOptionBottomSheet
@@ -32,9 +35,12 @@ import com.trueedu.spac.ui.home.views.SpacSectionView
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
+    admobManager: AdmobManager,
     openStockDetail: (String) -> Unit,
     vm: HomeViewModel = hiltViewModel()
 ) {
+    val remoteConfig = LocalRemoteConfig.current
+
     var sortOptionSheetVisible by remember { mutableStateOf(false) }
     var filterSheetVisible by remember { mutableStateOf(false) }
 
@@ -59,11 +65,9 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            /*
-            if (remoteConfig.adVisible.value && admobManager.nativeAd.value != null) {
-                NativeAdView(admobManager.nativeAd.value!!)
+            if (remoteConfig.adVisible && admobManager.nativeAd != null) {
+                NativeAdView(admobManager.nativeAd!!)
             }
-             */
         },
         modifier = Modifier
             .fillMaxSize()

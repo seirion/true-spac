@@ -21,10 +21,13 @@ import com.trueedu.spac.data.config.LocalFeature
 import com.trueedu.spac.data.config.LocalFeatureConfig
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.user.GoogleAuthClient
+import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.data.user.LocalUserCycle
+import com.trueedu.spac.data.user.RemoteConfig
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.repo.local.LocalTrueLocal
+import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
@@ -48,6 +51,10 @@ class MainActivity : ComponentActivity() {
     lateinit var localFeature: LocalFeature
     @Inject
     lateinit var userCycle: UserCycle
+    @Inject
+    lateinit var remoteConfig: RemoteConfig
+    @Inject
+    lateinit var admobManager: AdmobManager
     @Inject
     lateinit var googleAuthClient: GoogleAuthClient
 
@@ -77,6 +84,7 @@ class MainActivity : ComponentActivity() {
                 LocalTrueAnalytics provides trueAnalytics,
                 LocalFeatureConfig provides localFeature,
                 LocalUserCycle provides userCycle,
+                LocalRemoteConfig provides remoteConfig,
             ) {
                 TrueSpacTheme {
                     if (forceUpdateVisible) {
@@ -84,6 +92,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         MainScreen(
                             navController = navController,
+                            admobManager = admobManager,
                             simpleSnackbar = simpleSnackbar,
                             openUrl = ::openUrl,
                             gotoPlayStore = ::gotoPlayStore,
