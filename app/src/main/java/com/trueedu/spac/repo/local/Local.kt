@@ -12,7 +12,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-val LocalMelLocal = staticCompositionLocalOf<Local> {
+val LocalTrueLocal = staticCompositionLocalOf<Local> {
     error("No Local provided")
 }
 

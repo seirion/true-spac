@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.dart.model.DartListItem
-import com.trueedu.spac.repo.local.LocalMelLocal
+import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.Margin
@@ -35,7 +35,7 @@ fun DartScreen(
     openUrl: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    val local = LocalMelLocal.current
+    val local = LocalTrueLocal.current
     Scaffold(
         topBar = {
             val forceRefresh = if (local.dartApiKey.isNotEmpty()) {
