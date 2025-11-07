@@ -11,6 +11,7 @@ import com.trueedu.spac.api.model.dto.firebase.StockInfoKosdaq
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
+import com.trueedu.spac.data.model.UserRemoteConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -183,22 +184,22 @@ class FirebaseRealtimeDatabase @Inject constructor() {
         }
     }
 
-    suspend fun loadUserConfig(): Map<String, String> {
+    suspend fun loadUserConfig(): UserRemoteConfig {
         val currentUser = firebaseCurrentUser()
         if (currentUser == null) {
             logD("loadUserConfig() failed: currentUser null")
-            return emptyMap()
+            return UserRemoteConfig()
         }
         val userId = currentUser.uid
 
         val ref = database.getReference("users")
         val snapshot = ref.child(userId).child("config")
-        val m = snapshot.get().await()
-            .getValue(object : GenericTypeIndicator<Map<String, String>>() {})
-        return m ?: emptyMap()
+        val config = snapshot.get().await()
+            .getValue(UserRemoteConfig::class.java)
+        return config ?: UserRemoteConfig()
     }
 
-    suspend fun writeUserConfig(m: Map<String, String>) {
+    suspend fun writeUserConfig(config: UserRemoteConfig) {
         val currentUser = firebaseCurrentUser()
         if (currentUser == null) {
             logD("writeUserConfig() failed: currentUser null")
@@ -208,6 +209,6 @@ class FirebaseRealtimeDatabase @Inject constructor() {
 
         val ref = database.getReference("users")
         val snapshot = ref.child(userId).child("config")
-        snapshot.setValue(m)
+        snapshot.setValue(config)
     }
 }
