@@ -3,7 +3,7 @@ package com.trueedu.spac.data.user
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.trueedu.spac.data.log.logD
-import com.trueedu.spac.data.model.UserRemoteConfig
+import com.trueedu.spac.api.model.dto.firebase.UserRemoteConfig
 import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -11,7 +11,7 @@ import com.trueedu.spac.api.model.dto.firebase.StockInfoKosdaq
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
-import com.trueedu.spac.data.model.UserRemoteConfig
+import com.trueedu.spac.api.model.dto.firebase.UserRemoteConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
