@@ -30,6 +30,7 @@ class RemoteConfig @Inject constructor(
         scope.launch {
             try {
                 val config = firebaseRealtimeDatabase.loadUserConfig()
+                logD("config: $config")
                 adVisible.value = config.adVisible
             } catch (e: Exception) {
                 logD("Failed to load config", e)

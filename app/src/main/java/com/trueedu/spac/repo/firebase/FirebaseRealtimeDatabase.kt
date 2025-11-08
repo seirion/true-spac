@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.GenericTypeIndicator
-import com.trueedu.spac.BuildConfig
+import com.trueedu.spac.api.model.dto.firebase.AppConfig
 import com.trueedu.spac.api.model.dto.firebase.AppNotice
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKosdaq
@@ -33,50 +33,16 @@ class FirebaseRealtimeDatabase @Inject constructor() {
     private val stocksRef = database.getReference("stocks") // 종목 데이터
     private val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-    suspend fun needForceUpdate(): Boolean {
+    suspend fun getAppConfig(): AppConfig {
         try {
-            if (userId == null) {
-            }
-            val currentVersion = BuildConfig.VERSION_NAME
             val snapshot = configRef.get().await()
             val minVersion = snapshot.child("minVersion").getValue(String::class.java)
-
-            return minVersion != null && compareVersions(currentVersion, minVersion) < 0
-        } catch (e: Exception) {
-            // 오류 처리
-            logE("Error checking for update", e)
-            return false
-        }
-    }
-
-    suspend fun appNotice(): AppNotice {
-        try {
-            val snapshot = configRef.get().await()
             val notice = snapshot.child("notice").getValue(AppNotice::class.java)
-            return notice ?: AppNotice()
+            return AppConfig(minVersion, notice)
         } catch (e: Exception) {
-            // 오류 처리
-            logE("Error checking for notice", e)
-            return AppNotice()
+            logE("Error getting app config", e)
+            return AppConfig()
         }
-    }
-
-    // 버전 비교 함수 (숫자로 변환하여 비교)
-    private fun compareVersions(version1: String, version2: String): Int {
-        val v1Parts = version1.split(".")
-        val v2Parts = version2.split(".")
-
-        val maxLength = maxOf(v1Parts.size, v2Parts.size)
-        repeat(maxLength) {
-            val v1Part = v1Parts.getOrNull(it)?.toIntOrNull() ?: 0
-            val v2Part = v2Parts.getOrNull(it)?.toIntOrNull() ?: 0
-
-            if (v1Part != v2Part) {
-                return v1Part - v2Part
-            }
-        }
-
-        return 0
     }
 
     suspend fun lastUpdatedTime(): Long {
