@@ -7,6 +7,7 @@ import com.trueedu.spac.api.model.dto.firebase.AppNotice
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.user.TokenKeyManager
 import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
+import com.trueedu.spac.util.VersionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,31 +29,29 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch {
-                try {
-                    if (firebaseDatabase.needForceUpdate()) {
-                        trueAnalytics.log(
-                            "force_update__need",
-                            mapOf("version" to BuildConfig.VERSION_NAME)
-                        )
-                        logD("need app update")
-                        _forceUpdateVisible.value = true
-                    }
-                } catch (e: Exception) {
-                    logD("Failed to check force update: ${e.message}")
-                }
-            }
+            try {
+                val appConfig = firebaseDatabase.getAppConfig()
+                logD("Fetched AppConfig from Firebase: $appConfig")
 
-            launch {
-                try {
-                    firebaseDatabase.appNotice().let {
-                        logD("notice: $it")
-                        _appNotice.value = it
-                    }
-                } catch (e: Exception) {
-                    logD("Failed to fetch app notice: ${e.message}")
-                }
+                _appNotice.value = appConfig.notice ?: AppNotice()
+                checkForceUpdate(appConfig.minVersion)
+            } catch (e: Exception) {
+                logD("Failed to fetch AppConfig: ${e.message}")
             }
+        }
+    }
+
+    private fun checkForceUpdate(minVersion: String?) {
+        if (minVersion.isNullOrEmpty()) return
+
+        val currentVersion = BuildConfig.VERSION_NAME
+        if (VersionUtils.compareVersions(currentVersion, minVersion) < 0) {
+            trueAnalytics.log(
+                "force_update__need",
+                mapOf("version" to BuildConfig.VERSION_NAME)
+            )
+            logD("need app update")
+            _forceUpdateVisible.value = true
         }
     }
 
