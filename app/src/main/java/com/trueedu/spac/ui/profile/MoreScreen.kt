@@ -34,6 +34,7 @@ fun MoreScreen(
     vm: MoreViewModel = hiltViewModel(),
     gotoPlayStore: () -> Unit,
     openDartScreen: () -> Unit,
+    openRefundSchedule: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
     openAdmin: () -> Unit = {},
 ) {
@@ -72,6 +73,11 @@ fun MoreScreen(
             SettingItem("전자 공시 보기", true) {
                 trueAnalytics.enterView("profile__dart__click")
                 openDartScreen()
+            }
+
+            SettingItem("스팩 청산 일정", true) {
+                trueAnalytics.enterView("profile__refund_schedule__click")
+                openRefundSchedule()
             }
 
             if (vm.loggedIn()) {

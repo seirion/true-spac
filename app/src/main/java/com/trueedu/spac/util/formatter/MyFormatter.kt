@@ -17,4 +17,5 @@ interface MyFormatter {
 
 // 자주 사용하는 formatter
 val intFormatter = CashFormatter(0) // 정수 표시
+val cashFormatter = CashFormatter(0, withUnit = true) // 금액 표시 (원 단위 포함)
 val rateFormatter = RateFormatter(2) // 수익률 표시
