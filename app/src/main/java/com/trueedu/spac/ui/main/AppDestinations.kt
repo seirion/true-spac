@@ -71,6 +71,13 @@ sealed interface AppDestinations {
         override val icon: ImageVector = Icons.Filled.Settings
     }
 
+    @Serializable
+    data object RefundSchedule : AppDestinations {
+        override val label: String = "스팩 청산 일정"
+        @Transient
+        override val icon: ImageVector = Icons.Default.BarChart
+    }
+
     companion object {
         val tabs = listOf(Home, Following, More)
     }
