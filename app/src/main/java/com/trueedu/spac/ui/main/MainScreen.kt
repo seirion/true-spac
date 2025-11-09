@@ -25,6 +25,7 @@ import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.profile.MoreScreen
+import com.trueedu.spac.ui.refund.ManageRefundScheduleScreen
 import com.trueedu.spac.ui.refund.RefundScheduleScreen
 import com.trueedu.spac.ui.search.SearchScreen
 import com.trueedu.spac.ui.stock.StockDetailScreen
@@ -183,7 +184,10 @@ fun MainScreen(
 
             composable<AppDestinations.Admin> {
                 AdminScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    openManageRefundSchedule = {
+                        navController.navigate(AppDestinations.ManageRefundSchedule)
+                    }
                 )
             }
 
@@ -193,6 +197,12 @@ fun MainScreen(
                 )
             ) {
                 RefundScheduleScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<AppDestinations.ManageRefundSchedule> {
+                ManageRefundScheduleScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
