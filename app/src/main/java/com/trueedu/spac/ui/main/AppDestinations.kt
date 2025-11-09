@@ -46,7 +46,10 @@ sealed interface AppDestinations {
     }
 
     @Serializable
-    data class StockDetail(val stockId: String) : AppDestinations {
+    data class StockDetail(
+        val stockId: String,
+        val followingGroupPage: Int?,
+    ) : AppDestinations {
         override val label: String = ""
         @Transient
         override val icon: ImageVector = Icons.Default.BarChart

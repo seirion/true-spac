@@ -30,8 +30,10 @@ import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.components.TouchIcon24
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.settings.views.SettingItem
+import com.trueedu.spac.ui.stock.views.GroupSelectMode
 import com.trueedu.spac.ui.stock.views.SpacDetailView
 import com.trueedu.spac.ui.stock.views.SpacStatusView
+import com.trueedu.spac.ui.stock.views.StockGroupSelectDialog
 import com.trueedu.spac.ui.theme.ChartColor
 import com.trueedu.spac.util.formatter.CashFormatter
 import com.trueedu.spac.util.formatter.RateFormatter
@@ -40,6 +42,7 @@ import com.trueedu.spac.util.formatter.intFormatter
 @Composable
 fun StockDetailScreen(
     stockId: String,
+    followingGroupPage: Int?,
     vm: StockDetailViewModel = hiltViewModel(),
     openUrl: (String) -> Unit,
     editAssets: () -> Unit,
@@ -48,7 +51,7 @@ fun StockDetailScreen(
     val trueAnalytics = LocalTrueAnalytics.current
 
     LaunchedEffect(Unit) {
-        vm.init(stockId)
+        vm.init(stockId, followingGroupPage)
     }
 
     val stockInfo by vm.stockInfo.collectAsState()
@@ -57,6 +60,7 @@ fun StockDetailScreen(
     val currentPrice by vm.currentPrice.collectAsState()
     val priceChange by vm.priceChange.collectAsState()
     val priceChangeRate by vm.priceChangeRate.collectAsState()
+    val groupDialogState by vm.showGroupSelectDialog.collectAsState()
 
     val stock = stockInfo ?: run {
         LoadingView()
@@ -146,6 +150,23 @@ fun StockDetailScreen(
                 }
             }
         }
+    }
+
+    // 그룹 선택 다이얼로그 표시
+    groupDialogState?.let { dialogState ->
+        StockGroupSelectDialog(
+            stockName = stock.nameKr,
+            mode = dialogState.mode,
+            groupNames = vm.getGroupNames(),
+            availableGroups = dialogState.availableGroups,
+            onGroupSelected = { groupIndex ->
+                when (dialogState.mode) {
+                    GroupSelectMode.ADD -> vm.addToGroup(groupIndex)
+                    GroupSelectMode.REMOVE -> vm.removeFromGroup(groupIndex)
+                }
+            },
+            onDismiss = vm::dismissGroupSelectDialog
+        )
     }
 }
 
