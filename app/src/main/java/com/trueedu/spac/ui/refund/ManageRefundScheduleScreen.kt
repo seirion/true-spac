@@ -17,17 +17,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -106,7 +110,17 @@ fun ManageRefundScheduleScreen(
 private fun ManageRefundScheduleContent(
     vm: ManageRefundScheduleViewModel
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(vm.scrollToTop) {
+        if (vm.scrollToTop) {
+            listState.animateScrollToItem(0)
+            vm.resetScrollToTop()
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
@@ -144,6 +158,7 @@ private fun ManageRefundScheduleContent(
             items(vm.schedules) { schedule ->
                 ScheduleListItem(
                     schedule = schedule,
+                    onEdit = { vm.startEdit(schedule) },
                     onDelete = { vm.deleteSchedule(schedule) }
                 )
             }
@@ -204,7 +219,7 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TrueText(
-                    s = "새 청산 일정 추가",
+                    s = if (vm.editingSchedule != null) "청산 일정 수정" else "새 청산 일정 추가",
                     fontSize = 16,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -310,18 +325,52 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
                     placeholder = { TrueText(s = "예: 1000", fontSize = 14) }
                 )
 
-                Button(
-                    onClick = { vm.addSchedule() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !vm.loading,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    TrueText(
-                        s = if (vm.loading) "저장 중..." else "추가",
-                        fontSize = 16,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                if (vm.editingSchedule != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { vm.cancelEdit() },
+                            modifier = Modifier.weight(1f),
+                            enabled = !vm.loading,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            TrueText(
+                                s = "취소",
+                                fontSize = 16,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Button(
+                            onClick = { vm.addSchedule() },
+                            modifier = Modifier.weight(1f),
+                            enabled = !vm.loading,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            TrueText(
+                                s = if (vm.loading) "수정 중..." else "수정",
+                                fontSize = 16,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = { vm.addSchedule() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !vm.loading,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        TrueText(
+                            s = if (vm.loading) "저장 중..." else "추가",
+                            fontSize = 16,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
         }
@@ -331,6 +380,7 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
 @Composable
 private fun ScheduleListItem(
     schedule: RefundSchedule,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -374,12 +424,21 @@ private fun ScheduleListItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "삭제",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "수정",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "삭제",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

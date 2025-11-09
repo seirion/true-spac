@@ -43,6 +43,12 @@ class ManageRefundScheduleViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    var editingSchedule by mutableStateOf<RefundSchedule?>(null)
+        private set
+
+    var scrollToTop by mutableStateOf(false)
+        private set
+
     init {
         loadRefundSchedules()
     }
@@ -64,13 +70,12 @@ class ManageRefundScheduleViewModel @Inject constructor(
     }
 
     fun addSchedule() {
-        if (nameKr.isBlank() || code.isBlank() || date.isBlank()) {
-            errorMessage = "종목명, 종목코드, 입금일을 모두 입력해주세요"
+        if (editingSchedule != null) {
+            updateSchedule()
             return
         }
 
-        if (date.length != 8 || date.toIntOrNull() == null) {
-            errorMessage = "입금일은 YYYYMMDD 형식으로 입력해주세요 (예: 20250315)"
+        if (!validateInputs()) {
             return
         }
 
@@ -110,6 +115,62 @@ class ManageRefundScheduleViewModel @Inject constructor(
         }
     }
 
+    fun startEdit(schedule: RefundSchedule) {
+        editingSchedule = schedule
+        nameKr = schedule.nameKr
+        code = schedule.code
+        date = schedule.date
+        refundAmount = schedule.refundAmount?.toString() ?: ""
+        scrollToTop = true
+    }
+
+    fun cancelEdit() {
+        editingSchedule = null
+        clearInputs()
+    }
+
+    private fun updateSchedule() {
+        val editing = editingSchedule ?: return
+
+        if (!validateInputs()) {
+            return
+        }
+
+        viewModelScope.launch {
+            loading = true
+            errorMessage = null
+            try {
+                val amount = refundAmount.toDoubleOrNull()
+                val updatedSchedule = RefundSchedule(
+                    nameKr = nameKr.trim(),
+                    code = code.trim().uppercase(),
+                    date = date,
+                    refundAmount = amount
+                )
+
+                val updatedList = schedules.map {
+                    if (it == editing) updatedSchedule else it
+                }.sortedBy { it.date }
+
+                refundDatabase.writeRefundSchedule(updatedList)
+
+                schedules = updatedList
+                saveSuccess = true
+                editingSchedule = null
+
+                // 입력 필드 초기화
+                clearInputs()
+
+                logD("Successfully updated refund schedule: $updatedSchedule")
+            } catch (e: Exception) {
+                logD("Failed to update refund schedule: ${e.message}")
+                errorMessage = "수정 중 오류가 발생했습니다: ${e.message}"
+            } finally {
+                loading = false
+            }
+        }
+    }
+
     fun deleteSchedule(schedule: RefundSchedule) {
         viewModelScope.launch {
             loading = true
@@ -139,6 +200,24 @@ class ManageRefundScheduleViewModel @Inject constructor(
     fun clearMessages() {
         saveSuccess = false
         errorMessage = null
+    }
+
+    fun resetScrollToTop() {
+        scrollToTop = false
+    }
+
+    private fun validateInputs(): Boolean {
+        if (nameKr.isBlank() || code.isBlank() || date.isBlank()) {
+            errorMessage = "종목명, 종목코드, 입금일을 모두 입력해주세요"
+            return false
+        }
+
+        if (date.length != 8 || date.toIntOrNull() == null) {
+            errorMessage = "입금일은 YYYYMMDD 형식으로 입력해주세요 (예: 20250315)"
+            return false
+        }
+
+        return true
     }
 
     fun updateNameKr(value: String) {
