@@ -176,10 +176,10 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
     // Debounce를 위한 상태
     var searchQuery by remember { mutableStateOf("") }
 
-    // ViewModel의 nameKr이 외부에서 변경될 때 동기화 (예: clearInputs 호출 시)
+    // ViewModel의 nameKr이 외부에서 변경될 때 동기화 (예: selectSuggestion, clearInputs 호출 시)
     LaunchedEffect(vm.nameKr) {
-        if (vm.nameKr.isEmpty() && searchQuery.isNotEmpty()) {
-            searchQuery = ""
+        if (searchQuery != vm.nameKr) {
+            searchQuery = vm.nameKr
         }
     }
 
@@ -238,7 +238,7 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
                             singleLine = true
                         )
 
-                        if (vm.showSuggestions) {
+                        if (vm.showSuggestions && vm.suggestions.isNotEmpty()) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -248,47 +248,33 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
                                 tonalElevation = 2.dp,
                                 color = MaterialTheme.colorScheme.surface
                             ) {
-                                if (vm.suggestions.isEmpty()) {
-                                    // 빈 검색 결과 UI
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        TrueText(
-                                            s = "검색 결과가 없습니다",
-                                            fontSize = 14,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                } else {
-                                    LazyColumn {
-                                        items(vm.suggestions) { stockInfo ->
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable { vm.selectSuggestion(stockInfo) }
-                                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                                            ) {
-                                                TrueText(
-                                                    s = stockInfo.nameKr,
-                                                    fontSize = 14,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                TrueText(
-                                                    s = stockInfo.code,
-                                                    fontSize = 12,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            if (stockInfo != vm.suggestions.last()) {
-                                                HorizontalDivider(
-                                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                                    color = MaterialTheme.colorScheme.outlineVariant
-                                                )
-                                            }
+                                LazyColumn {
+                                    items(vm.suggestions) { stockInfo ->
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    vm.selectSuggestion(stockInfo)
+                                                }
+                                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        ) {
+                                            TrueText(
+                                                s = stockInfo.nameKr,
+                                                fontSize = 14,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            TrueText(
+                                                s = stockInfo.code,
+                                                fontSize = 12,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        if (stockInfo != vm.suggestions.last()) {
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(horizontal = 16.dp),
+                                                color = MaterialTheme.colorScheme.outlineVariant
+                                            )
                                         }
                                     }
                                 }
