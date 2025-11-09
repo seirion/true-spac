@@ -93,7 +93,7 @@ fun StockDetailScreen(
                 textColor,
                 stock.isHalt,
                 stock.isDesignated,
-                false, // TODO: dartManager.hasDisclosure(stock.code),
+                vm.dartManager.hasDisclosure(stock.code),
                 onBack = onBack,
                 actions = actions
             )

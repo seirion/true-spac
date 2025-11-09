@@ -6,6 +6,7 @@ import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.UserAsset
+import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
@@ -29,6 +30,7 @@ class StockDetailViewModel @Inject constructor(
     private val stockPool: StockPool,
     private val spacStatusDatabase: SpacStatusDatabase,
     private val priceManager: PriceManager,
+    val dartManager: DartManager,
 ) : ViewModel() {
 
     private val _spacStatus = MutableStateFlow<SpacStatus?>(null)
