@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -83,6 +84,13 @@ sealed interface AppDestinations {
         override val label: String = "청산 일정 관리"
         @Transient
         override val icon: ImageVector = Icons.Default.Edit
+    }
+
+    @Serializable
+    data object Feedback : AppDestinations {
+        override val label: String = "오류나 제안 보내기"
+        @Transient
+        override val icon: ImageVector = Icons.Default.Feedback
     }
 
     companion object {

@@ -35,6 +35,7 @@ fun MoreScreen(
     gotoPlayStore: () -> Unit,
     openDartScreen: () -> Unit,
     openRefundSchedule: () -> Unit,
+    openFeedback: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
     openAdmin: () -> Unit = {},
 ) {
@@ -81,6 +82,11 @@ fun MoreScreen(
             }
 
             if (vm.loggedIn()) {
+                SettingItem("오류나 제안 보내기", true) {
+                    trueAnalytics.enterView("profile__feedback__click")
+                    openFeedback()
+                }
+
                 SettingItem("로그아웃", true) {
                     trueAnalytics.enterView("profile__logout__click")
                     logoutDialogVisible = true
