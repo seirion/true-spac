@@ -30,7 +30,7 @@ class CashFormatter(
     private fun getNumberFormatInstance(decimalPlaces: Int): NumberFormat {
         val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
         numberFormat.maximumFractionDigits = decimalPlaces
-        numberFormat.minimumFractionDigits = decimalPlaces
+        numberFormat.minimumFractionDigits = 0
         return numberFormat
     }
 }
