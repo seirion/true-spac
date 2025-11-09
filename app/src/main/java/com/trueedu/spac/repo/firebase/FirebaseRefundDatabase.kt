@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * FirebaseRealtimeDatabase 에서 환급 일정 데이터 처리
+ * FirebaseRealtimeDatabase 에서 청산 일정 데이터 처리
  */
 @Singleton
 class FirebaseRefundDatabase @Inject constructor(

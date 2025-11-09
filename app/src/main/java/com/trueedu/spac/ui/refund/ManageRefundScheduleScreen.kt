@@ -67,7 +67,7 @@ fun ManageRefundScheduleScreen(
     Scaffold(
         topBar = {
             BackTitleTopBar(
-                title = "환급 일정 관리",
+                title = "청산 일정 관리",
                 onBack = onBack
             )
         },
@@ -124,7 +124,7 @@ private fun ManageRefundScheduleContent(
                     contentAlignment = Alignment.Center
                 ) {
                     TrueText(
-                        s = "저장된 환급 일정이 없습니다",
+                        s = "저장된 청산 일정이 없습니다",
                         fontSize = 14,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -157,7 +157,7 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TrueText(
-                s = "새 환급 일정 추가",
+                s = "새 청산 일정 추가",
                 fontSize = 16,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface

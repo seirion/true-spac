@@ -61,7 +61,7 @@ fun AdminScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // 환급 일정 관리 버튼
+            // 청산 일정 관리 버튼
             Button(
                 onClick = openManageRefundSchedule,
                 modifier = Modifier
@@ -70,7 +70,7 @@ fun AdminScreen(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 TrueText(
-                    s = "환급 일정 관리",
+                    s = "청산 일정 관리",
                     fontSize = 16,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary

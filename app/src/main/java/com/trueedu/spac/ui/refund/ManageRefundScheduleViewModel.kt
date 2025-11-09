@@ -66,7 +66,7 @@ class ManageRefundScheduleViewModel @Inject constructor(
         }
 
         if (schedules.any { it.code == code.trim().uppercase() && it.date == date }) {
-            errorMessage = "이미 등록된 종목의 환급 일정입니다"
+            errorMessage = "이미 등록된 종목의 청산 일정입니다"
             return
         }
 

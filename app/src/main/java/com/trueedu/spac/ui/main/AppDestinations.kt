@@ -80,7 +80,7 @@ sealed interface AppDestinations {
 
     @Serializable
     data object ManageRefundSchedule : AppDestinations {
-        override val label: String = "환급 일정 관리"
+        override val label: String = "청산 일정 관리"
         @Transient
         override val icon: ImageVector = Icons.Default.Edit
     }

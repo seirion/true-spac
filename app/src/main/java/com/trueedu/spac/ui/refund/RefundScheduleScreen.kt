@@ -30,7 +30,7 @@ fun RefundScheduleScreen(
     Scaffold(
         topBar = {
             BackTitleTopBar(
-                title = "환급 일정",
+                title = "청산 일정",
                 onBack = onBack
             )
         },
@@ -64,7 +64,7 @@ private fun RefundScheduleContent(
             contentAlignment = Alignment.Center
         ) {
             TrueText(
-                s = "환급 일정이 없습니다",
+                s = "청산 일정이 없습니다",
                 fontSize = 16,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
