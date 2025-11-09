@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.RefundSchedule
+import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.repo.firebase.FirebaseRefundDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -14,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ManageRefundScheduleViewModel @Inject constructor(
-    private val refundDatabase: FirebaseRefundDatabase
+    private val refundDatabase: FirebaseRefundDatabase,
+    private val spacManager: SpacManager
 ) : ViewModel() {
 
     var loading by mutableStateOf(false)
@@ -27,6 +30,12 @@ class ManageRefundScheduleViewModel @Inject constructor(
     var code by mutableStateOf("")
     var date by mutableStateOf("")
     var refundAmount by mutableStateOf("")
+
+    var suggestions by mutableStateOf<List<StockInfo>>(emptyList())
+        private set
+
+    var showSuggestions by mutableStateOf(false)
+        private set
 
     var saveSuccess by mutableStateOf(false)
         private set
@@ -124,11 +133,40 @@ class ManageRefundScheduleViewModel @Inject constructor(
         code = ""
         date = ""
         refundAmount = ""
+        hideSuggestions()
     }
 
     fun clearMessages() {
         saveSuccess = false
         errorMessage = null
+    }
+
+    fun updateNameKr(value: String) {
+        try {
+            if (value.isNotBlank()) {
+                val searchResults = spacManager.search(value).take(10)
+                suggestions = searchResults
+                showSuggestions = true
+            } else {
+                suggestions = emptyList()
+                showSuggestions = false
+            }
+        } catch (e: Exception) {
+            logD("Failed to search stocks: ${e.message}")
+            suggestions = emptyList()
+            showSuggestions = false
+        }
+    }
+
+    fun selectSuggestion(stockInfo: StockInfo) {
+        nameKr = stockInfo.nameKr
+        code = stockInfo.code
+        hideSuggestions()
+    }
+
+    fun hideSuggestions() {
+        showSuggestions = false
+        suggestions = emptyList()
     }
 }
 

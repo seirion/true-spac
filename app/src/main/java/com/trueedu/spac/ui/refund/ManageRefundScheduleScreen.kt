@@ -1,6 +1,9 @@
 package com.trueedu.spac.ui.refund
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,9 +32,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +51,7 @@ import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.util.formatter.cashFormatter
 import com.trueedu.spac.util.formatter.dateFormat
+import kotlinx.coroutines.delay
 
 @Composable
 fun ManageRefundScheduleScreen(
@@ -143,74 +153,176 @@ private fun ManageRefundScheduleContent(
 
 @Composable
 private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    // BackHandler로 suggestion 닫기
+    BackHandler(enabled = vm.showSuggestions) {
+        vm.hideSuggestions()
+    }
+
+    // Debounce를 위한 상태
+    var searchQuery by remember { mutableStateOf("") }
+
+    // ViewModel의 nameKr이 외부에서 변경될 때 동기화 (예: clearInputs 호출 시)
+    LaunchedEffect(vm.nameKr) {
+        if (vm.nameKr.isEmpty() && searchQuery.isNotEmpty()) {
+            searchQuery = ""
+        }
+    }
+
+    // Debounce 처리: 300ms 후에 검색
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.isNotEmpty()) {
+            delay(300)
+            vm.updateNameKr(searchQuery)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                onClick = { vm.hideSuggestions() },
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         ) {
-            TrueText(
-                s = "새 청산 일정 추가",
-                fontSize = 16,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            OutlinedTextField(
-                value = vm.nameKr,
-                onValueChange = { vm.nameKr = it },
-                label = { TrueText(s = "종목명 (한글)", fontSize = 14) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = vm.code,
-                onValueChange = { vm.code = it.uppercase() },
-                label = { TrueText(s = "종목코드", fontSize = 14) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = vm.date,
-                onValueChange = { vm.date = it },
-                label = { TrueText(s = "입금일 (YYYYMMDD)", fontSize = 14) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                placeholder = { TrueText(s = "예: 20250315", fontSize = 14) }
-            )
-
-            OutlinedTextField(
-                value = vm.refundAmount,
-                onValueChange = { vm.refundAmount = it },
-                label = { TrueText(s = "분배금 (선택사항)", fontSize = 14) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                placeholder = { TrueText(s = "예: 1000", fontSize = 14) }
-            )
-
-            Button(
-                onClick = { vm.addSchedule() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !vm.loading,
-                shape = RoundedCornerShape(8.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clickable(
+                        onClick = {},
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TrueText(
-                    s = if (vm.loading) "저장 중..." else "추가",
+                    s = "새 청산 일정 추가",
                     fontSize = 16,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                                vm.nameKr = it
+                            },
+                            label = { TrueText(s = "종목명 (한글)", fontSize = 14) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        if (vm.showSuggestions) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 200.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                shadowElevation = 4.dp,
+                                tonalElevation = 2.dp,
+                                color = MaterialTheme.colorScheme.surface
+                            ) {
+                                if (vm.suggestions.isEmpty()) {
+                                    // 빈 검색 결과 UI
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        TrueText(
+                                            s = "검색 결과가 없습니다",
+                                            fontSize = 14,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                } else {
+                                    LazyColumn {
+                                        items(vm.suggestions) { stockInfo ->
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { vm.selectSuggestion(stockInfo) }
+                                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                            ) {
+                                                TrueText(
+                                                    s = stockInfo.nameKr,
+                                                    fontSize = 14,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                TrueText(
+                                                    s = stockInfo.code,
+                                                    fontSize = 12,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            if (stockInfo != vm.suggestions.last()) {
+                                                HorizontalDivider(
+                                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                                    color = MaterialTheme.colorScheme.outlineVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = vm.code,
+                    onValueChange = { vm.code = it.uppercase() },
+                    label = { TrueText(s = "종목코드", fontSize = 14) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = vm.date,
+                    onValueChange = { vm.date = it },
+                    label = { TrueText(s = "입금일 (YYYYMMDD)", fontSize = 14) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    placeholder = { TrueText(s = "예: 20250315", fontSize = 14) }
+                )
+
+                OutlinedTextField(
+                    value = vm.refundAmount,
+                    onValueChange = { vm.refundAmount = it },
+                    label = { TrueText(s = "분배금 (선택사항)", fontSize = 14) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    placeholder = { TrueText(s = "예: 1000", fontSize = 14) }
+                )
+
+                Button(
+                    onClick = { vm.addSchedule() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !vm.loading,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    TrueText(
+                        s = if (vm.loading) "저장 중..." else "추가",
+                        fontSize = 16,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         }
     }
