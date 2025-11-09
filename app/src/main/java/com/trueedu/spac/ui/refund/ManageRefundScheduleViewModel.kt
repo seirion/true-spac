@@ -74,7 +74,7 @@ class ManageRefundScheduleViewModel @Inject constructor(
             loading = true
             errorMessage = null
             try {
-                val amount = refundAmount.toIntOrNull()
+                val amount = refundAmount.toDoubleOrNull()
                 val newSchedule = RefundSchedule(
                     nameKr = nameKr.trim(),
                     code = code.trim().uppercase(),
