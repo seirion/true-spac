@@ -73,7 +73,6 @@ class FollowingViewModel @Inject constructor(
                 }
                     .distinctUntilChanged()
                     .collect { list ->
-                        if (list.isEmpty()) return@collect
                         logD("followingManager: $list")
                         loading.value = false
                     }
