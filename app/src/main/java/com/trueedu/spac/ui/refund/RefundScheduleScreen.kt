@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.api.model.dto.firebase.RefundSchedule
@@ -40,6 +41,9 @@ fun RefundScheduleScreen(
                 title = "청산 일정",
                 onBack = onBack
             )
+        },
+        bottomBar = {
+            RefundScheduleBottomBar()
         },
         modifier = Modifier
             .fillMaxSize()
@@ -87,6 +91,25 @@ private fun RefundScheduleContent(
                 RefundScheduleItem(schedule = schedule)
             }
         }
+    }
+}
+
+@Composable
+private fun RefundScheduleBottomBar() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        TrueText(
+            s = "※ 청산 가격은 정확하지 않을 수 있으므로 증권사에서 정확한 값을 확인하시기 바랍니다.",
+            fontSize = 12,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = Int.MAX_VALUE,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
