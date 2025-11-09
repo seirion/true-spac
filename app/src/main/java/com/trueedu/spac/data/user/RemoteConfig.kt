@@ -27,13 +27,15 @@ class RemoteConfig @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     var adVisible by mutableStateOf(false)
+    var refundPriceVisible by mutableStateOf(false)
 
     init {
         scope.launch {
             try {
                 val config = firebaseRealtimeDatabase.loadUserConfig()
                 logD("config: $config")
-                adVisible = config.adVisible
+                adVisible = config.adVisible ?: false
+                refundPriceVisible = config.refundPriceVisible ?: false
             } catch (e: Exception) {
                 logD("Failed to load config", e)
                 // 기본값 유지
