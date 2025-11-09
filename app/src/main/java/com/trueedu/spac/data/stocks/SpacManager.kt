@@ -4,7 +4,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
+import com.trueedu.spac.data.user.RemoteConfig
 import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.util.formatter.safeDouble
@@ -25,6 +27,7 @@ class SpacManager @Inject constructor(
     private val local: Local,
     private val stockPool: StockPool,
     private val spacStatusDatabase: SpacStatusDatabase,
+    private val remoteConfig: RemoteConfig,
 ) {
     val spacStatusMap = mutableStateOf<Map<String, SpacStatus>>(emptyMap())
 
@@ -93,6 +96,11 @@ class SpacManager @Inject constructor(
     }
 
     private fun updateRedemptionValue(code: String) {
+        if (!remoteConfig.refundPriceVisible) {
+            logD("Redemption value update skipped: refundPriceVisible is false")
+            return
+        }
+
         val stock = stockPool.get(code) ?: return
         val price = priceMap[code] ?: stock.prevPrice.safeDouble()
         val redemptionPrice = spacStatusMap.value[code]?.redemptionPrice ?: return
