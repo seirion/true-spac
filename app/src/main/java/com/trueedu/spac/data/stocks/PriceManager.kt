@@ -71,6 +71,10 @@ class PriceManager @Inject constructor(
         return cachedPriceMap[code]?.priceChange?.safeDouble()
     }
 
+    fun priceChangeRate(code: String): Double? {
+        return cachedPriceMap[code]?.priceChangeRate?.safeDouble()
+    }
+
     fun volume(code: String): Long? {
         return cachedPriceMap[code]?.volume?.safeLong()
     }

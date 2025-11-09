@@ -6,15 +6,15 @@ import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.SpacStatus
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.UserAsset
-import com.trueedu.spac.api.model.dto.price.PriceResponse
 import com.trueedu.spac.data.stocks.FollowingManager
+import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
 import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
-import com.trueedu.spac.util.formatter.safeDouble
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,11 +28,8 @@ class StockDetailViewModel @Inject constructor(
     val manualAssets: ManualAssets,
     private val stockPool: StockPool,
     private val spacStatusDatabase: SpacStatusDatabase,
+    private val priceManager: PriceManager,
 ) : ViewModel() {
-
-    // 가격 정보 (api)
-    private val _basePrice = MutableStateFlow<PriceResponse?>(null)
-    val basePrice: StateFlow<PriceResponse?> = _basePrice.asStateFlow()
 
     private val _spacStatus = MutableStateFlow<SpacStatus?>(null)
     val spacStatus: StateFlow<SpacStatus?> = _spacStatus.asStateFlow()
@@ -43,9 +40,27 @@ class StockDetailViewModel @Inject constructor(
     private val _infoList = MutableStateFlow<List<Pair<String, String?>>>(emptyList())
     val infoList: StateFlow<List<Pair<String, String?>>> = _infoList.asStateFlow()
 
+    // 실시간 가격
+    private val _currentPrice = MutableStateFlow<Double?>(null)
+    val currentPrice: StateFlow<Double?> = _currentPrice.asStateFlow()
+
+    // 가격 변동
+    private val _priceChange = MutableStateFlow<Double?>(null)
+    val priceChange: StateFlow<Double?> = _priceChange.asStateFlow()
+
+    // 가격 변동률
+    private val _priceChangeRate = MutableStateFlow<Double?>(null)
+    val priceChangeRate: StateFlow<Double?> = _priceChangeRate.asStateFlow()
+
+    // 가격 업데이트 수신 Job
+    private var priceUpdateJob: Job? = null
+
     fun init(code: String) {
         _stockInfo.value = stockPool.get(code)
         initInfoList()
+
+        // 실시간 가격 업데이트
+        updatePriceInfo(code)
 
         viewModelScope.launch {
             val stockInfo = _stockInfo.value
@@ -60,11 +75,21 @@ class StockDetailViewModel @Inject constructor(
                 }
             }
         }
+
+        // 기존 가격 업데이트 Job이 있으면 취소
+        priceUpdateJob?.cancel()
+        // PriceManager의 가격 업데이트를 수신
+        priceUpdateJob = viewModelScope.launch {
+            priceManager.priceUpdated.collect {
+                updatePriceInfo(code)
+            }
+        }
     }
 
-    fun currentPrice(): Double {
-        return _basePrice.value?.output?.price?.toDouble()
-            ?: _stockInfo.value?.prevPrice.safeDouble()
+    private fun updatePriceInfo(code: String) {
+        _currentPrice.value = priceManager.price(code)
+        _priceChange.value = priceManager.priceChange(code)
+        _priceChangeRate.value = priceManager.priceChangeRate(code)
     }
 
     fun isFollowing(): Boolean {

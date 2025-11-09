@@ -30,10 +30,11 @@ import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.components.TouchIcon24
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.settings.views.SettingItem
-import com.trueedu.spac.ui.stock.resources.priceChangeStr
 import com.trueedu.spac.ui.stock.views.SpacDetailView
 import com.trueedu.spac.ui.stock.views.SpacStatusView
 import com.trueedu.spac.ui.theme.ChartColor
+import com.trueedu.spac.util.formatter.CashFormatter
+import com.trueedu.spac.util.formatter.RateFormatter
 import com.trueedu.spac.util.formatter.intFormatter
 
 @Composable
@@ -51,22 +52,33 @@ fun StockDetailScreen(
     }
 
     val stockInfo by vm.stockInfo.collectAsState()
-    val basePrice by vm.basePrice.collectAsState()
     val infoList by vm.infoList.collectAsState()
     val spacStatus by vm.spacStatus.collectAsState()
+    val currentPrice by vm.currentPrice.collectAsState()
+    val priceChange by vm.priceChange.collectAsState()
+    val priceChangeRate by vm.priceChangeRate.collectAsState()
 
-    if (stockInfo == null) {
+    val stock = stockInfo ?: run {
         LoadingView()
         return
     }
 
+    val cashFormatter = CashFormatter()
+    val rateFormatter = RateFormatter()
+
     Scaffold(
         topBar = {
-            val price = vm.currentPrice()
-            val (priceChangeStr, textColor) = when {
-                basePrice != null -> priceChangeStr(basePrice!!)
-                else -> "" to ChartColor.up
+            val price = currentPrice ?: stock.prevPrice.toDoubleOrNull() ?: 0.0
+            val change = priceChange ?: 0.0
+            val changeRate = priceChangeRate ?: 0.0
+
+            val priceChangeStr = if (change != 0.0 || changeRate != 0.0) {
+                "${cashFormatter.format(change, true)} (${rateFormatter.format(changeRate, true)})"
+            } else {
+                ""
             }
+
+            val textColor = ChartColor.color(change)
 
             val icon = if (vm.isFollowing()) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
             val actions: @Composable RowScope.() -> Unit = {
@@ -75,13 +87,13 @@ fun StockDetailScreen(
             }
 
             BackStockTopBar(
-                stockInfo!!.nameKr,
+                stock.nameKr,
                 intFormatter.format(price, false),
                 priceChangeStr,
                 textColor,
-                stockInfo!!.isHalt,
-                stockInfo!!.isDesignated,
-                false, // TODO: dartManager.hasDisclosure(stockInfo!!.code),
+                stock.isHalt,
+                stock.isDesignated,
+                false, // TODO: dartManager.hasDisclosure(stock.code),
                 onBack = onBack,
                 actions = actions
             )
@@ -109,14 +121,14 @@ fun StockDetailScreen(
             SettingItem("기업 공시 보기", true) {
                 trueAnalytics.clickButton(
                     "stock_detail__dart__click",
-                    mapOf("name" to stockInfo!!.nameKr)
+                    mapOf("name" to stock.nameKr)
                 )
-                val code = stockInfo!!.code
                 val url =
-                    "https://dart.fss.or.kr/dsab001/main.do?autoSearch=true&textCrpNM=${code}"
+                    "https://dart.fss.or.kr/dsab001/main.do?autoSearch=true&textCrpNM=${stock.code}"
                 openUrl(url)
             }
-            SpacDetailView(vm.currentPrice().toInt(), stockInfo!!, spacStatus)
+            val price = currentPrice ?: stock.prevPrice.toDoubleOrNull() ?: 0.0
+            SpacDetailView(price.toInt(), stock, spacStatus)
 
             infoList.forEach {
                 StockInfoRow(it.first, it.second ?: "")
