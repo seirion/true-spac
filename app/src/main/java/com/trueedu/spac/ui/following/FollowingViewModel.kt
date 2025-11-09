@@ -11,6 +11,7 @@ import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.price.PriceResponse
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
@@ -31,6 +32,7 @@ class FollowingViewModel @Inject constructor(
     val followingManager: FollowingManager,
     val stockPool: StockPool,
     private val priceManager: PriceManager,
+    val dartManager: DartManager,
 ) : ViewModel() {
 
     val loading = mutableStateOf(true)
@@ -177,9 +179,7 @@ class FollowingViewModel @Inject constructor(
     }
 
     fun hasDisclosure(code: String): Boolean {
-        // TODO
-        //return dartManager.hasDisclosure(code)
-        return false
+        return dartManager.hasDisclosure(code)
     }
 
     override fun onCleared() {
