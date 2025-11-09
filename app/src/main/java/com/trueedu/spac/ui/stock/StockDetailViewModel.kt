@@ -12,6 +12,7 @@ import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
 import com.trueedu.spac.repo.firebase.SpacStatusDatabase
+import com.trueedu.spac.ui.stock.views.GroupSelectMode
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +22,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class GroupDialogState(
+    val mode: GroupSelectMode,
+    val availableGroups: List<Int>
+)
 
 @HiltViewModel
 class StockDetailViewModel @Inject constructor(
@@ -57,7 +63,15 @@ class StockDetailViewModel @Inject constructor(
     // 가격 업데이트 수신 Job
     private var priceUpdateJob: Job? = null
 
-    fun init(code: String) {
+    // 관심 그룹 페이지
+    private var followingGroupPage: Int? = null
+
+    // 그룹 선택 다이얼로그 표시 여부
+    private val _showGroupSelectDialog = MutableStateFlow<GroupDialogState?>(null)
+    val showGroupSelectDialog: StateFlow<GroupDialogState?> = _showGroupSelectDialog.asStateFlow()
+
+    fun init(code: String, followingGroupPage: Int? = null) {
+        this.followingGroupPage = followingGroupPage
         _stockInfo.value = stockPool.get(code)
         initInfoList()
 
@@ -96,17 +110,77 @@ class StockDetailViewModel @Inject constructor(
 
     fun isFollowing(): Boolean {
         val code = _stockInfo.value?.code ?: return false
-        return followingManager.contains(code)
+        return if (followingGroupPage != null) {
+            followingManager.contains(followingGroupPage!!, code)
+        } else {
+            followingManager.contains(code)
+        }
     }
 
     fun toggleFollowing() {
         val code = _stockInfo.value?.code ?: return
-        if (followingManager.contains(code)) {
-            // FIXME
-            followingManager.remove(0, code)
+        val page = followingGroupPage
+
+        if (page != null) {
+            if (followingManager.contains(page, code)) {
+                followingManager.remove(page, code)
+            } else {
+                followingManager.add(page, code)
+            }
         } else {
-            followingManager.add(0, code)
+            if (followingManager.contains(code)) {
+                // 삭제 - 어느 그룹에서 삭제할지 선택
+                showGroupSelectDialogForRemove()
+            } else {
+                // 추가 - 어느 그룹에 추가할지 선택
+                showGroupSelectDialogForAdd()
+            }
         }
+    }
+
+    private fun showGroupSelectDialogForAdd() {
+        val availableGroups = (0 until FollowingManager.MAX_GROUP_SIZE).toList()
+        _showGroupSelectDialog.value = GroupDialogState(
+            mode = GroupSelectMode.ADD,
+            availableGroups = availableGroups
+        )
+    }
+
+    private fun showGroupSelectDialogForRemove() {
+        val code = _stockInfo.value?.code ?: return
+        // 해당 종목이 포함된 그룹만 표시
+        val availableGroups = (0 until FollowingManager.MAX_GROUP_SIZE)
+            .filter { followingManager.contains(it, code) }
+
+        if (availableGroups.isEmpty()) {
+            // 이론적으로는 isFollowing()이 true일 때만 호출되므로 발생하지 않아야 함
+            return
+        }
+
+        _showGroupSelectDialog.value = GroupDialogState(
+            mode = GroupSelectMode.REMOVE,
+            availableGroups = availableGroups
+        )
+    }
+
+    fun dismissGroupSelectDialog() {
+        _showGroupSelectDialog.value = null
+    }
+
+    fun addToGroup(groupIndex: Int) {
+        val code = _stockInfo.value?.code ?: return
+        followingManager.add(groupIndex, code)
+        dismissGroupSelectDialog()
+    }
+
+    fun removeFromGroup(groupIndex: Int) {
+        val code = _stockInfo.value?.code ?: return
+        followingManager.remove(groupIndex, code)
+        dismissGroupSelectDialog()
+    }
+
+    fun getGroupNames(): List<String?> {
+        return followingManager.groupNames.value
     }
 
     fun initInfoList() {

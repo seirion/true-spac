@@ -55,9 +55,9 @@ fun MainScreen(
         }
     }
 
-    val openStockDetail = { stockId: String ->
+    val openStockDetail = { stockId: String, followingGroupPage: Int? ->
         trueAnalytics.log("stock_detail", mapOf("stockId" to stockId))
-        navController.navigate(AppDestinations.StockDetail(stockId))
+        navController.navigate(AppDestinations.StockDetail(stockId, followingGroupPage))
     }
 
     NavigationSuiteScaffold(
@@ -152,6 +152,7 @@ fun MainScreen(
                 val stockDetail: AppDestinations.StockDetail = backStackEntry.toRoute()
                 StockDetailScreen(
                     stockId = stockDetail.stockId,
+                    followingGroupPage = stockDetail.followingGroupPage,
                     editAssets = {
                         if (userCycle.loggedIn()) {
                             navController.navigate(AppDestinations.EditAsset(stockDetail.stockId))

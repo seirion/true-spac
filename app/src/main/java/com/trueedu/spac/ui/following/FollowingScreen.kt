@@ -46,7 +46,7 @@ fun FollowingScreen(
     vm: FollowingViewModel = hiltViewModel(),
     loginWithGoogle: (LoginCallback) -> Unit,
     openSearch: (Int) -> Unit = {}, // page
-    openStockDetail: (String) -> Unit = {}, // stockId
+    openStockDetail: (String, Int?) -> Unit = { _, _ -> }, // stockId, followingGroupPage
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -170,7 +170,7 @@ fun FollowingScreen(
                         halt = stock.isHalt,
                         designated = stock.isDesignated,
                         hasDisclosure = vm.hasDisclosure(stock.code),
-                        onClick = { openStockDetail(stock.code) },
+                        onClick = { openStockDetail(stock.code, position % vm.pageCount()) },
                     ) {
                         logD("long click: ${stock.nameKr}")
                         selectedStock = stock
