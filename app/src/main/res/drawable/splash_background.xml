@@ -4,11 +4,7 @@
 
     <item android:drawable="@color/white" />
 
-    <item
-        android:bottom="40dp"
-        android:left="40dp"
-        android:right="40dp"
-        android:top="40dp">
+    <item>
         <bitmap
             android:gravity="center"
             android:src="@mipmap/app_icon" />
