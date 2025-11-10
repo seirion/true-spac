@@ -10,16 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.trueedu.spac.api.model.dto.firebase.SpacStatus
+import com.trueedu.spac.api.model.dto.firebase.SpacRefund
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.components.TrueText
 
 @Composable
-fun SpacStatusView(status: SpacStatus.Status?) {
+fun SpacStatusView(status: SpacRefund.Status?) {
 
     val text = when (status) {
-        SpacStatus.Status.MERGE_REVIEW -> status.description
-        SpacStatus.Status.MERGE_APPROVED -> status.description
+        SpacRefund.Status.MERGE_REVIEW -> status.description
+        SpacRefund.Status.MERGE_APPROVED -> status.description
         else -> null
     }
 
