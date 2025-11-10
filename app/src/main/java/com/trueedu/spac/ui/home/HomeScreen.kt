@@ -107,6 +107,7 @@ fun HomeScreen(
             stickyHeader { SpacSectionView(vm::setSort) }
 
             itemsIndexed(vm.stocks.value, key = { i, _ -> i }) { i, item ->
+                val spacRefund = spacManager.spacRefundMap.value[item.code]
                 val redemptionValue = spacManager.redemptionValueMap[item.code]
                 val expectedProfit = redemptionValue?.first
                 val expectedProfitRate = redemptionValue?.second
@@ -117,6 +118,7 @@ fun HomeScreen(
                 val hasDisclosure = vm.hasDisclosure(item.code)
 
                 SpacItem(i, item,
+                    spacRefund,
                     vm.price(item.code),
                     vm.priceChange(item.code),
                     vm.volume(item.code),

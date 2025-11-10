@@ -12,8 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.trueedu.spac.api.model.dto.firebase.SpacRefund
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
 import com.trueedu.spac.ui.common.Margin
@@ -24,11 +24,11 @@ import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.intFormatter
 import com.trueedu.spac.util.formatter.rateFormatter
 
-@Preview(showBackground = true)
 @Composable
 fun SpacItem(
     index: Int = 1,
     item: StockInfo = StockInfoKospi("003456", "삼성전자", ""),
+    spacRefund: SpacRefund?,
     price: Double = 2000.0,
     priceChange: Double? = 10.0,
     volume: Long = 1234L,
@@ -97,18 +97,26 @@ fun SpacItem(
                     color = MaterialTheme.colorScheme.secondary,
                 )
 
-                val redemptionPriceString =
-                    if (expectedProfit != null && expectedProfitRate != null) {
-                        val rateString = rateFormatter.format(expectedProfitRate, true)
-                        "${cashFormatter.format(expectedProfit)} (${rateString})"
-                    } else {
-                        "-"
-                    }
-                TrueText(
-                    s = redemptionPriceString,
-                    fontSize = 12,
-                    color = ChartColor.color(expectedProfitRate ?: 0.0),
-                )
+                if (spacRefund?.shouldShowRedemption() == true) {
+                    val redemptionPriceString =
+                        if (expectedProfit != null && expectedProfitRate != null) {
+                            val rateString = rateFormatter.format(expectedProfitRate, true)
+                            "${cashFormatter.format(expectedProfit)} (${rateString})"
+                        } else {
+                            "-"
+                        }
+                    TrueText(
+                        s = redemptionPriceString,
+                        fontSize = 12,
+                        color = ChartColor.color(expectedProfitRate ?: 0.0),
+                    )
+                } else {
+                    TrueText(
+                        s = spacRefund?.status?.description ?: "",
+                        fontSize = 12,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
             }
 
             Column(
