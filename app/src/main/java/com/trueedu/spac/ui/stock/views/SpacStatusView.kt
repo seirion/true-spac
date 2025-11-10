@@ -18,8 +18,8 @@ import com.trueedu.spac.ui.components.TrueText
 fun SpacStatusView(status: SpacStatus.Status?) {
 
     val text = when (status) {
-        SpacStatus.Status.MERGER_REVIEW -> status.description
-        SpacStatus.Status.MERGER_APPROVED -> status.description
+        SpacStatus.Status.MERGE_REVIEW -> status.description
+        SpacStatus.Status.MERGE_APPROVED -> status.description
         else -> null
     }
 

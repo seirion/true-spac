@@ -11,8 +11,8 @@ data class SpacStatus(
 
     enum class Status(val description: String) {
         NORMAL("일반"),
-        MERGER_REVIEW("합병심사"),
-        MERGER_APPROVED("합병승인"),
+        MERGE_REVIEW("합병심사"),
+        MERGE_APPROVED("합병승인"),
         DELISTING("상장폐지"),
         UNKNOWN("-"),
         ;
