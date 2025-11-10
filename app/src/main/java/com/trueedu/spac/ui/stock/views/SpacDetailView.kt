@@ -43,7 +43,7 @@ fun ColumnScope.SpacDetailView(
     currentPrice: Int,
     spacRefund: SpacRefund?,
 ) {
-    if (spacRefund == null) return
+    if (spacRefund?.shouldShowRedemption() != true) return
 
     val redemptionPrice = spacRefund.settlementAmount()?.toInt()?.toString() ?: "2100"
     val baseInputString = remember { mutableStateOf(TextFieldValue(currentPrice.toString())) }

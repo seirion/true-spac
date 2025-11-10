@@ -64,6 +64,14 @@ data class SpacRefund(
         return (finalAmount - 2000.0) / 2000.0 * 100
     }
 
+    /**
+     * 청산 정보를 표시할지 여부
+     * NORMAL 또는 MERGE_CANCELED 상태일 때만 표시
+     */
+    fun shouldShowRedemption(): Boolean {
+        return status == Status.NORMAL || status == Status.MERGE_CANCELED
+    }
+
     enum class Status(val description: String) {
         NORMAL("일반"),
         MERGE_REVIEW("합병심사"),
