@@ -25,15 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.trueedu.spac.api.model.dto.firebase.SpacStatus
-import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.api.model.dto.firebase.SpacRefund
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.components.DigitInput
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.theme.ChartColor
 import com.trueedu.spac.util.formatter.rateFormatter
 import com.trueedu.spac.util.redemptionProfitRate
-import com.trueedu.spac.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -43,10 +41,11 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun ColumnScope.SpacDetailView(
     currentPrice: Int,
-    stock: StockInfo,
-    spacStatus: SpacStatus?,
+    spacRefund: SpacRefund?,
 ) {
-    val redemptionPrice = spacStatus?.redemptionPrice?.toString() ?: "2100"
+    if (spacRefund == null) return
+
+    val redemptionPrice = spacRefund.settlementAmount()?.toInt()?.toString() ?: "2100"
     val baseInputString = remember { mutableStateOf(TextFieldValue(currentPrice.toString())) }
     val targetInputString = remember { mutableStateOf(TextFieldValue(redemptionPrice)) }
 
@@ -56,19 +55,14 @@ fun ColumnScope.SpacDetailView(
         targetInput = targetInputString,
     )
 
-    val listingDateStr = stock.listingDate ?: return
     var targetDate by remember {
-        mutableStateOf(
-        listingDateStr.toLocalDate()!!
-            .plusYears(3)
-            .plusDays(-41)
-        )
+        mutableStateOf(spacRefund.endDate)
     }
 
     var showDatePicker by remember { mutableStateOf(false) }
 
     val basePrice = baseInputString.value.text.toIntOrNull() ?: 0
-    val targetPrice = targetInputString.value.text.toIntOrNull() ?: 0
+    val targetPrice = targetInputString.value.text.toDoubleOrNull() ?: 0.0
     val (profitRate, annualizedProfit) = redemptionProfitRate(
         basePrice.toDouble(), targetPrice, targetDate
     )

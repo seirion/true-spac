@@ -19,6 +19,7 @@ import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
 import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.theme.ChartColor
+import com.trueedu.spac.util.formatter.cashFormatter
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.intFormatter
 import com.trueedu.spac.util.formatter.rateFormatter
@@ -31,7 +32,7 @@ fun SpacItem(
     price: Double = 2000.0,
     priceChange: Double? = 10.0,
     volume: Long = 1234L,
-    expectedProfit: Int? = null, // 청산 시 기대 수익
+    expectedProfit: Double? = null, // 청산 시 기대 수익
     expectedProfitRate: Double? = null, // 청산 시 기대 수익률(%)
     holdingNum: Double = 1.0,
     hasDisclosure: Boolean = true, // 전자 공시 존재 여부
@@ -95,10 +96,11 @@ fun SpacItem(
                     fontSize = 13,
                     color = MaterialTheme.colorScheme.secondary,
                 )
+
                 val redemptionPriceString =
                     if (expectedProfit != null && expectedProfitRate != null) {
                         val rateString = rateFormatter.format(expectedProfitRate, true)
-                        "${intFormatter.format(expectedProfit)} (${rateString})"
+                        "${cashFormatter.format(expectedProfit)} (${rateString})"
                     } else {
                         "-"
                     }

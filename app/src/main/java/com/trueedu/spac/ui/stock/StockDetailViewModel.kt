@@ -3,15 +3,15 @@ package com.trueedu.spac.ui.stock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
-import com.trueedu.spac.api.model.dto.firebase.SpacStatus
+import com.trueedu.spac.api.model.dto.firebase.SpacRefund
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.UserAsset
 import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.FollowingManager
 import com.trueedu.spac.data.stocks.PriceManager
+import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
-import com.trueedu.spac.repo.firebase.SpacStatusDatabase
 import com.trueedu.spac.ui.stock.views.GroupSelectMode
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
@@ -34,13 +34,13 @@ class StockDetailViewModel @Inject constructor(
     val followingManager: FollowingManager,
     val manualAssets: ManualAssets,
     private val stockPool: StockPool,
-    private val spacStatusDatabase: SpacStatusDatabase,
+    private val spacManager: SpacManager,
     private val priceManager: PriceManager,
     val dartManager: DartManager,
 ) : ViewModel() {
 
-    private val _spacStatus = MutableStateFlow<SpacStatus?>(null)
-    val spacStatus: StateFlow<SpacStatus?> = _spacStatus.asStateFlow()
+    private val _spacRefund = MutableStateFlow<SpacRefund?>(null)
+    val spacRefund: StateFlow<SpacRefund?> = _spacRefund.asStateFlow()
 
     private val _stockInfo = MutableStateFlow<StockInfo?>(null)
     val stockInfo: StateFlow<StockInfo?> = _stockInfo.asStateFlow()
@@ -81,14 +81,7 @@ class StockDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val stockInfo = _stockInfo.value
             if (stockInfo?.isSpac == true) {
-                try {
-                    val list = spacStatusDatabase.load()
-                    val spacStatus = list.firstOrNull { it.code == stockInfo.code }
-                    _spacStatus.value = spacStatus
-                } catch (e: Exception) {
-                    // 로딩 실패 시 null로 유지
-                    _spacStatus.value = null
-                }
+                _spacRefund.value = spacManager.spacRefundMap.value[code]
             }
         }
 

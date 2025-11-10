@@ -56,7 +56,7 @@ fun StockDetailScreen(
 
     val stockInfo by vm.stockInfo.collectAsState()
     val infoList by vm.infoList.collectAsState()
-    val spacStatus by vm.spacStatus.collectAsState()
+    val spacStatus by vm.spacRefund.collectAsState()
     val currentPrice by vm.currentPrice.collectAsState()
     val priceChange by vm.priceChange.collectAsState()
     val priceChangeRate by vm.priceChangeRate.collectAsState()
@@ -132,7 +132,7 @@ fun StockDetailScreen(
                 openUrl(url)
             }
             val price = currentPrice ?: stock.prevPrice?.toDoubleOrNull() ?: 0.0
-            SpacDetailView(price.toInt(), stock, spacStatus)
+            SpacDetailView(price.toInt(), spacStatus)
 
             infoList.forEach {
                 StockInfoRow(it.first, it.second ?: "")

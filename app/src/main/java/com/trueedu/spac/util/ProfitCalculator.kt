@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit
  */
 fun redemptionProfitRate(
     currentPrice: Double,
-    redemptionPrice: Int,
+    redemptionPrice: Double,
     targetDate: LocalDate,
 ): Pair<Double?, Double?> {
     val now = LocalDate.now()

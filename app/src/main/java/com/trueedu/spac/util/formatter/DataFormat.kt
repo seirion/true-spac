@@ -11,6 +11,14 @@ fun dateFormat(s: String?): String {
     }
 }
 
+fun dateFormat1(s: String?): String {
+    return if (s?.length == 8) {
+        listOf(s.substring(0, 4), s.substring(4, 6), s.substring(6, 8)).joinToString("-")
+    } else {
+        s ?: ""
+    }
+}
+
 /**
  * api 를 통해서 받은 숫자 형식의 스트링 값을 숫자 포맷으로 변경한 스트링 반환
  */
