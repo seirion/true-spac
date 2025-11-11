@@ -87,6 +87,9 @@ class DartManager @Inject constructor(
     suspend fun CoroutineScope.loadList(codes: List<String>) {
         if (local.dartApiKey.isBlank()) return
 
+        // 이전 날짜 데이터 제거
+        items.clear()
+
         val fromDate = latestWorkDay()
             .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
@@ -95,16 +98,16 @@ class DartManager @Inject constructor(
             async {
                 val dartInfo = dartCorpMap[code] ?: return@async
                 try {
-                    val response = dartRemote.list(dartInfo.corpCode, fromDate)
-                    response.collect { res ->
-                        if (res.list?.isNotEmpty() == true) {
-                            logD("${dartInfo.nameKr} - ${res.list.first().let {"${it.receiptDate} ${it.reportName}"} }")
-                            items[code] = res.list.map {
-                                it.copy(reportName = it.reportName.replace(Regex("\\s+"), " "))
+                    dartRemote.list(dartInfo.corpCode, fromDate)
+                        .collect { res ->
+                            if (res.list?.isNotEmpty() == true) {
+                                logD("${dartInfo.nameKr} - ${res.list.first().let {"${it.receiptDate} ${it.reportName}"} }")
+                                items[code] = res.list.map {
+                                    it.copy(reportName = it.reportName.replace(Regex("\\s+"), " "))
+                                }
+                                updateSignal.emit(Unit)
                             }
-                            updateSignal.emit(Unit)
                         }
-                    }
                 } catch (e: Exception) {
                     logE("Error loading dart list for ${dartInfo.nameKr}: ${e.message}")
                 }
