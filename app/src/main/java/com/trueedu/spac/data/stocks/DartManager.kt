@@ -1,5 +1,6 @@
 package com.trueedu.spac.data.stocks
 
+import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.dart.model.DartListItem
 import com.trueedu.spac.dart.model.DartListResponse
 import com.trueedu.spac.dart.repository.remote.DartRemote
@@ -31,6 +32,7 @@ class DartManager @Inject constructor(
     private val dartRemote: DartRemote,
     private val spacManager: SpacManager,
     private val firebaseDartManager: FirebaseDartManager,
+    private val trueAnalytics: TrueAnalytics,
 ) {
     companion object {
         private const val CACHE_VALIDITY_MINUTES = 30L
@@ -61,7 +63,7 @@ class DartManager @Inject constructor(
                     delay(200)
                 }
                 val list = spacManager.spacList.value
-                loadList(list.map { it.code })
+                syncListToFirebase(list.map { it.code })
                 logD("lastUpdatedAt: $lastUpdatedAt")
             } else {
                 lastUpdatedAt = lastUpdatedAtRemote
@@ -85,7 +87,7 @@ class DartManager @Inject constructor(
         return items
     }
 
-    suspend fun CoroutineScope.loadList(codes: List<String>) {
+    suspend fun CoroutineScope.syncListToFirebase(codes: List<String>) {
         if (local.dartApiKey.isBlank()) return
 
         // 이전 날짜 데이터 제거
@@ -121,11 +123,23 @@ class DartManager @Inject constructor(
             .toLong()
 
         // 완료 후 firebase 업데이트
-        firebaseDartManager.writeDartList(
+        val success = firebaseDartManager.writeDartList(
             items.values.map {
                 DartListResponse(status = "", message = "", list = it)
             }
         )
+
+        if (success) {
+            trueAnalytics.log(
+                "dart__write_completed",
+                mapOf("num" to items.size)
+            )
+        } else {
+            trueAnalytics.log(
+                "dart__write_failed",
+                mapOf("num" to items.size)
+            )
+        }
     }
 
     fun forceLoad() {
@@ -133,7 +147,7 @@ class DartManager @Inject constructor(
         clear()
         MainScope().launch(Dispatchers.IO) {
             val list = spacManager.spacList.value
-            loadList(list.map { it.code })
+            syncListToFirebase(list.map { it.code })
         }
     }
 

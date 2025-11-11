@@ -222,20 +222,25 @@ class PriceManager @Inject constructor(
      * 시세 데이터를 Firebase에 저장
      * @param priceMap 저장할 시세 데이터 Map<종목코드, StockPriceDao>
      * @param customTimestamp 커스텀 타임스탬프 (null이면 현재 시각 사용)
+     * @return 성공 시 true, 실패 시 false
      */
     suspend fun writePriceToFirebase(
         priceMap: Map<String, StockPriceDao>,
         customTimestamp: LocalDateTime? = null
-    ) {
+    ): Boolean {
         logD("writePriceToFirebase() - writing ${priceMap.size} prices")
-        try {
-            firebasePriceManager.write(priceMap, customTimestamp)
-            // Firebase에 저장 성공 후 로컬 타임스탬프 업데이트
-            val timestamp = firebasePriceManager.lastUpdatedAt()
-            local.priceUpdatedAt = timestamp
-            logD("writePriceToFirebase() completed successfully, timestamp: $timestamp")
+        return try {
+            val success = firebasePriceManager.write(priceMap, customTimestamp)
+            if (success) {
+                // Firebase에 저장 성공 후 로컬 타임스탬프 업데이트
+                val timestamp = firebasePriceManager.lastUpdatedAt()
+                local.priceUpdatedAt = timestamp
+                logD("writePriceToFirebase() completed successfully, timestamp: $timestamp")
+            }
+            success
         } catch (e: Exception) {
             logE("Failed to write prices to Firebase", e)
+            false
         }
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
 import com.trueedu.spac.data.stocks.PriceManager
@@ -21,6 +22,7 @@ class StockPriceWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val tracker: WorkerExecutionTracker,
     private val priceManager: PriceManager,
+    private val trueAnalytics: TrueAnalytics,
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -49,8 +51,20 @@ class StockPriceWorker @AssistedInject constructor(
             // Firebase에 저장
             if (priceMap.isNotEmpty()) {
                 logD("💾 Firebase에 ${priceMap.size}개 종목 시세를 저장합니다...")
-                priceManager.writePriceToFirebase(priceMap)
-                logD("✅ 시세 업데이트 완료: ${priceMap.size}개 종목")
+                val success = priceManager.writePriceToFirebase(priceMap)
+                if (success) {
+                    trueAnalytics.log(
+                        "price__write_completed",
+                        mapOf("num" to priceMap.size)
+                    )
+                    logD("✅ 시세 업데이트 완료: ${priceMap.size}개 종목")
+                } else {
+                    trueAnalytics.log(
+                        "price__write_failed",
+                        mapOf("num" to priceMap.size)
+                    )
+                    logD("❌ 시세 저장 실패: ${priceMap.size}개 종목")
+                }
             } else {
                 logD("⚠️ 업데이트할 시세 데이터가 없습니다")
             }
