@@ -23,10 +23,12 @@ import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.LogoutDialog
+import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.profile.views.MoreTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
 import com.trueedu.spac.ui.settings.views.SettingLabel
+import com.trueedu.spac.ui.settings.views.SettingSwitchItem
 
 @Composable
 fun MoreScreen(
@@ -41,6 +43,7 @@ fun MoreScreen(
 ) {
     val context = LocalContext.current
     val trueAnalytics = LocalTrueAnalytics.current
+    val remoteConfig = LocalRemoteConfig.current
     var logoutDialogVisible by remember { mutableStateOf(false) }
     var deleteAccountDialogVisible by remember { mutableStateOf(false) }
 
@@ -96,6 +99,17 @@ fun MoreScreen(
                     trueAnalytics.enterView("profile__withdraw__click")
                     deleteAccountDialogVisible = true
                 }
+            }
+
+            // 디버그 모드에서만 광고 on/off 표시
+            if (BuildConfig.DEBUG) {
+                SettingSwitchItem(
+                    text = "광고 on/off",
+                    checked = remoteConfig.adVisible,
+                    onCheckedChange = { isChecked ->
+                        remoteConfig.updateAdVisible(isChecked)
+                    }
+                )
             }
 
             // 관리자 모드인 경우 관리자 설정 버튼 표시
