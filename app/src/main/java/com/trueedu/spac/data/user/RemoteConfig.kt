@@ -34,7 +34,7 @@ class RemoteConfig @Inject constructor(
             try {
                 val config = firebaseRealtimeDatabase.loadUserConfig()
                 logD("config: $config")
-                adVisible = config.adVisible ?: false
+                adVisible = config.adVisible ?: true
                 refundPriceVisible = config.refundPriceVisible ?: false
             } catch (e: Exception) {
                 logD("Failed to load config", e)
