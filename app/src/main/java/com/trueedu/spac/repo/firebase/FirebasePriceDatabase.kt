@@ -65,10 +65,10 @@ class FirebasePriceDatabase @Inject constructor(
         }
     }
 
-    suspend fun write(m: Map<String, StockPriceDao>, customTimestamp: LocalDateTime? = null) {
+    suspend fun write(m: Map<String, StockPriceDao>, customTimestamp: LocalDateTime? = null): Boolean {
         logD("write Price data: ${m.size}")
 
-        withAuthCheck(Unit) {
+        return withAuthCheck(false) {
             try {
                 val ref = database.getReference(SNAPSHOT_KEY)
                 val snapshot = ref.child(CHILD_KEY)
@@ -88,8 +88,10 @@ class FirebasePriceDatabase @Inject constructor(
                     .await()
 
                 logD("write() completed: ${m.size} items, timestamp: $formattedTimestamp")
+                true
             } catch (e: Exception) {
                 logE("Failed to write price to Firebase", e)
+                false
             }
         }
     }

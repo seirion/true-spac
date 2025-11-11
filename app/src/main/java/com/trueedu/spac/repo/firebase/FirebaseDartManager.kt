@@ -24,7 +24,7 @@ class FirebaseDartManager @Inject constructor(
      * yyyyMMddHHmm 형식의 Long 타입 반환
      */
     suspend fun lastUpdatedAt(): Long {
-        val currentUser = firebaseCurrentUser() ?: run {
+        if (firebaseCurrentUser() == null) {
             logD("lastUpdatedAt() failed: currentUser null")
             return 0L
         }
@@ -35,7 +35,7 @@ class FirebaseDartManager @Inject constructor(
 
     suspend fun loadDartList(): List<DartListResponse> {
         logD("loadDartList()")
-        val currentUser = firebaseCurrentUser() ?: run {
+        if (firebaseCurrentUser() == null) {
             logD("loadDartList() failed: currentUser null")
             return emptyList()
         }
@@ -46,22 +46,28 @@ class FirebaseDartManager @Inject constructor(
         return list ?: emptyList()
     }
 
-    suspend fun writeDartList(list :List<DartListResponse>) {
+    suspend fun writeDartList(list: List<DartListResponse>): Boolean {
         logD("writeDartList(): ${list.size}")
-        val currentUser = firebaseCurrentUser() ?: run {
+        if (firebaseCurrentUser() == null) {
             logD("writeDartList() failed: currentUser null")
-            return
+            return false
         }
-        val ref = database.getReference(BASE_PATH)
-        val snapshot = ref.child(CHILD_PATH)
-        snapshot.setValue(list).await()
+        return try {
+            val ref = database.getReference(BASE_PATH)
+            val snapshot = ref.child(CHILD_PATH)
+            snapshot.setValue(list).await()
 
-        val metaRef = database.getReference("meta")
-        metaRef.child("dartLastUpdatedAt").setValue(
-            LocalDateTime.now()
-                .toDateTimeCompactString()
-                .dropLast(2) // ss 제거 하여 yyyyMMddHHmm 으로 변환
-                .toLong()
-        ).await()
+            val metaRef = database.getReference("meta")
+            metaRef.child("dartLastUpdatedAt").setValue(
+                LocalDateTime.now()
+                    .toDateTimeCompactString()
+                    .dropLast(2) // ss 제거 하여 yyyyMMddHHmm 으로 변환
+                    .toLong()
+            ).await()
+            true
+        } catch (e: Exception) {
+            logD("writeDartList() failed: ${e.message}")
+            false
+        }
     }
 }

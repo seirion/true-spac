@@ -67,7 +67,7 @@ class DartWorker @AssistedInject constructor(
             logD("📡 ${spacList.size}개 종목의 DART 공시 정보를 가져옵니다...")
             coroutineScope {
                 with(dartManager) {
-                    loadList(spacList.map { it.code })
+                    syncListToFirebase(spacList.map { it.code })
                 }
             }
 
