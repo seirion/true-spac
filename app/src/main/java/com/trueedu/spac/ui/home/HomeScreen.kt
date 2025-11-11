@@ -50,7 +50,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             HomeTopBar(
-                updateTimeStr = vm.priceUpdateTimeStr(),
+                updateTimeStr = vm.priceUpdateTimeStr,
                 sortType = vm.sort.value,
                 onSortOption = {
                     if (!loading) {
