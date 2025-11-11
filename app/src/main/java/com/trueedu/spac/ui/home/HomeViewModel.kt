@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.home
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -96,13 +97,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun priceUpdateTimeStr(): String {
+    val priceUpdateTimeStr by derivedStateOf {
         val timestamp = priceManager.cacheTimestamp
         logD("priceUpdateTimeStr: $timestamp")
-        if (timestamp == 0L) return "전일 종가"
+        if (timestamp == 0L) return@derivedStateOf "전일 종가"
 
         val timestampStr = timestamp.toString()
-        if (timestampStr.length != 12) return "전일 종가"
+        if (timestampStr.length != 12) return@derivedStateOf "전일 종가"
 
         val dateStr = timestampStr.take(8)
         val timeStr = timestampStr.substring(8, 12)
@@ -110,7 +111,7 @@ class HomeViewModel @Inject constructor(
         val cacheDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"))
         val today = LocalDate.now()
 
-        return if (cacheDate.isBefore(today)) {
+        if (cacheDate.isBefore(today)) {
             "전일 종가"
         } else {
             val time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HHmm"))
