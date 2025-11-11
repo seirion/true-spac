@@ -2,15 +2,13 @@ package com.trueedu.spac.ui.ads
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
-import coil.load
-import coil.transform.CircleCropTransformation
+import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.trueedu.spac.R
@@ -22,7 +20,7 @@ class TrueNativeAdView(context: Context) : ConstraintLayout(context) {
 
     fun setNativeAd(nativeAd: NativeAd, colorScheme: ColorScheme) {
         val nativeAdView = findViewById<NativeAdView>(R.id.nativeAdView)
-        val icon = findViewById<ImageView>(R.id.icon)
+        val mediaView = findViewById<MediaView>(R.id.icon)
         val title = findViewById<TextView>(R.id.title).also {
             it.setTextColor(colorScheme.primary.toArgb())
         }
@@ -39,10 +37,10 @@ class TrueNativeAdView(context: Context) : ConstraintLayout(context) {
             it.setTextColor(colorScheme.secondary.toArgb())
         }
 
-        nativeAdView.iconView = icon
-        val url = nativeAd.icon?.uri ?: nativeAd.images.firstOrNull()?.uri ?: "" //icon이 없는 경우가 있다
-        icon.load(url.toString()) {
-            transformations(CircleCropTransformation())
+        // MediaView를 사용하여 이미지/비디오 자산 표시
+        nativeAdView.mediaView = mediaView
+        nativeAd.mediaContent?.let { mediaContent ->
+            mediaView.setMediaContent(mediaContent)
         }
 
         nativeAdView.headlineView = title.apply {
