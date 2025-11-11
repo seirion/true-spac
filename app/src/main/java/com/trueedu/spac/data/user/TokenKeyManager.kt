@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -103,6 +104,45 @@ class TokenKeyManager @Inject constructor(
                 logD("new token: $it")
             }
             .launchIn(scope)
+    }
+
+    /**
+     * 외부에서 토큰 갱신을 요청할 때 사용하는 suspend 함수
+     * 주로 토큰 만료 시 재시도를 위해 사용됩니다.
+     */
+    suspend fun refreshTokenSync(): Boolean {
+        logD("refreshTokenSync()")
+        val appKey = userKey.value?.appKey
+        val appSecret = userKey.value?.appSecret
+        if (appKey.isNullOrEmpty() || appSecret.isNullOrEmpty()) {
+            logD("appKey or appSecret is empty")
+            return false
+        }
+
+        val request = TokenRequest(
+            grantType = "client_credentials",
+            appKey = appKey,
+            appSecret = appSecret,
+        )
+
+        return try {
+            val tokenResponse = authRemote.refreshToken(request).firstOrNull()
+
+            if (tokenResponse != null) {
+                setAccessToken(tokenResponse)
+                event.emit(TokenIssued)
+                logD("token refreshed successfully: $tokenResponse")
+                true
+            } else {
+                logD("token refresh returned null")
+                event.emit(TokenIssueFail)
+                false
+            }
+        } catch (e: Exception) {
+            logD("Exception during token refresh: ${e.message}")
+            event.emit(TokenIssueFail)
+            false
+        }
     }
 
     private fun revokeToken() {
