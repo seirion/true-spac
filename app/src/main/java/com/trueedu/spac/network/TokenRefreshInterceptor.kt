@@ -1,5 +1,6 @@
 package com.trueedu.spac.network
 
+import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.user.TokenKeyManager
 import kotlinx.coroutines.CompletableDeferred
@@ -13,22 +14,27 @@ import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.Provider
 
 /**
  * KIS API 토큰 만료 에러를 감지하고 자동으로 토큰을 갱신한 후 재시도하는 인터셉터
  *
- * KIS API는 HTTP 401이 아닌 200 OK와 함께 body에 에러 코드를 반환하므로
+ * KIS API는 HTTP 401이 아닌 200 OK 또는 500 Error와 함께 body에 에러 코드를 반환하므로
  * Authenticator 대신 Interceptor를 사용합니다.
+ *
+ * 토큰 만료 응답: {"rt_cd": "1", "msg_cd": "EGW00123", "msg1": "기간이 만료된 token 입니다."}
  *
  * 동시성 처리:
  * - 여러 요청이 동시에 토큰 만료를 감지하더라도 토큰 갱신은 한 번만 실행됩니다.
  * - 나머지 요청들은 첫 번째 갱신이 완료될 때까지 대기합니다.
+ *
+ * 순환 참조 방지:
+ * - Provider<TokenKeyManager>를 사용하여 지연 주입(lazy injection)으로 순환 참조를 회피합니다.
+ * - TokenKeyManager → AuthRemote → Retrofit → OkHttpClient → TokenRefreshInterceptor → TokenKeyManager
  */
-@Singleton
-class TokenRefreshInterceptor @Inject constructor(
-    private val tokenKeyManager: TokenKeyManager,
+class TokenRefreshInterceptor(
+    private val tokenKeyManagerProvider: Provider<TokenKeyManager>,
+    private val trueAnalytics: TrueAnalytics,
 ) : Interceptor {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -60,8 +66,9 @@ class TokenRefreshInterceptor @Inject constructor(
 
         val response = chain.proceed(originalRequest)
 
-        // HTTP 응답이 성공적이면 body를 체크
-        if (response.isSuccessful) {
+        // HTTP 200-299 또는 500 응답인 경우 body를 체크 (토큰 만료 에러 감지)
+        // KIS API는 토큰 만료 시 200 또는 500으로 응답할 수 있음
+        if (response.isSuccessful || response.code == 500) {
             return checkAndHandleTokenExpiration(chain, response, retryCount)
         }
 
@@ -114,9 +121,13 @@ class TokenRefreshInterceptor @Inject constructor(
                 // (다른 스레드들이 deferred를 가져갈 수 있도록)
                 if (!deferred.isCompleted) {
                     try {
+                        val tokenKeyManager = tokenKeyManagerProvider.get()
                         val result = tokenKeyManager.refreshTokenSync()
                         deferred.complete(result)
                         logD("Token refresh completed: $result")
+                        if (result) {
+                            trueAnalytics.log("token_refresh")
+                        }
                     } catch (e: Exception) {
                         logD("Token refresh failed with exception: ${e.message}")
                         deferred.complete(false)
