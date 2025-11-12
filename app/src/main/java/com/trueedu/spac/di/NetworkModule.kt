@@ -8,6 +8,8 @@ import com.facebook.flipper.plugins.network.FlipperOkhttpInterceptor
 import com.facebook.flipper.plugins.network.NetworkFlipperPlugin
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.trueedu.spac.BuildConfig
+import com.trueedu.spac.analytics.TrueAnalytics
+import com.trueedu.spac.data.user.TokenKeyManager
 import com.trueedu.spac.network.TokenInterceptor
 import com.trueedu.spac.network.TokenRefreshInterceptor
 import dagger.Module
@@ -85,6 +87,15 @@ object NetworkModule {
     @Singleton
     fun providesFlipperOkhttpInterceptor(networkFlipperPlugin: NetworkFlipperPlugin): FlipperOkhttpInterceptor {
         return FlipperOkhttpInterceptor(networkFlipperPlugin)
+    }
+
+    @Provides
+    @Singleton
+    fun providesTokenRefreshInterceptor(
+        tokenKeyManagerProvider: javax.inject.Provider<TokenKeyManager>,
+        trueAnalytics: TrueAnalytics
+    ): TokenRefreshInterceptor {
+        return TokenRefreshInterceptor(tokenKeyManagerProvider, trueAnalytics)
     }
 
     @Provides
