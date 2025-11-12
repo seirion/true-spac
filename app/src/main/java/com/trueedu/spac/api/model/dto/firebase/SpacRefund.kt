@@ -18,8 +18,7 @@ data class SpacRefund(
      * 청산 금액 (원금 + 수익)
      */
     fun settlementAmount(): Double? {
-        // rate1, rate2, rate3이 모두 null이면 null 반환
-        if (rate1 == null && rate2 == null && rate3 == null) {
+        if (rate1 == null || rate2 == null || rate3 == null) {
             return null
         }
 
@@ -29,24 +28,24 @@ data class SpacRefund(
         var principal = 2000.0
 
         // rate1 적용 (1년차)
-        rate1?.let { r1 ->
+        rate1.let { r1 ->
             val interest = principal * r1
             val tax = interest * taxRate
             principal = principal + interest - tax
         }
 
         // rate2 적용 (2년차)
-        rate2?.let { r2 ->
+        rate2.let { r2 ->
             val interest = principal * r2
             val tax = interest * taxRate
             principal = principal + interest - tax
         }
 
         // rate3 적용 (3년차 일할 계산)
-        rate3?.let { r3 ->
+        rate3.let { r3 ->
             val totalDays = ChronoUnit.DAYS.between(listingDate, endDate)
             val remainingDays = totalDays - 730 // 2년(730일) 제외
-            val ratio = remainingDays.toDouble() / 365.0
+            val ratio = remainingDays / 365.0
             val interest = principal * r3 * ratio
             val tax = interest * taxRate
             principal = principal + interest - tax
