@@ -22,23 +22,26 @@ data class SpacRefund(
             return null
         }
 
-        // 신탁사 수수료 0.01, 이자 소득세 0.154
-        val taxRate = 0.01 + 0.154
+        // 이자 소득세 15.4%, 신탁사 수수료 0.1%
+        val incomeTaxRate = 0.154  // 수익에 대한 소득세
+        val trustFeeRate = 0.001   // 원금에 대한 신탁사 수수료 0.1%
         // 1만원 짜리 스팩은 없으므로 당분간 2000원으로 고정
         var principal = 2000.0
 
         // rate1 적용 (1년차)
         rate1.let { r1 ->
-            val interest = principal * r1
-            val tax = interest * taxRate
-            principal = principal + interest - tax
+            val interest = principal * r1  // 수익
+            val incomeTax = interest * incomeTaxRate  // 수익에 대한 소득세
+            val trustFee = principal * trustFeeRate  // 원금에 대한 신탁사 수수료
+            principal = principal + interest - incomeTax - trustFee
         }
 
         // rate2 적용 (2년차)
         rate2.let { r2 ->
-            val interest = principal * r2
-            val tax = interest * taxRate
-            principal = principal + interest - tax
+            val interest = principal * r2  // 수익
+            val incomeTax = interest * incomeTaxRate  // 수익에 대한 소득세
+            val trustFee = principal * trustFeeRate  // 원금에 대한 신탁사 수수료
+            principal = principal + interest - incomeTax - trustFee
         }
 
         // rate3 적용 (3년차 일할 계산)
@@ -46,9 +49,10 @@ data class SpacRefund(
             val totalDays = ChronoUnit.DAYS.between(listingDate, endDate)
             val remainingDays = totalDays - 730 // 2년(730일) 제외
             val ratio = remainingDays / 365.0
-            val interest = principal * r3 * ratio
-            val tax = interest * taxRate
-            principal = principal + interest - tax
+            val interest = principal * r3 * ratio  // 수익 (일할 계산)
+            val incomeTax = interest * incomeTaxRate  // 수익에 대한 소득세
+            val trustFee = principal * trustFeeRate * ratio  // 원금에 대한 신탁사 수수료 (일할 계산)
+            principal = principal + interest - incomeTax - trustFee
         }
 
         // 최종 금액 (원금 + 수익)
