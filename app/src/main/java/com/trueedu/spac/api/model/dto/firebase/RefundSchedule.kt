@@ -4,5 +4,6 @@ data class RefundSchedule(
     val nameKr: String = "",
     val code: String = "",
     val date: String = "", // yyyyMMdd
-    val refundAmount: Double? = null
+    val refundAmount: Double? = null,
+    val fixed: Boolean = false,
 )

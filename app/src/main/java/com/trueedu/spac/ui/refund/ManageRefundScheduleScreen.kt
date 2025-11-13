@@ -52,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.api.model.dto.firebase.RefundSchedule
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.LoadingView
+import com.trueedu.spac.ui.components.MySwitch
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.util.formatter.cashFormatter
 import com.trueedu.spac.util.formatter.dateFormat
@@ -311,6 +312,22 @@ private fun AddScheduleForm(vm: ManageRefundScheduleViewModel) {
                     placeholder = { TrueText(s = "예: 1000", fontSize = 14) }
                 )
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TrueText(
+                        s = "확정 여부",
+                        fontSize = 14,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    MySwitch(
+                        checked = vm.fixed,
+                        onCheckedChange = { vm.fixed = it }
+                    )
+                }
+
                 if (vm.editingSchedule != null) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -400,8 +417,9 @@ private fun ScheduleListItem(
                 )
                 schedule.refundAmount?.let { amount ->
                     Spacer(modifier = Modifier.height(2.dp))
+                    val statusText = if (schedule.fixed) " (확정)" else " (예상)"
                     TrueText(
-                        s = "분배금: ${cashFormatter.format(amount)}",
+                        s = "분배금: ${cashFormatter.format(amount)}$statusText",
                         fontSize = 14,
                         color = MaterialTheme.colorScheme.primary,
                     )

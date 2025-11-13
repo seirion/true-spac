@@ -30,6 +30,7 @@ class ManageRefundScheduleViewModel @Inject constructor(
     var code by mutableStateOf("")
     var date by mutableStateOf("")
     var refundAmount by mutableStateOf("")
+    var fixed by mutableStateOf(false)
 
     var suggestions by mutableStateOf<List<StockInfo>>(emptyList())
         private set
@@ -93,7 +94,8 @@ class ManageRefundScheduleViewModel @Inject constructor(
                     nameKr = nameKr.trim(),
                     code = code.trim().uppercase(),
                     date = date,
-                    refundAmount = amount
+                    refundAmount = amount,
+                    fixed = fixed
                 )
 
                 val updatedList = (schedules + newSchedule).sortedBy { it.date }
@@ -121,6 +123,7 @@ class ManageRefundScheduleViewModel @Inject constructor(
         code = schedule.code
         date = schedule.date
         refundAmount = schedule.refundAmount?.toString() ?: ""
+        fixed = schedule.fixed
         scrollToTop = true
     }
 
@@ -145,7 +148,8 @@ class ManageRefundScheduleViewModel @Inject constructor(
                     nameKr = nameKr.trim(),
                     code = code.trim().uppercase(),
                     date = date,
-                    refundAmount = amount
+                    refundAmount = amount,
+                    fixed = fixed
                 )
 
                 val updatedList = schedules.map {
@@ -194,6 +198,7 @@ class ManageRefundScheduleViewModel @Inject constructor(
         code = ""
         date = ""
         refundAmount = ""
+        fixed = false
         hideSuggestions()
     }
 
