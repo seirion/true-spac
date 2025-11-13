@@ -12,21 +12,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.api.model.dto.firebase.RefundSchedule
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.components.TrueText
+import com.trueedu.spac.ui.components.bottomsheet.DraggableBottomSheet
 import com.trueedu.spac.util.formatter.cashFormatter
 import com.trueedu.spac.util.formatter.dateFormat
 
@@ -35,15 +41,16 @@ fun RefundScheduleScreen(
     vm: RefundScheduleViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             BackTitleTopBar(
                 title = "청산 일정",
-                onBack = onBack
+                onBack = onBack,
+                actionIcon = Icons.Filled.Info,
+                onAction = { showBottomSheet = true }
             )
-        },
-        bottomBar = {
-            RefundScheduleBottomBar()
         },
         modifier = Modifier
             .fillMaxSize()
@@ -62,6 +69,13 @@ fun RefundScheduleScreen(
                 )
             }
         }
+    }
+
+    DraggableBottomSheet(
+        showBottomSheet = showBottomSheet,
+        onDismiss = { showBottomSheet = false }
+    ) {
+        RefundScheduleInfoContent()
     }
 }
 
@@ -95,20 +109,26 @@ private fun RefundScheduleContent(
 }
 
 @Composable
-private fun RefundScheduleBottomBar() {
-    Box(
+private fun RefundScheduleInfoContent() {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         TrueText(
-            s = "※ 청산 가격은 정확하지 않을 수 있으므로 증권사에서 정확한 값을 확인하시기 바랍니다.",
-            fontSize = 12,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            s = "주의사항",
+            fontSize = 18,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        TrueText(
+            s = "※ 청산 가격은 오차가 발생할 수 있으므로 증권사에서 정확한 값을 확인하시기 바랍니다.",
+            fontSize = 14,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = Int.MAX_VALUE,
-            textAlign = TextAlign.Center
         )
     }
 }
@@ -159,4 +179,3 @@ private fun RefundScheduleItem(
         }
     }
 }
-
