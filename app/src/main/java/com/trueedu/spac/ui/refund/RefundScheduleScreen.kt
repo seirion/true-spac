@@ -148,8 +148,9 @@ private fun RefundScheduleItem(
                 )
                 schedule.refundAmount?.let { amount ->
                     Spacer(modifier = Modifier.height(2.dp))
+                    val statusText = if (schedule.fixed) " (확정)" else " (예상)"
                     TrueText(
-                        s = "분배금: ${cashFormatter.format(amount)}",
+                        s = "분배금: ${cashFormatter.format(amount)}$statusText",
                         fontSize = 14,
                         color = MaterialTheme.colorScheme.primary,
                     )
