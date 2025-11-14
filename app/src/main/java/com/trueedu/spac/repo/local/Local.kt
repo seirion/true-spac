@@ -96,6 +96,9 @@ class Local @Inject constructor(
     // 확인한 notice 마지막 id
     var appNoticeId by preferences.int(0)
 
+    // 면책 문구 확인 여부
+    var disclaimerAccepted by preferences.boolean(false)
+
     // 종목 다운로드 시각 yyyyMMddHHmm
     var stockUpdatedAt by preferences.long(0L)
 
