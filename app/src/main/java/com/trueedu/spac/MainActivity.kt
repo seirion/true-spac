@@ -10,6 +10,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +32,7 @@ import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
+import com.trueedu.spac.ui.main.DisclaimerPopupView
 import com.trueedu.spac.ui.main.ForceUpdateView
 import com.trueedu.spac.ui.main.MainScreen
 import com.trueedu.spac.ui.main.NoticePopupView
@@ -74,6 +78,7 @@ class MainActivity : ComponentActivity() {
             this.navController = navController
             val forceUpdateVisible by vm.forceUpdateVisible.collectAsState()
             val appNotice by vm.appNotice.collectAsState()
+            var disclaimerPopupVisible by remember { mutableStateOf(!local.disclaimerAccepted) }
 
             LaunchedEffect(Unit) {
                 intent?.let { navController.handleDeepLink(it) }
@@ -120,6 +125,20 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } // noticeVisible
+
+                    // 면책 문구 팝업
+                    if (disclaimerPopupVisible) {
+                        DisclaimerPopupView(
+                            onConfirm = {
+                                trueAnalytics.clickButton("main__disclaimer_confirm__click")
+                                disclaimerPopupVisible = false
+                                local.disclaimerAccepted = true
+                            },
+                            onDismiss = {
+                                disclaimerPopupVisible = false
+                            }
+                        )
+                    }
 
                     simpleSnackbar.Host()
                 }
