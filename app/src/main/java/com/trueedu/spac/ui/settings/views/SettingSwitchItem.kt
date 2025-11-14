@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.trueedu.spac.ui.common.DividerHorizontal
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.components.TrueText
 
 @Composable
@@ -45,6 +45,5 @@ fun SettingSwitchItem(
             )
         )
     }
-    DividerHorizontal()
+    DashDividerHorizontal()
 }
-

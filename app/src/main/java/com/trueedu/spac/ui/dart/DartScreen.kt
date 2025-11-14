@@ -22,12 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.dart.model.DartListItem
 import com.trueedu.spac.repo.local.LocalTrueLocal
-import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.dart.views.DartTopBar
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 
 @Composable
 fun DartScreen(
@@ -90,7 +90,7 @@ fun DartScreen(
                     }
                 }
                 Margin(4)
-                DividerHorizontal()
+                DashDividerHorizontal()
             }
         }
     }
