@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.trueedu.spac.ui.common.DividerHorizontal
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.components.TrueText
 
 @Preview(showBackground = true)
@@ -58,5 +58,5 @@ fun ItemWithIcon(
             contentDescription = "next"
         )
     }
-    DividerHorizontal()
+    DashDividerHorizontal()
 }

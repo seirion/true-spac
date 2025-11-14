@@ -26,7 +26,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.api.model.dto.firebase.SpacRefund
-import com.trueedu.spac.ui.common.DividerHorizontal
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.components.DigitInput
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.theme.ChartColor
@@ -116,8 +116,7 @@ fun ColumnScope.SpacDetailView(
             DatePicker(state = datePickerState)
         }
     }
-
-    DividerHorizontal()
+    DashDividerHorizontal()
 }
 
 @Preview(showBackground = true)

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TrueText
@@ -65,7 +66,7 @@ fun FollowingEditPopupBody(
                         }
                         .padding(vertical = 8.dp),
                 )
-                DividerHorizontal()
+                DashDividerHorizontal()
             }
         }
         Row(

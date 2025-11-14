@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.api.model.dto.firebase.SpacRefund
-import com.trueedu.spac.ui.common.DividerHorizontal
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.components.TrueText
 
 @Composable
@@ -42,5 +42,5 @@ fun SpacStatusView(status: SpacRefund.Status?) {
             modifier = Modifier.padding(12.dp, 0.dp)
         )
     }
-    DividerHorizontal()
+    DashDividerHorizontal()
 }

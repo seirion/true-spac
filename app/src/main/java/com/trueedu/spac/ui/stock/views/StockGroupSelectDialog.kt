@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.common.DividerHorizontal
 import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TrueText
@@ -77,7 +78,7 @@ fun StockGroupSelectDialog(
                             }
                             .padding(vertical = 12.dp),
                     )
-                    DividerHorizontal()
+                    DashDividerHorizontal()
                 }
             }
 
