@@ -24,6 +24,7 @@ flipper = "0.240.0"
 playServicesAds = "23.6.0"
 constraintlayout = "2.2.0"
 cardview = "1.0.0"
+mockk = "1.13.13"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -105,6 +106,10 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 
 # CardView
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+
+# Test libraries
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

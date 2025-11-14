@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
@@ -26,6 +27,7 @@ class SpacManager @Inject constructor(
     private val local: Local,
     private val stockPool: StockPool,
     private val remoteConfig: RemoteConfig,
+    private val priceManagerProvider: Provider<PriceManager>,
 ) {
     val spacRefundMap = mutableStateOf<Map<String, SpacRefund>>(emptyMap())
 
@@ -40,6 +42,23 @@ class SpacManager @Inject constructor(
     val spacAnnualProfitMode = mutableStateOf(local.spacAnnualProfit)
 
     private var requestIndex = 0
+
+    private val priceManager: PriceManager
+        get() = priceManagerProvider.get()
+
+    /**
+     * PriceManager의 가격을 우선 사용하고, 유효하지 않으면 폴백 값 사용
+     */
+    private fun getPrice(code: String, fallback: Double): Double {
+        return priceManager.price(code)?.takeIf { it > 0.0 } ?: fallback
+    }
+
+    /**
+     * PriceManager의 거래량을 우선 사용하고, 유효하지 않으면 폴백 값 사용
+     */
+    private fun getVolume(code: String, fallback: Long): Long {
+        return priceManager.volume(code)?.takeIf { it > 0 } ?: fallback
+    }
 
     init {
         MainScope().launch {
@@ -65,8 +84,10 @@ class SpacManager @Inject constructor(
     private fun init() {
         // 초기 값으로 전일 종가를 줌
         spacList.value.forEach {
-            priceMap[it.code] = it.prevPrice.safeDouble()
-            volumeMap[it.code] = it.prevVolume.safeLong()
+            val fallbackPrice = it.prevPrice.safeDouble()
+            val fallbackVolume = it.prevVolume.safeLong()
+            priceMap[it.code] = getPrice(it.code, fallbackPrice)
+            volumeMap[it.code] = getVolume(it.code, fallbackVolume)
             updateRedemptionValue(it.code)
         }
 
@@ -99,7 +120,8 @@ class SpacManager @Inject constructor(
         }
 
         val stock = stockPool.get(code) ?: return
-        val price = priceMap[code] ?: stock.prevPrice.safeDouble()
+        val fallbackPrice = priceMap[code] ?: stock.prevPrice.safeDouble()
+        val price = getPrice(code, fallbackPrice)
         val spacRefund = spacRefundMap.value[code] ?: return
         val redemptionPrice = spacRefund.settlementAmount() ?: return
         val targetDate = spacRefund.endDate
