@@ -145,6 +145,7 @@ fun HomeScreen(
         FilterOptionBottomSheet(
             visible = filterSheetVisible,
             current = vm.spacFilter,
+            spacManager = vm.spacManager,
             onDismiss = { filterSheetVisible = false },
             onValueChanged = vm::updateFilter,
         )
