@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.analytics.LocalTrueAnalytics
+import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.ui.common.OnOffSetting
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.bottomsheet.DraggableBottomSheet
@@ -20,6 +22,7 @@ import com.trueedu.spac.ui.home.model.SpacFilter
 fun FilterOptionBottomSheet(
     visible: Boolean,
     current: SpacFilter,
+    spacManager: SpacManager,
     onDismiss: () -> Unit,
     onValueChanged: (SpacFilter) -> Unit,
 ) {
@@ -30,7 +33,7 @@ fun FilterOptionBottomSheet(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            FilterOptionBody(current, onValueChanged)
+            FilterOptionBody(current, spacManager, onValueChanged)
         }
     }
 }
@@ -38,18 +41,20 @@ fun FilterOptionBottomSheet(
 @Composable
 private fun ColumnScope.FilterOptionBody(
     current: SpacFilter,
+    spacManager: SpacManager,
     onValueChanged: (SpacFilter) -> Unit,
 ) {
     val trueAnalytics = LocalTrueAnalytics.current
+    val spacAnnualProfitMode by spacManager.spacAnnualProfitMode
 
     TitleView()
-    /*
-    OnOffSetting(
-        "청산 시 이자 1년 환산 표시",
-        current.spacAnnualProfitMode,
-        onValueChanged
-    )
-     */
+    OnOffSetting("청산 수익률 1년 환산 표기", spacAnnualProfitMode) {
+        trueAnalytics.clickToggleButton(
+            "filter__spac_annual_profit__click",
+            !it
+        )
+        spacManager.setSpacAnnualProfit(it)
+    }
     OnOffSetting("1년 미만 종목만 보기", current.listedOverTwoYears) {
         trueAnalytics.clickToggleButton(
             "filter__listed_over_two_years__click",
