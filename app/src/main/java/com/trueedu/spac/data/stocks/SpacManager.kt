@@ -33,11 +33,11 @@ class SpacManager @Inject constructor(
 
     val loading = MutableStateFlow(true)
     val spacList = mutableStateOf<List<StockInfo>>(emptyList())
-    val priceMap = mutableStateMapOf<String, Double>()
-    val priceChangeMap = mutableStateMapOf<String, Double>()
-    val volumeMap = mutableStateMapOf<String, Long>() // 거래량
-    val volumePriceMap = mutableStateMapOf<String, Long>() // 거래대금
-    val redemptionValueMap = mutableStateMapOf<String, Pair<Double, Double>>()
+    private val priceMap = mutableStateMapOf<String, Double>()
+    private val priceChangeMap = mutableStateMapOf<String, Double>()
+    private val volumeMap = mutableStateMapOf<String, Long>() // 거래량
+    private val volumePriceMap = mutableStateMapOf<String, Long>() // 거래대금
+    private val redemptionValueMap = mutableStateMapOf<String, Pair<Double, Double>>()
 
     val spacAnnualProfitMode = mutableStateOf(local.spacAnnualProfit)
 
@@ -49,15 +49,22 @@ class SpacManager @Inject constructor(
     /**
      * PriceManager의 가격을 우선 사용하고, 유효하지 않으면 폴백 값 사용
      */
-    private fun getPrice(code: String, fallback: Double): Double {
+    fun getPrice(code: String, fallback: Double): Double {
         return priceManager.price(code)?.takeIf { it > 0.0 } ?: fallback
     }
 
     /**
      * PriceManager의 거래량을 우선 사용하고, 유효하지 않으면 폴백 값 사용
      */
-    private fun getVolume(code: String, fallback: Long): Long {
+    fun getVolume(code: String, fallback: Long): Long {
         return priceManager.volume(code)?.takeIf { it > 0 } ?: fallback
+    }
+
+    /**
+     * 환매가치 수익률을 반환 (redemptionPrice, profitRate)
+     */
+    fun getRedemptionValue(code: String): Pair<Double, Double>? {
+        return redemptionValueMap[code]
     }
 
     init {
