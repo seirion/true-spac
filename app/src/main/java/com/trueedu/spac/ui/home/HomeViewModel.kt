@@ -59,8 +59,8 @@ class HomeViewModel @Inject constructor(
         SpacSort.ISSUE_DATE to { it.listingDate.safeLong().toDouble() },
         SpacSort.MARKET_CAP to { it.marketCap.safeLong().toDouble() },
         SpacSort.GROWTH_RATE to { -1 * growthRate(it) },
-        SpacSort.REDEMPTION_VALUE to { -1 * (spacManager.redemptionValueMap[it.code]?.second ?: Double.MIN_VALUE) },
-        SpacSort.VOLUME to { -1 * (spacManager.volumeMap[it.code]?.toDouble() ?: 0.0) },
+        SpacSort.REDEMPTION_VALUE to { -1 * (spacManager.getRedemptionValue(it.code)?.second ?: Double.MIN_VALUE) },
+        SpacSort.VOLUME to { -1.0 * (spacManager.getVolume(it.code, 0L)) },
     )
 
     init {
@@ -145,7 +145,7 @@ class HomeViewModel @Inject constructor(
 
     private fun matchesPriceFilter(stock: StockInfo): Boolean {
         if (!spacFilter.underParValue) return true
-        val price = spacManager.priceMap.getOrDefault(stock.code, 0.0).toInt()
+        val price = spacManager.getPrice(stock.code, 0.0).toInt()
         val base = if (stock.parValue.safeLong() == 100L) 2_000 else 10_000
         return price != 0 && price <= base
     }
@@ -191,7 +191,7 @@ class HomeViewModel @Inject constructor(
     private fun growthRate(stock: StockInfo): Double {
         val code = stock.code
         val prevPrice = stock.prevPrice.safeDouble()
-        val price = spacManager.priceMap.getOrDefault(code, prevPrice)
+        val price = spacManager.getPrice(code, prevPrice)
         val base = if (stock.parValue.safeLong() == 100L) 2_000 else 10_000
         return (price - base) * 100.0 / base
     }

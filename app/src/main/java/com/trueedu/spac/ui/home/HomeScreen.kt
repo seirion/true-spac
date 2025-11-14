@@ -108,7 +108,7 @@ fun HomeScreen(
 
             itemsIndexed(vm.stocks.value, key = { i, _ -> i }) { i, item ->
                 val spacRefund = spacManager.spacRefundMap.value[item.code]
-                val redemptionValue = spacManager.redemptionValueMap[item.code]
+                val redemptionValue = spacManager.getRedemptionValue(item.code)
                 val expectedProfit = redemptionValue?.first
                 val expectedProfitRate = redemptionValue?.second
 
