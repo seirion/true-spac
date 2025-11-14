@@ -6,8 +6,8 @@ object VersionUtils {
      * @return version1이 크면 양수, version2가 크면 음수, 같으면 0
      */
     fun compareVersions(version1: String, version2: String): Int {
-        val v1Parts = version1.split(".")
-        val v2Parts = version2.split(".")
+        val v1Parts = version1.split(".", "-")
+        val v2Parts = version2.split(".", "-")
 
         val maxLength = maxOf(v1Parts.size, v2Parts.size)
         repeat(maxLength) {
