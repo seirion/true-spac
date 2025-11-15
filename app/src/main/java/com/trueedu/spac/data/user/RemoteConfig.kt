@@ -11,6 +11,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,36 +29,75 @@ class RemoteConfig @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    var adVisible by mutableStateOf(false)
-    var refundPriceVisible by mutableStateOf(false)
+    // 초기화 완료 상태를 나타내는 StateFlow
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+
+    // UserRemoteConfig 객체 인스턴스로 관리
+    private var config by mutableStateOf(
+        UserRemoteConfig(
+            adVisible = true,
+            refundPriceVisible = false,
+            pushToken = null
+        )
+    )
+
+    // 개별 속성 접근을 위한 getter
+    val adVisible: Boolean
+        get() = config.adVisible ?: true
+
+    val refundPriceVisible: Boolean
+        get() = config.refundPriceVisible ?: false
+
+    val pushToken: String?
+        get() = config.pushToken
 
     init {
         scope.launch {
             try {
-                val config = firebaseRealtimeDatabase.loadUserConfig()
-                logD("config: $config")
-                adVisible = config.adVisible ?: true
-                refundPriceVisible = config.refundPriceVisible ?: false
+                val loadedConfig = firebaseRealtimeDatabase.loadUserConfig()
+                logD("config loaded: $loadedConfig")
+                config = loadedConfig
             } catch (e: Exception) {
                 logD("Failed to load config", e)
                 // 기본값 유지
+            } finally {
+                // 성공 여부와 관계없이 초기화 완료 표시
+                _isInitialized.value = true
+                logD("RemoteConfig 초기화 완료")
             }
         }
     }
 
     fun updateAdVisible(visible: Boolean) {
         if (adVisible != visible) {
-            val previousValue = adVisible
-            adVisible = visible
-            scope.launch {
-                try {
-                    val config = UserRemoteConfig(adVisible = visible)
-                    firebaseRealtimeDatabase.writeUserConfig(config)
-                } catch (e: Exception) {
-                    logD("Failed to save config", e)
-                    // 실패 시 상태 복원
-                    adVisible = previousValue
-                }
+            updateConfig(config.copy(adVisible = visible))
+        }
+    }
+
+    fun updateRefundPriceVisible(visible: Boolean) {
+        if (refundPriceVisible != visible) {
+            updateConfig(config.copy(refundPriceVisible = visible))
+        }
+    }
+
+    fun updatePushToken(token: String?) {
+        if (pushToken != token) {
+            updateConfig(config.copy(pushToken = token))
+        }
+    }
+
+    private fun updateConfig(newConfig: UserRemoteConfig) {
+        val previousConfig = config
+        config = newConfig
+        scope.launch {
+            try {
+                firebaseRealtimeDatabase.writeUserConfig(newConfig)
+                logD("config saved: $newConfig")
+            } catch (e: Exception) {
+                logD("Failed to save config", e)
+                // 실패 시 상태 복원
+                config = previousConfig
             }
         }
     }

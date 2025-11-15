@@ -73,6 +73,15 @@
             android:name=".worker.DartUpdateEndReceiver"
             android:exported="false" />
 
+        <!-- Firebase Cloud Messaging: 푸시 알림 수신 및 토큰 갱신 처리 -->
+        <service
+            android:name=".service.TrueFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/admob_id"/>

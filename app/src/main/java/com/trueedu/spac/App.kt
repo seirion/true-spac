@@ -13,12 +13,15 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.firebase.messaging.FirebaseMessaging
 import com.trueedu.spac.data.log.FileNameTree
 import com.trueedu.spac.data.log.ReleaseTree
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.StockPool
+import com.trueedu.spac.data.user.RemoteConfig
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.worker.DartAlarmManager
 import com.trueedu.spac.worker.PeriodicSyncWorker
 import com.trueedu.spac.worker.StockPriceAlarmManager
@@ -28,6 +31,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.internal.Contexts
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -44,13 +53,19 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     @Inject
     lateinit var dartAlarmManager: DartAlarmManager
 
+    @Inject
+    lateinit var remoteConfig: RemoteConfig
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface InjectModule {
         fun getLocal(): Local
         fun getStockPool(): StockPool
         fun getPriceManager(): PriceManager
-        fun getAdmobManager(): com.trueedu.spac.ui.ads.AdmobManager
+        fun getAdmobManager(): AdmobManager
+        fun getRemoteConfig(): RemoteConfig
     }
 
     override val workManagerConfiguration: Configuration
@@ -64,6 +79,9 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         val local = entryPointInjector(InjectModule::class.java).getLocal()
         local.migrate()
         init()
+
+        // FCM 토큰 가져오기 및 저장
+        fetchAndSaveFcmToken(local)
 
         // UserKey가 유효하면 관리자 모드로 동작
         val adminMode = isAdminMode(local)
@@ -83,6 +101,42 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
         }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+    }
+
+    /**
+     * FCM 토큰을 가져와서 로컬 및 원격에 저장합니다.
+     * 토큰이 변경되지 않았으면 저장을 생략합니다.
+     */
+    private fun fetchAndSaveFcmToken(local: Local) {
+        applicationScope.launch {
+            try {
+                // Firebase Task를 코루틴으로 변환하여 토큰 가져오기
+                val token = FirebaseMessaging.getInstance().token.await()
+
+                // 기존 토큰과 비교
+                val previousToken = local.notificationToken
+                if (previousToken == token) {
+                    logD("🔑 FCM 토큰 변경 없음 - 저장 생략")
+                    return@launch
+                }
+
+                if (BuildConfig.DEBUG) {
+                    logD("🔑 FCM 토큰 변경 감지: $token")
+                }
+
+                // 로컬에 저장
+                local.notificationToken = token
+
+                // RemoteConfig 초기화 완료 대기 (Race condition 방지)
+                remoteConfig.isInitialized.first { it }
+
+                // RemoteConfig에도 저장 (Firebase Realtime Database에 자동 동기화)
+                remoteConfig.updatePushToken(token)
+                logD("✅ FCM 토큰 저장 완료 (로컬 + 원격)")
+            } catch (e: Exception) {
+                logD("⚠️ FCM 토큰 가져오기 실패: ${e.message}")
+            }
+        }
     }
 
     /**
