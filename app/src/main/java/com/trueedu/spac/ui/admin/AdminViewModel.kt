@@ -1,6 +1,7 @@
 package com.trueedu.spac.ui.admin
 
 import android.app.AlarmManager
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -20,6 +21,7 @@ import androidx.work.WorkManager
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.master.MasterFileDownloader
 import com.trueedu.spac.repo.local.Local
+import com.trueedu.spac.util.FcmPushSender
 import com.trueedu.spac.worker.PeriodicSyncWorker
 import com.trueedu.spac.worker.StockPriceAlarmManager
 import com.trueedu.spac.worker.StockPriceWorker
@@ -77,6 +79,25 @@ class AdminViewModel @Inject constructor(
 
     private val _usMasterDownloadMessage = mutableStateOf("")
     val usMasterDownloadMessage: State<String> = _usMasterDownloadMessage
+
+    // FCM 푸시 테스트 관련 State
+    private val _fcmToken = mutableStateOf("")
+    val fcmToken: State<String> = _fcmToken
+
+    private val _pushTitle = mutableStateOf("")
+    val pushTitle: State<String> = _pushTitle
+
+    private val _pushBody = mutableStateOf("")
+    val pushBody: State<String> = _pushBody
+
+    private val _pushDeepLink = mutableStateOf("")
+    val pushDeepLink: State<String> = _pushDeepLink
+
+    private val _isSendingPush = mutableStateOf(false)
+    val isSendingPush: State<Boolean> = _isSendingPush
+
+    private val _pushResultMessage = mutableStateOf("")
+    val pushResultMessage: State<String> = _pushResultMessage
 
     init {
         // 초기 데이터 로드
@@ -301,6 +322,147 @@ class AdminViewModel @Inject constructor(
                 _isDownloadingUsMaster.value = false
             }
         }
+    }
+
+    /**
+     * FCM 토큰 업데이트
+     */
+    fun updateFcmToken(token: String) {
+        _fcmToken.value = token
+    }
+
+    /**
+     * 클립보드에서 텍스트를 가져와 FCM 토큰에 붙여넣기
+     */
+    fun pasteFromClipboard() {
+        try {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipData = clipboard.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                val text = clipData.getItemAt(0).text?.toString() ?: ""
+                if (text.isNotEmpty()) {
+                    _fcmToken.value = text
+                    logD("📋 클립보드에서 토큰 붙여넣기 완료")
+                } else {
+                    logD("⚠️ 클립보드가 비어있습니다")
+                }
+            } else {
+                logD("⚠️ 클립보드에 데이터가 없습니다")
+            }
+        } catch (e: Exception) {
+            logD("❌ 클립보드 읽기 실패: ${e.message}", e)
+        }
+    }
+
+    /**
+     * 푸시 결과 메시지를 클립보드에 복사
+     */
+    fun copyResultMessageToClipboard() {
+        try {
+            val message = _pushResultMessage.value
+            if (message.isNotEmpty()) {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = android.content.ClipData.newPlainText("푸시 결과", message)
+                clipboard.setPrimaryClip(clip)
+                logD("📋 결과 메시지를 클립보드에 복사했습니다: $message")
+            }
+        } catch (e: Exception) {
+            logD("❌ 클립보드 복사 실패: ${e.message}", e)
+        }
+    }
+
+    /**
+     * 푸시 제목 업데이트
+     */
+    fun updatePushTitle(title: String) {
+        _pushTitle.value = title
+    }
+
+    /**
+     * 푸시 내용 업데이트
+     */
+    fun updatePushBody(body: String) {
+        _pushBody.value = body
+    }
+
+    /**
+     * 푸시 딥링크 업데이트
+     */
+    fun updatePushDeepLink(deepLink: String) {
+        _pushDeepLink.value = deepLink
+    }
+
+    /**
+     * FCM 푸시 전송 (테스트용)
+     */
+    fun sendTestPush() {
+        if (_isSendingPush.value) {
+            logD("⚠️ 이미 푸시 전송 중입니다")
+            return
+        }
+
+        val token = _fcmToken.value.trim()
+        val title = _pushTitle.value.trim()
+        val body = _pushBody.value.trim()
+        val deepLink = _pushDeepLink.value.trim().ifEmpty { null }
+
+        // 입력 값 검증
+        if (token.isEmpty()) {
+            _pushResultMessage.value = "❌ FCM 토큰을 입력해주세요"
+            return
+        }
+        if (title.isEmpty()) {
+            _pushResultMessage.value = "❌ 푸시 제목을 입력해주세요"
+            return
+        }
+        if (body.isEmpty()) {
+            _pushResultMessage.value = "❌ 푸시 내용을 입력해주세요"
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _isSendingPush.value = true
+                _pushResultMessage.value = "전송 중..."
+                logD("📤 FCM 푸시 전송 시작${deepLink?.let { " (딥링크: $it)" } ?: ""}")
+
+                val result = FcmPushSender.sendPush(
+                    context = context,
+                    token = token,
+                    title = title,
+                    body = body,
+                    data = mapOf(
+                        "type" to "test",
+                        "timestamp" to System.currentTimeMillis().toString()
+                    ),
+                    deepLink = deepLink
+                )
+
+                result.onSuccess { response ->
+                    _pushResultMessage.value = "✅ 푸시 전송 성공!"
+                    logD("✅ FCM 푸시 전송 성공: $response")
+                }.onFailure { error ->
+                    _pushResultMessage.value = "❌ 전송 실패: ${error.message}"
+                    logD("❌ FCM 푸시 전송 실패: ${error.message}", error)
+                }
+            } catch (e: Exception) {
+                _pushResultMessage.value = "❌ 전송 오류: ${e.message}"
+                logD("❌ FCM 푸시 전송 오류: ${e.message}", e)
+            } finally {
+                _isSendingPush.value = false
+            }
+        }
+    }
+
+    /**
+     * 푸시 테스트 필드 초기화
+     */
+    fun clearPushTestFields() {
+        _fcmToken.value = ""
+        _pushTitle.value = ""
+        _pushBody.value = ""
+        _pushDeepLink.value = ""
+        _pushResultMessage.value = ""
     }
 }
 

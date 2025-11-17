@@ -86,6 +86,15 @@ android {
         buildConfig = true
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+        }
+    }
     hilt {
         enableAggregatingTask = false
     }
@@ -210,6 +219,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
+
+    // Google Auth Library (FCM v1 API용 - 테스트 전용)
+    debugImplementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
 
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.room.ktx)
