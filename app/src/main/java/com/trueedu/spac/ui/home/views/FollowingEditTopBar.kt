@@ -54,7 +54,7 @@ fun FollowingEditTopBar(
         },
         titleView = {
             if (editMode) {
-                val focusRequester = FocusRequester()
+                val focusRequester = remember { FocusRequester() }
                 LaunchedEffect(Unit) {
                     focusRequester.requestFocus()
                 }
