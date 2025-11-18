@@ -72,8 +72,6 @@ fun MoreScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
-
             SettingItem("전자 공시 보기", true) {
                 trueAnalytics.enterView("profile__dart__click")
                 openDartScreen()
@@ -83,6 +81,8 @@ fun MoreScreen(
                 trueAnalytics.enterView("profile__refund_schedule__click")
                 openRefundSchedule()
             }
+
+            SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
             if (vm.loggedIn()) {
                 SettingItem("오류나 제안 보내기", true) {
