@@ -22,9 +22,9 @@ data class SpacRefund(
             return null
         }
 
-        // 이자 소득세 15.4%, 신탁사 수수료 0.1%
+        // 이자 소득세 15.4%, 신탁사 수수료 0.8%
         val incomeTaxRate = 0.154  // 수익에 대한 소득세
-        val trustFeeRate = 0.001   // 원금에 대한 신탁사 수수료 0.1%
+        val trustFeeRate = 0.008   // 원금에 대한 신탁사 수수료 0.8%
         // 1만원 짜리 스팩은 없으므로 당분간 2000원으로 고정
         var principal = 2000.0
 
