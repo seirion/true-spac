@@ -9,78 +9,85 @@ class UsStockInfo(
     val nameKr: String,
     val attributes: String,
 ) {
+    // 탭으로 구분된 필드들을 캐싱 (lazy 초기화)
+    private val fields: List<String> by lazy {
+        attributes.split('\t')
+    }
 
     companion object {
+        private const val EXPECTED_FIELD_COUNT = 24
+
         fun from(str: String): UsStockInfo {
-            if (str.length < ATTRIBUTES_LEN) {
-                throw IllegalArgumentException("Invalid data length: ${str.length}, expected at least: $ATTRIBUTES_LEN")
+            // 탭으로 구분된 데이터 파싱
+            val fields = str.split('\t')
+            if (fields.size < EXPECTED_FIELD_COUNT) {
+                val preview = str.take(100).replace("\t", "\\t")
+                throw IllegalArgumentException(
+                    "Invalid data format: expected $EXPECTED_FIELD_COUNT fields, got ${fields.size}. Data preview: $preview..."
+                )
             }
 
-            val code = str.substring(22, 38).trim()  // symb
-            val nameKr = str.substring(54, 118).trim()  // knam
-            val attributes = str.substring(0, minOf(str.length, ATTRIBUTES_LEN))
+            val code = fields[4].trim()  // symb (심볼)
+            val nameKr = fields[6].trim()  // knam (한글명)
+            val attributes = str  // 전체 데이터를 attributes로 저장
 
             return UsStockInfo(code, nameKr, attributes)
         }
 
-        private const val ATTRIBUTES_LEN = 242
-
+        // 탭으로 구분된 형식의 필드 인덱스 (0부터 시작)
         val fieldSpecs = listOf(
-            0,      // ncod (National code)
-            2,      // exid (Exchange id)
-            5,      // excd (Exchange code)
-            8,      // exnm (Exchange name)
-            24,     // symb (Symbol)
-            40,     // rsym (realtime symbol)
-            56,     // knam (Korea name)
-            120,    // enam (English name)
-            184,    // stis (Security type)
-            185,    // curr (currency)
-            189,    // zdiv (float position)
-            190,    // ztyp (data type)
-            191,    // base (base price)
-            203,    // bnit (Bid order size)
-            211,    // anit (Ask order size)
-            219,    // mstm (market start time)
-            223,    // metm (market end time)
-            227,    // isdr (DR 여부)
-            228,    // drcd (DR 국가코드)
-            230,    // icod (업종분류코드)
-            234,    // sjong (지수구성종목 존재 여부)
-            235,    // ttyp (Tick size Type)
-            236,    // etyp (ETF/ETN/ETC type)
-            239,    // ttyp_sb (Tick size type 상세)
-            242     // 끝
+            0,      // ncod (National code) - US
+            1,      // exid (Exchange id) - 22
+            2,      // excd (Exchange code) - NAS
+            3,      // exnm (Exchange name) - 나스닥
+            4,      // symb (Symbol) - AACB
+            5,      // rsym (realtime symbol) - NASAACB
+            6,      // knam (Korea name) - 아티우스 애퀴지션 2
+            7,      // enam (English name) - ARTIUS II ACQUISITION INC
+            8,      // stis (Security type) - 2
+            9,      // curr (currency) - USD
+            10,     // zdiv (float position) - 4
+            11,     // ztyp (data type) - (빈 필드)
+            12,     // base (base price) - 10.2700
+            13,     // bnit (Bid order size) - 1
+            14,     // anit (Ask order size) - 1
+            15,     // mstm (market start time) - 930
+            16,     // metm (market end time) - 1600
+            17,     // isdr (DR 여부) - N
+            18,     // drcd (DR 국가코드) - (빈 필드)
+            19,     // icod (업종분류코드) - 000
+            20,     // sjong (지수구성종목 존재 여부) - 0
+            21,     // ttyp (Tick size Type) - 0
+            22,     // etyp (ETF/ETN/ETC type) - (공백)
+            23      // ttyp_sb (Tick size type 상세) - (공백)
         )
 
-        private val columns = listOf(
-            "국가코드",
-            "거래소ID",
-            "거래소코드",
-            "거래소명",
-            "심볼",
-            "실시간심볼",
-            "한글명",
-            "영문명",
-            "증권타입",
-            "통화",
-            "소수점자리",
-            "데이터타입",
-            "기준가",
-            "매수호가단위",
-            "매도호가단위",
-            "시장시작시간",
-            "시장종료시간",
-            "DR여부",
-            "DR국가코드",
-            "업종분류코드",
-            "지수구성종목여부",
-            "호가단위타입",
-            "ETP타입",
-            "호가단위타입상세"
+        private val columns = mapOf(
+            "국가코드" to 0,
+            "거래소ID" to 1,
+            "거래소코드" to 2,
+            "거래소명" to 3,
+            "심볼" to 4,
+            "실시간심볼" to 5,
+            "한글명" to 6,
+            "영문명" to 7,
+            "증권타입" to 8,
+            "통화" to 9,
+            "소수점자리" to 10,
+            "데이터타입" to 11,
+            "기준가" to 12,
+            "매수호가단위" to 13,
+            "매도호가단위" to 14,
+            "시장시작시간" to 15,
+            "시장종료시간" to 16,
+            "DR여부" to 17,
+            "DR국가코드" to 18,
+            "업종분류코드" to 19,
+            "지수구성종목여부" to 20,
+            "호가단위타입" to 21,
+            "ETP타입" to 22,
+            "호가단위타입상세" to 23
         )
-            .mapIndexed { index, s -> s to index }
-            .toMap()
     }
 
     // No-argument constructor required for Firebase
@@ -184,14 +191,7 @@ class UsStockInfo(
 
     private fun getAttribute(key: String): String? {
         return columns[key]?.let { index ->
-            if (index >= 0 && index < fieldSpecs.size - 1) {
-                val start = fieldSpecs[index]
-                val end = fieldSpecs[index + 1]
-                if (attributes.length >= end) {
-                    return attributes.substring(start, end)
-                }
-            }
-            null
+            fields.getOrNull(index)
         }
     }
 }
