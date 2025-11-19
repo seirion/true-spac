@@ -18,6 +18,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.master.MasterFileDownloader
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.worker.PeriodicSyncWorker
 import com.trueedu.spac.worker.StockPriceAlarmManager
@@ -37,6 +38,7 @@ class AdminViewModel @Inject constructor(
     private val tracker: WorkerExecutionTracker,
     private val stockPriceAlarmManager: StockPriceAlarmManager,
     private val workManagerHelper: WorkManagerHelper,
+    private val masterFileDownloader: MasterFileDownloader,
 ) : ViewModel() {
 
     // Worker 상태 State
@@ -69,6 +71,12 @@ class AdminViewModel @Inject constructor(
 
     private val _isBatteryOptimizationIgnored = mutableStateOf(true)
     val isBatteryOptimizationIgnored: State<Boolean> = _isBatteryOptimizationIgnored
+
+    private val _isDownloadingUsMaster = mutableStateOf(false)
+    val isDownloadingUsMaster: State<Boolean> = _isDownloadingUsMaster
+
+    private val _usMasterDownloadMessage = mutableStateOf("")
+    val usMasterDownloadMessage: State<String> = _usMasterDownloadMessage
 
     init {
         // 초기 데이터 로드
@@ -264,6 +272,34 @@ class AdminViewModel @Inject constructor(
             logD("⚙️ 배터리 최적화 설정 페이지로 이동")
         } catch (e: Exception) {
             logD("⚠️ 배터리 최적화 설정 페이지 열기 실패: ${e.message}")
+        }
+    }
+
+    /**
+     * 미국 주식 마스터 파일 다운로드 (테스트용)
+     */
+    fun downloadUsMasterFile() {
+        if (_isDownloadingUsMaster.value) {
+            logD("⚠️ 이미 다운로드 중입니다")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _isDownloadingUsMaster.value = true
+                _usMasterDownloadMessage.value = "다운로드 중..."
+                logD("🇺🇸 미국 주식 마스터 파일 다운로드 시작")
+
+                masterFileDownloader.downloadUsMasterFile()
+
+                _usMasterDownloadMessage.value = "다운로드 완료!"
+                logD("✅ 미국 주식 마스터 파일 다운로드 완료")
+            } catch (e: Exception) {
+                _usMasterDownloadMessage.value = "다운로드 실패: ${e.message}"
+                logD("❌ 미국 주식 마스터 파일 다운로드 실패: ${e.message}")
+            } finally {
+                _isDownloadingUsMaster.value = false
+            }
         }
     }
 }
