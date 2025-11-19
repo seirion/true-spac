@@ -77,6 +77,38 @@ fun AdminScreen(
                 )
             }
 
+            // 미국 주식 마스터 파일 다운로드 버튼
+            Button(
+                onClick = { vm.downloadUsMasterFile() },
+                enabled = !vm.isDownloadingUsMaster.value,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                TrueText(
+                    s = if (vm.isDownloadingUsMaster.value) "다운로드 중..." else "미국 주식 마스터 다운로드",
+                    fontSize = 16,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            // 다운로드 상태 메시지
+            if (vm.usMasterDownloadMessage.value.isNotEmpty()) {
+                Text(
+                    text = vm.usMasterDownloadMessage.value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (vm.usMasterDownloadMessage.value.contains("완료"))
+                        MaterialTheme.colorScheme.primary
+                    else if (vm.usMasterDownloadMessage.value.contains("실패"))
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Worker 실행 상태 표시 (관리자 모드인 경우)
