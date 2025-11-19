@@ -25,10 +25,22 @@ import java.util.zip.ZipInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val KOSPI = "kospi"
-private const val KOSDAQ = "kosdaq"
+enum class Exchange(val code: String, val fileName: String) {
+    /** 한국거래소 코스피 시장 */
+    KOSPI("kospi", "kospi_code.mst.zip"),
 
-private const val NASDAQ = "nas" // 나스닥
+    /** 한국거래소 코스닥 시장 */
+    KOSDAQ("kosdaq", "kosdaq_code.mst.zip"),
+
+    /** 미국 나스닥 시장 */
+    NASDAQ("nas", "nasmst.cod.zip");
+
+    companion object {
+        fun fromCode(code: String): Exchange? {
+            return entries.find { it.code == code }
+        }
+    }
+}
 
 @Singleton
 class StockInfoDownloader @Inject constructor(
@@ -43,9 +55,8 @@ class StockInfoDownloader @Inject constructor(
 
     suspend fun getKrStockInfoList(): List<StockInfo> {
         val stocks = ArrayList<StockInfo>()
-        listOf(KOSPI, KOSDAQ).forEach { exchange ->
-            val fileName = fileName(exchange)
-            val file = download(fileName) ?: return@forEach
+        listOf(Exchange.KOSPI, Exchange.KOSDAQ).forEach { exchange ->
+            val file = download(exchange) ?: return@forEach
             val unzipped = unzipFile(file) ?: return@forEach
             val stockInfo = readKrStockFromUnzippedFile(unzipped, exchange)
             stocks.addAll(stockInfo)
@@ -54,24 +65,16 @@ class StockInfoDownloader @Inject constructor(
     }
 
     suspend fun getUsStockInfoList(): List<UsStockInfo> {
-        val exchange = NASDAQ // nasdaq
-        val fileName = fileName(exchange)
-        val file = download(fileName) ?: return emptyList()
+        val exchange = Exchange.NASDAQ
+        val file = download(exchange) ?: return emptyList()
         val unzipped = unzipFile(file) ?: return emptyList()
         val usStockInfo = readUsStockFromUnzippedFile(unzipped)
         return usStockInfo
     }
 
-    private fun fileName(exchange: String): String {
-        return if (exchange in listOf(KOSPI, KOSDAQ)) {
-            "${exchange}_code.mst.zip"
-        } else {
-            "${exchange}mst.cod.zip"
-        }
-    }
 
-
-    private suspend fun download(fileName: String): File? = withContext(Dispatchers.IO) {
+    private suspend fun download(exchange: Exchange): File? = withContext(Dispatchers.IO) {
+        val fileName = exchange.fileName
         logD("begin download(): $fileName")
 
         val url = "https://new.real.download.dws.co.kr/common/master/${fileName}"
@@ -182,7 +185,7 @@ class StockInfoDownloader @Inject constructor(
         return unzippedFile
     }
 
-    private fun readKrStockFromUnzippedFile(url: String, exchange: String): List<StockInfo> {
+    private fun readKrStockFromUnzippedFile(url: String, exchange: Exchange): List<StockInfo> {
         logD("read file: $url")
         val unzippedFile = File(url)
         val out = ArrayList<StockInfo>()
@@ -190,7 +193,7 @@ class StockInfoDownloader @Inject constructor(
             BufferedReader(InputStreamReader(FileInputStream(unzippedFile), Charset.forName("CP949"))).use { reader ->
                 var line: String?
                 while (reader.readLine().also { line = it } != null) {
-                    if (exchange == KOSPI) {
+                    if (exchange == Exchange.KOSPI) {
                         out.add(StockInfoKospi.from(line!!))
                     } else {
                         out.add(StockInfoKosdaq.from(line!!))
