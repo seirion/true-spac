@@ -134,7 +134,7 @@ class StockPool @Inject constructor(
     suspend fun downloadMasterFiles() {
         status.value = Status.UPDATING
         try {
-            val stocksList = stockInfoDownloader.getStockInfoList()
+            val stocksList = stockInfoDownloader.getKrStockInfoList()
             stocks = stocksList.associateBy(StockInfo::code)
 
             val yyyyMMddHHmm = currentTimeToYyyyMMddHHmm()

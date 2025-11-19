@@ -4,6 +4,7 @@ import android.content.Context
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKosdaq
 import com.trueedu.spac.api.model.dto.firebase.StockInfoKospi
+import com.trueedu.spac.api.model.dto.firebase.UsStockInfo
 import com.trueedu.spac.data.log.logD
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -24,8 +25,10 @@ import java.util.zip.ZipInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val kospi = "kospi"
-private val kosdaq = "kosdaq"
+private const val KOSPI = "kospi"
+private const val KOSDAQ = "kosdaq"
+
+private const val NASDAQ = "nas" // 나스닥
 
 @Singleton
 class StockInfoDownloader @Inject constructor(
@@ -38,22 +41,40 @@ class StockInfoDownloader @Inject constructor(
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    suspend fun getStockInfoList(): List<StockInfo> {
+    suspend fun getKrStockInfoList(): List<StockInfo> {
         val stocks = ArrayList<StockInfo>()
-        listOf(kospi, kosdaq).forEach { exchange ->
-            val file = download(exchange) ?: return@forEach
+        listOf(KOSPI, KOSDAQ).forEach { exchange ->
+            val fileName = fileName(exchange)
+            val file = download(fileName) ?: return@forEach
             val unzipped = unzipFile(file) ?: return@forEach
-            val stockInfo = readUnzippedFile(unzipped, exchange)
+            val stockInfo = readKrStockFromUnzippedFile(unzipped, exchange)
             stocks.addAll(stockInfo)
         }
         return stocks
     }
 
-    private suspend fun download(exchange: String): File? = withContext(Dispatchers.IO) {
-        logD("begin download(): $exchange")
+    suspend fun getUsStockInfoList(): List<UsStockInfo> {
+        val exchange = NASDAQ // nasdaq
+        val fileName = fileName(exchange)
+        val file = download(fileName) ?: return emptyList()
+        val unzipped = unzipFile(file) ?: return emptyList()
+        val usStockInfo = readUsStockFromUnzippedFile(unzipped)
+        return usStockInfo
+    }
 
-        val url = "https://new.real.download.dws.co.kr/common/master/${exchange}_code.mst.zip"
-        val fileName = "${exchange}_code.mst.zip"
+    private fun fileName(exchange: String): String {
+        return if (exchange in listOf(KOSPI, KOSDAQ)) {
+            "${exchange}_code.mst.zip"
+        } else {
+            "${exchange}mst.cod.zip"
+        }
+    }
+
+
+    private suspend fun download(fileName: String): File? = withContext(Dispatchers.IO) {
+        logD("begin download(): $fileName")
+
+        val url = "https://new.real.download.dws.co.kr/common/master/${fileName}"
 
         try {
             // 캐시 디렉토리에 파일 저장
@@ -67,7 +88,7 @@ class StockInfoDownloader @Inject constructor(
             // 다운로드 실행
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    logD("Download failed: $exchange - HTTP ${response.code}")
+                    logD("Download failed: $fileName - HTTP ${response.code}")
                     return@withContext null
                 }
 
@@ -78,11 +99,11 @@ class StockInfoDownloader @Inject constructor(
                     }
                 }
 
-                logD("download completed: $exchange")
+                logD("download completed: $fileName")
                 return@withContext outputFile
             }
         } catch (e: Exception) {
-            logD("Download failed: $exchange - ${e.message}")
+            logD("Download failed: $fileName - ${e.message}")
             e.printStackTrace()
             return@withContext null
         }
@@ -161,7 +182,7 @@ class StockInfoDownloader @Inject constructor(
         return unzippedFile
     }
 
-    private fun readUnzippedFile(url: String, exchange: String): List<StockInfo> {
+    private fun readKrStockFromUnzippedFile(url: String, exchange: String): List<StockInfo> {
         logD("read file: $url")
         val unzippedFile = File(url)
         val out = ArrayList<StockInfo>()
@@ -169,13 +190,46 @@ class StockInfoDownloader @Inject constructor(
             BufferedReader(InputStreamReader(FileInputStream(unzippedFile), Charset.forName("CP949"))).use { reader ->
                 var line: String?
                 while (reader.readLine().also { line = it } != null) {
-                    if (exchange == kospi) {
+                    if (exchange == KOSPI) {
                         out.add(StockInfoKospi.from(line!!))
                     } else {
                         out.add(StockInfoKosdaq.from(line!!))
                     }
                 }
             }
+            return out
+        } catch (e: IOException) {
+            logD("file open failed: $e")
+            e.printStackTrace()
+            return emptyList()
+        } finally {
+            // 압축 해제된 파일 삭제
+            try {
+                if (unzippedFile.exists() && unzippedFile.delete()) {
+                    logD("unzipped file deleted: $url")
+                }
+            } catch (e: Exception) {
+                logD("failed to delete unzipped file: $e")
+            }
+        }
+    }
+
+    private fun readUsStockFromUnzippedFile(url: String): List<UsStockInfo> {
+        logD("read file: $url")
+        val unzippedFile = File(url)
+        val out = ArrayList<UsStockInfo>()
+        try {
+            BufferedReader(InputStreamReader(FileInputStream(unzippedFile), Charset.forName("CP949"))).use { reader ->
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    try {
+                        out.add(UsStockInfo.from(line!!))
+                    } catch (e: Exception) {
+                        logD("Failed to parse US stock info: ${e.message}")
+                    }
+                }
+            }
+            logD("US stock info parsed: ${out.size} stocks")
             return out
         } catch (e: IOException) {
             logD("file open failed: $e")
