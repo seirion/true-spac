@@ -1,5 +1,7 @@
 package com.trueedu.spac.api.model.dto.firebase
 
+import com.google.firebase.database.Exclude
+
 abstract class StockInfo(
     val code: String,
     val nameKr: String,
@@ -8,48 +10,63 @@ abstract class StockInfo(
     protected abstract fun getAttribute(key: String): String?
 
     /** KOSPI 여부 */
+    @get:Exclude
     abstract val isKospi: Boolean
 
     /** KOSDAQ 여부 */
+    @get:Exclude
     abstract val isKosdaq: Boolean
 
     /** SPAC 여부 */
+    @get:Exclude
     abstract val isSpac: Boolean
 
     /** 거래정지 여부 */
+    @get:Exclude
     abstract val isHalt: Boolean
 
     /** 관리종목 여부 */
+    @get:Exclude
     abstract val isDesignated: Boolean
 
     /** 액면가 */
+    @get:Exclude
     abstract val parValue: String?
 
     /** 상장일자 */
+    @get:Exclude
     abstract val listingDate: String?
 
     /** 상장주수 */
+    @get:Exclude
     abstract val listingShares: String?
 
     /** 전일 종가 */
+    @get:Exclude
     abstract val prevPrice: String?
 
     /** 전일 거래량 */
+    @get:Exclude
     abstract val prevVolume: String?
 
     /** 시가총액 (전일 기준) */
+    @get:Exclude
     abstract val marketCap: String?
 
     /** 매출액 */
+    @get:Exclude
     abstract val sales: String?
 
     /** 영업이익 */
+    @get:Exclude
     abstract val operatingProfit: String?
 
     /** 공매도과열 여부 */
+    @get:Exclude
     abstract val isShortSellingOverheating: Boolean
 
     /** 이상급등 여부 */
+    @get:Exclude
     abstract val isUnusualPriceSurge: Boolean
 }
 
@@ -160,14 +177,17 @@ class StockInfoKospi(
         get() = getAttribute("이상급등") == "Y"
 
     /** KOSPI100 종목 여부 */
+    @get:Exclude
     val isKospi100: Boolean
         get() = getAttribute("KOSPI100") == "Y"
 
     /** KOSPI50 종목 여부 */
+    @get:Exclude
     val isKospi50: Boolean
         get() = getAttribute("KOSPI50") == "Y"
 
     /** 자본금 */
+    @get:Exclude
     val capitalStock: String?
         get() = getAttribute("자본금")
 
@@ -286,6 +306,7 @@ class StockInfoKosdaq(
         get() = getAttribute("이상급등종목여부") == "Y"
 
     /** KOSDAQ150 종목 여부 */
+    @get:Exclude
     val isKosdaq150: Boolean
         get() = getAttribute("KOSDAQ150지수여부 (Y,N)") == "Y"
 

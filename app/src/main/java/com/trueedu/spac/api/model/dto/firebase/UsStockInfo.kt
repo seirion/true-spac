@@ -1,5 +1,7 @@
 package com.trueedu.spac.api.model.dto.firebase
 
+import com.google.firebase.database.Exclude
+
 /**
  * 미국 주식 정보
  * 데이터 형식 참고: mastcode 구조체 (해외종목코드정보)
@@ -94,98 +96,122 @@ class UsStockInfo(
     constructor() : this("", "", "")
 
     /** 국가코드 */
+    @get:Exclude
     val nationalCode: String?
         get() = getAttribute("국가코드")?.trim()
 
     /** 거래소ID */
+    @get:Exclude
     val exchangeId: String?
         get() = getAttribute("거래소ID")?.trim()
 
     /** 거래소코드 */
+    @get:Exclude
     val exchangeCode: String?
         get() = getAttribute("거래소코드")?.trim()
 
     /** 거래소명 */
+    @get:Exclude
     val exchangeName: String?
         get() = getAttribute("거래소명")?.trim()
 
     /** 실시간심볼 */
+    @get:Exclude
     val realtimeSymbol: String?
         get() = getAttribute("실시간심볼")?.trim()
 
     /** 영문명 */
+    @get:Exclude
     val englishName: String?
         get() = getAttribute("영문명")?.trim()
 
     /** 증권타입 (1:Index, 2:Stock, 3:ETP(ETF), 4:Warrant) */
+    @get:Exclude
     val securityType: String?
         get() = getAttribute("증권타입")?.trim()
 
     /** 주식 여부 (증권타입 2) */
+    @get:Exclude
     val isStock: Boolean
         get() = securityType == "2"
 
     /** 지수 여부 (증권타입 1) */
+    @get:Exclude
     val isIndex: Boolean
         get() = securityType == "1"
 
     /** ETF 여부 (증권타입 3) */
+    @get:Exclude
     val isEtf: Boolean
         get() = securityType == "3"
 
     /** 통화 */
+    @get:Exclude
     val currency: String?
         get() = getAttribute("통화")?.trim()
 
     /** 소수점자리 */
+    @get:Exclude
     val floatPosition: String?
         get() = getAttribute("소수점자리")?.trim()
 
     /** 기준가 */
+    @get:Exclude
     val basePrice: String?
         get() = getAttribute("기준가")?.trim()
 
     /** 매수호가단위 */
+    @get:Exclude
     val bidOrderUnit: String?
         get() = getAttribute("매수호가단위")?.trim()
 
     /** 매도호가단위 */
+    @get:Exclude
     val askOrderUnit: String?
         get() = getAttribute("매도호가단위")?.trim()
 
     /** 시장시작시간 (HHMM) */
+    @get:Exclude
     val marketStartTime: String?
         get() = getAttribute("시장시작시간")?.trim()
 
     /** 시장종료시간 (HHMM) */
+    @get:Exclude
     val marketEndTime: String?
         get() = getAttribute("시장종료시간")?.trim()
 
     /** DR 여부 */
+    @get:Exclude
     val isDr: Boolean
         get() = getAttribute("DR여부")?.trim() == "Y"
 
     /** DR 국가코드 */
+    @get:Exclude
     val drCountryCode: String?
         get() = getAttribute("DR국가코드")?.trim()
 
     /** 업종분류코드 */
+    @get:Exclude
     val industryCode: String?
         get() = getAttribute("업종분류코드")?.trim()
 
     /** 지수구성종목 존재 여부 (0:구성종목없음, 1:구성종목있음) */
+    @get:Exclude
     val hasIndexConstituents: Boolean
         get() = getAttribute("지수구성종목여부")?.trim() == "1"
 
     /** 호가단위타입 */
+    @get:Exclude
     val tickSizeType: String?
         get() = getAttribute("호가단위타입")?.trim()
 
     /** ETP 타입 (001:ETF, 002:ETN, 003:ETC, 004:Others, 005:VIX Underlying ETF, 006:VIX Underlying ETN) */
+    @get:Exclude
     val etpType: String?
         get() = getAttribute("ETP타입")?.trim()
 
     /** 호가단위타입 상세 */
+    @get:Exclude
     val tickSizeTypeDetail: String?
         get() = getAttribute("호가단위타입상세")?.trim()
 
