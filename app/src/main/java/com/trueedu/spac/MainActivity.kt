@@ -2,11 +2,13 @@ package com.trueedu.spac
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -82,6 +84,19 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 intent?.let { navController.handleDeepLink(it) }
+            }
+
+            // 화면 항상 켜기 기능
+            DisposableEffect(local.keepScreenOn) {
+                if (local.keepScreenOn) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+                onDispose {
+                    // 정리 시 플래그 제거
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
             }
 
             CompositionLocalProvider(

@@ -107,6 +107,9 @@ class Local @Inject constructor(
     // 스팩 설정
     var spacAnnualProfit by preferences.boolean(false) // 청산 가치 1년 환산 표시
 
+    // 화면 항상 켜기
+    var keepScreenOn by preferences.boolean(false)
+
     // 검색 기록 (최대 10개 저장)
     private var searchHistoryList by preferences.stringList(emptyList())
     private val maxSearchHistory = 10

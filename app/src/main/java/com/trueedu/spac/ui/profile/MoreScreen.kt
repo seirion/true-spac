@@ -24,6 +24,7 @@ import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.LogoutDialog
 import com.trueedu.spac.data.user.LocalRemoteConfig
+import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.profile.views.MoreTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
@@ -44,6 +45,7 @@ fun MoreScreen(
     val context = LocalContext.current
     val trueAnalytics = LocalTrueAnalytics.current
     val remoteConfig = LocalRemoteConfig.current
+    val local = LocalTrueLocal.current
     var logoutDialogVisible by remember { mutableStateOf(false) }
     var deleteAccountDialogVisible by remember { mutableStateOf(false) }
 
@@ -81,6 +83,14 @@ fun MoreScreen(
                 trueAnalytics.enterView("profile__refund_schedule__click")
                 openRefundSchedule()
             }
+
+            SettingSwitchItem(
+                text = "화면 항상 켜기",
+                checked = local.keepScreenOn,
+                onCheckedChange = { isChecked ->
+                    local.keepScreenOn = isChecked
+                }
+            )
 
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
