@@ -1,7 +1,10 @@
 package com.trueedu.spac.repo.local
 
 import android.content.SharedPreferences
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.core.content.edit
 import com.trueedu.spac.api.model.dto.auth.TokenResponse
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.util.toLocalDateTime
@@ -108,7 +111,7 @@ class Local @Inject constructor(
     var spacAnnualProfit by preferences.boolean(false) // 청산 가치 1년 환산 표시
 
     // 화면 항상 켜기
-    var keepScreenOn by preferences.boolean(false)
+    val keepScreenOn = createPreferenceState("keepScreenOn", false)
 
     // 검색 기록 (최대 10개 저장)
     private var searchHistoryList by preferences.stringList(emptyList())
@@ -151,5 +154,21 @@ class Local @Inject constructor(
     fun logout() {
         email = ""
         profileImageUrl = ""
+    }
+
+    private fun createPreferenceState(key: String, defaultValue: Boolean): MutableState<Boolean> {
+        val state = mutableStateOf(preferences.getBoolean(key, defaultValue))
+
+        return object : MutableState<Boolean> {
+            override var value: Boolean
+                get() = state.value
+                set(value) {
+                    state.value = value
+                    preferences.edit { putBoolean(key, value) }
+                }
+
+            override fun component1(): Boolean = state.value
+            override fun component2(): (Boolean) -> Unit = { value = it }
+        }
     }
 }
