@@ -86,9 +86,9 @@ fun MoreScreen(
 
             SettingSwitchItem(
                 text = "화면 항상 켜기",
-                checked = local.keepScreenOn,
+                checked = local.keepScreenOn.value,
                 onCheckedChange = { isChecked ->
-                    local.keepScreenOn = isChecked
+                    local.keepScreenOn.value = isChecked
                 }
             )
 

@@ -87,8 +87,8 @@ class MainActivity : ComponentActivity() {
             }
 
             // 화면 항상 켜기 기능
-            DisposableEffect(local.keepScreenOn) {
-                if (local.keepScreenOn) {
+            DisposableEffect(local.keepScreenOn.value) {
+                if (local.keepScreenOn.value) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
