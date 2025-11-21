@@ -53,7 +53,6 @@ fun ColumnScope.SortOptionBody(
         fontSize = 20,
         fontWeight = FontWeight.W600,
         modifier = Modifier
-            .padding(16.dp)
             .wrapContentHeight()
             .fillMaxWidth()
     )
@@ -66,7 +65,7 @@ fun ColumnScope.SortOptionBody(
                 .clickable {
                     onSelected(s)
                 }
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(vertical = 8.dp)
         ) {
             val icon = if (currentSelected == s) {
                 Icons.Filled.CheckCircle

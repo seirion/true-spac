@@ -25,7 +25,6 @@ fun OnOffSetting(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .padding(horizontal = 16.dp)
     ) {
         TrueText(s = title, fontSize = 16, color = MaterialTheme.colorScheme.primary)
         MySwitch(

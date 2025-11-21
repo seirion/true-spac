@@ -86,7 +86,6 @@ private fun TitleView() {
         fontSize = 20,
         fontWeight = FontWeight.W600,
         modifier = Modifier
-            .padding(16.dp)
             .wrapContentHeight()
             .fillMaxWidth()
     )
