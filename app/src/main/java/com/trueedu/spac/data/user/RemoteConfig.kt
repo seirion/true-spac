@@ -7,14 +7,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.api.model.dto.firebase.UserRemoteConfig
 import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,10 +27,17 @@ val LocalRemoteConfig = staticCompositionLocalOf<RemoteConfig> {
 
 @Singleton
 class RemoteConfig @Inject constructor(
+    private val userCycle: UserCycle,
     private val firebaseRealtimeDatabase: FirebaseRealtimeDatabase
 ) {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        logD("RemoteConfig error: ${throwable.message}")
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
+
+    // 로그인 이벤트 수집 Job
+    private var loginEventJob: Job? = null
 
     // 초기화 완료 상태를 나타내는 StateFlow
     private val _isInitialized = MutableStateFlow(false)
@@ -57,20 +67,45 @@ class RemoteConfig @Inject constructor(
         get() = config.notificationEnabled
 
     init {
-        scope.launch {
-            try {
-                val loadedConfig = firebaseRealtimeDatabase.loadUserConfig()
-                logD("config loaded: $loadedConfig")
-                config = loadedConfig
-            } catch (e: Exception) {
-                logD("Failed to load config", e)
-                // 기본값 유지
-            } finally {
-                // 성공 여부와 관계없이 초기화 완료 표시
-                _isInitialized.value = true
-                logD("RemoteConfig 초기화 완료")
-            }
+        loginEventJob = scope.launch {
+            userCycle.loginEvent
+                .collect { isLogin ->
+                    when (isLogin) {
+                        true -> loadConfig()
+                        false -> resetConfig()
+                        null -> {
+                            // 초기 상태: 아직 로그인 여부가 결정되지 않음
+                            logD("RemoteConfig: 로그인 상태 대기 중")
+                        }
+                    }
+                }
         }
+    }
+
+    private suspend fun loadConfig() {
+        try {
+            val loadedConfig = firebaseRealtimeDatabase.loadUserConfig()
+            logD("config loaded: $loadedConfig")
+            config = loadedConfig
+        } catch (e: Exception) {
+            logD("Failed to load config", e)
+            // 기본값 유지
+        } finally {
+            // 성공 여부와 관계없이 초기화 완료 표시
+            _isInitialized.value = true
+            logD("RemoteConfig 초기화 완료")
+        }
+    }
+
+    private suspend fun resetConfig() {
+        config = UserRemoteConfig(
+            adVisible = true,
+            refundPriceVisible = false,
+            pushToken = null,
+            notificationEnabled = false
+        )
+        _isInitialized.value = true
+        logD("RemoteConfig 리셋 완료")
     }
 
     fun updateAdVisible(visible: Boolean) {
@@ -113,6 +148,7 @@ class RemoteConfig @Inject constructor(
     }
 
     fun onCleared() {
+        loginEventJob?.cancel()
         scope.cancel()
     }
 }
