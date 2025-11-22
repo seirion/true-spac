@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ fun MoreTopBar(
     email: String,
     profileImageUrl: String,
     onClick: () -> Unit = {},
+    openNotification: () -> Unit,
 ) {
     val loggedIn = email.isNotEmpty()
     TopAppBar(
@@ -45,6 +47,9 @@ fun MoreTopBar(
             }
         },
         actions = {
+            if (loggedIn) {
+                TouchIcon32(icon = Icons.Filled.Notifications, onClick = openNotification)
+            }
         },
         title = {
             if (loggedIn) {
@@ -63,4 +68,3 @@ fun MoreTopBar(
         ),
     )
 }
-
