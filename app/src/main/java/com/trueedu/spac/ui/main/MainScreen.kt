@@ -25,6 +25,7 @@ import com.trueedu.spac.ui.edit.EditAssetScreen
 import com.trueedu.spac.ui.feedback.FeedbackScreen
 import com.trueedu.spac.ui.following.FollowingScreen
 import com.trueedu.spac.ui.home.HomeScreen
+import com.trueedu.spac.ui.notification.NotificationScreen
 import com.trueedu.spac.ui.profile.MoreScreen
 import com.trueedu.spac.ui.refund.ManageRefundScheduleScreen
 import com.trueedu.spac.ui.refund.RefundScheduleScreen
@@ -130,6 +131,9 @@ fun MainScreen(
                         navController.navigate(AppDestinations.Feedback)
                     },
                     loginWithGoogle = loginWithGoogle,
+                    openNotification = {
+                        navController.navigate(AppDestinations.Notification)
+                    },
                     openAdmin = {
                         navController.navigate(AppDestinations.Admin)
                     }
@@ -219,6 +223,16 @@ fun MainScreen(
             ) {
                 FeedbackScreen(
                     simpleSnackbar = simpleSnackbar,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<AppDestinations.Notification>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/notification" }
+                )
+            ) {
+                NotificationScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

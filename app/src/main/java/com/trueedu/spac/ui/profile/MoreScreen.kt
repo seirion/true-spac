@@ -20,11 +20,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
+import com.trueedu.spac.data.user.LocalRemoteConfig
+import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.LogoutDialog
-import com.trueedu.spac.data.user.LocalRemoteConfig
-import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.profile.views.MoreTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
@@ -40,6 +40,7 @@ fun MoreScreen(
     openRefundSchedule: () -> Unit,
     openFeedback: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
+    openNotification: () -> Unit = {},
     openAdmin: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -52,11 +53,11 @@ fun MoreScreen(
     Scaffold(
         topBar = {
             MoreTopBar(
-                vm.email(),
-                vm.profileImageUrl(),
-            ) {
-                loginWithGoogle(null)
-            }
+                email = vm.email(),
+                profileImageUrl = vm.profileImageUrl(),
+                onClick = { loginWithGoogle(null) },
+                openNotification = openNotification,
+            )
         },
         contentWindowInsets =
             ScaffoldDefaults.contentWindowInsets.exclude(NavigationBarDefaults.windowInsets),
@@ -168,4 +169,3 @@ fun MoreScreen(
         }
     }
 }
-

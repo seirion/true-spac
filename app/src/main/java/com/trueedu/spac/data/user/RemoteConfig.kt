@@ -38,7 +38,8 @@ class RemoteConfig @Inject constructor(
         UserRemoteConfig(
             adVisible = true,
             refundPriceVisible = false,
-            pushToken = null
+            pushToken = null,
+            notificationEnabled = false
         )
     )
 
@@ -51,6 +52,9 @@ class RemoteConfig @Inject constructor(
 
     val pushToken: String?
         get() = config.pushToken
+
+    val notificationEnabled: Boolean
+        get() = config.notificationEnabled
 
     init {
         scope.launch {
@@ -84,6 +88,12 @@ class RemoteConfig @Inject constructor(
     fun updatePushToken(token: String?) {
         if (pushToken != token) {
             updateConfig(config.copy(pushToken = token))
+        }
+    }
+
+    fun updateNotificationEnabled(enabled: Boolean) {
+        if (notificationEnabled != enabled) {
+            updateConfig(config.copy(notificationEnabled = enabled))
         }
     }
 
