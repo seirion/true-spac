@@ -39,6 +39,7 @@ class TrueFirebaseMessagingService : FirebaseMessagingService() {
     /**
      * 새로운 FCM 토큰이 생성되었을 때 호출됩니다.
      * 앱 재설치, 앱 데이터 삭제, 또는 토큰 갱신 시 호출됩니다.
+     * 로그인이 되지 않은 경우 로컬에만 저장하고, 로그인 시 서버에 동기화합니다.
      */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -46,11 +47,15 @@ class TrueFirebaseMessagingService : FirebaseMessagingService() {
 
         // 토큰을 로컬에 저장
         local.notificationToken = token
+        logD("✅ FCM 토큰 로컬 저장 완료")
 
-        // RemoteConfig에도 저장 (Firebase Realtime Database에 자동 동기화)
-        remoteConfig.updatePushToken(token)
-
-        logD("✅ FCM 토큰 저장 완료 (로컬 + 원격)")
+        // 로그인 상태인 경우에만 RemoteConfig에도 저장 (Firebase Realtime Database에 자동 동기화)
+        if (local.email.isNotEmpty()) {
+            remoteConfig.updatePushToken(token)
+            logD("✅ FCM 토큰 서버 저장 완료 (로그인 상태)")
+        } else {
+            logD("ℹ️ 로그인 상태 아님 - FCM 토큰 서버 저장 생략 (로그인 시 자동 동기화됨)")
+        }
     }
 
     /**

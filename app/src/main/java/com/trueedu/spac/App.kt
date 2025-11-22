@@ -106,6 +106,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
     /**
      * FCM 토큰을 가져와서 로컬 및 원격에 저장합니다.
      * 토큰이 변경되지 않았으면 저장을 생략합니다.
+     * 로그인이 되지 않은 경우 로컬에만 저장하고, 로그인 시 서버에 동기화합니다.
      */
     private fun fetchAndSaveFcmToken(local: Local) {
         applicationScope.launch {
@@ -126,13 +127,18 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
 
                 // 로컬에 저장
                 local.notificationToken = token
+                logD("✅ FCM 토큰 로컬 저장 완료")
 
                 // RemoteConfig 초기화 완료 대기 (Race condition 방지)
                 remoteConfig.isInitialized.first { it }
 
-                // RemoteConfig에도 저장 (Firebase Realtime Database에 자동 동기화)
-                remoteConfig.updatePushToken(token)
-                logD("✅ FCM 토큰 저장 완료 (로컬 + 원격)")
+                // 로그인 상태인 경우에만 RemoteConfig에도 저장 (Firebase Realtime Database에 자동 동기화)
+                if (local.email.isNotEmpty()) {
+                    remoteConfig.updatePushToken(token)
+                    logD("✅ FCM 토큰 서버 저장 완료 (로그인 상태)")
+                } else {
+                    logD("ℹ️ 로그인 상태 아님 - FCM 토큰 서버 저장 생략 (로그인 시 자동 동기화됨)")
+                }
             } catch (e: Exception) {
                 logD("⚠️ FCM 토큰 가져오기 실패: ${e.message}")
             }

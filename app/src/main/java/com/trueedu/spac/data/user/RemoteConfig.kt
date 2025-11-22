@@ -28,7 +28,8 @@ val LocalRemoteConfig = staticCompositionLocalOf<RemoteConfig> {
 @Singleton
 class RemoteConfig @Inject constructor(
     private val userCycle: UserCycle,
-    private val firebaseRealtimeDatabase: FirebaseRealtimeDatabase
+    private val firebaseRealtimeDatabase: FirebaseRealtimeDatabase,
+    private val local: com.trueedu.spac.repo.local.Local
 ) {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -71,7 +72,11 @@ class RemoteConfig @Inject constructor(
             userCycle.loginEvent
                 .collect { isLogin ->
                     when (isLogin) {
-                        true -> loadConfig()
+                        true -> {
+                            loadConfig()
+                            // 로그인 성공 시 저장된 FCM 토큰을 서버에 업로드
+                            syncPushTokenAfterLogin()
+                        }
                         false -> resetConfig()
                         null -> {
                             // 초기 상태: 아직 로그인 여부가 결정되지 않음
@@ -106,6 +111,26 @@ class RemoteConfig @Inject constructor(
         )
         _isInitialized.value = true
         logD("RemoteConfig 리셋 완료")
+    }
+
+    /**
+     * 로그인 후 로컬에 저장된 FCM 토큰을 서버에 동기화합니다.
+     */
+    private suspend fun syncPushTokenAfterLogin() {
+        withContext(Dispatchers.IO) {
+            try {
+                val savedToken = local.notificationToken
+                if (savedToken.isNotEmpty()) {
+                    logD("🔄 로그인 후 FCM 토큰 서버 동기화 시작: $savedToken")
+                    updatePushToken(savedToken)
+                    logD("✅ 로그인 후 FCM 토큰 서버 동기화 완료")
+                } else {
+                    logD("ℹ️ 저장된 FCM 토큰 없음 - 동기화 생략")
+                }
+            } catch (e: Exception) {
+                logD("⚠️ 로그인 후 FCM 토큰 동기화 실패: ${e.message}")
+            }
+        }
     }
 
     fun updateAdVisible(visible: Boolean) {
