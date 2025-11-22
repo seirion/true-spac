@@ -87,8 +87,12 @@ class DartManager @Inject constructor(
         return items
     }
 
-    suspend fun CoroutineScope.syncListToFirebase(codes: List<String>) {
-        if (local.dartApiKey.isBlank()) return
+    suspend fun CoroutineScope.syncListToFirebase(codes: List<String>): Int {
+        if (local.dartApiKey.isBlank()) return 0
+
+        // 기존 Firebase 데이터 로드
+        val existingDartData = firebaseDartManager.loadDartList()
+        val existingItemsMap = buildExistingItemsMap(existingDartData)
 
         // 이전 날짜 데이터 제거
         items.clear()
@@ -97,30 +101,28 @@ class DartManager @Inject constructor(
         val fromDate = latestWorkDay()
             .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
+        // 새로운 공시 개수 및 실패한 종목 추적
+        var totalNewDisclosuresCount = 0
+        val failedStocks = mutableListOf<String>()
+
         // 모든 API 호출을 동시에 실행하고 결과를 기다림
         codes.map { code ->
             async {
-                val dartInfo = dartCorpMap[code] ?: return@async
-                try {
-                    dartRemote.list(dartInfo.corpCode, fromDate)
-                        .collect { res ->
-                            if (res.list?.isNotEmpty() == true) {
-                                logD("${dartInfo.nameKr} - ${res.list.first().let {"${it.receiptDate} ${it.reportName}"} }")
-                                items[code] = res.list.map {
-                                    it.copy(reportName = it.reportName.replace(Regex("\\s+"), " "))
-                                }
-                                updateSignal.emit(Unit)
-                            }
-                        }
-                } catch (e: Exception) {
-                    logE("Error loading dart list for ${dartInfo.nameKr}: ${e.message}")
-                }
+                processStockDisclosure(code, dartCorpMap, fromDate, existingItemsMap, failedStocks)
             }
-        }.awaitAll()
+        }.awaitAll().forEach { count ->
+            totalNewDisclosuresCount += count
+        }
+
         lastUpdatedAt = LocalDateTime.now()
             .toDateTimeCompactString()
             .dropLast(2) // ss 제거 하여 yyyyMMddHHmm 으로 변환
             .toLong()
+
+        // 실패한 종목이 있으면 로그 출력
+        if (failedStocks.isNotEmpty()) {
+            logE("⚠️ 공시 조회 실패한 종목 (${failedStocks.size}개): ${failedStocks.take(5).joinToString(", ")}${if (failedStocks.size > 5) " ..." else ""}")
+        }
 
         // 완료 후 firebase 업데이트
         val success = firebaseDartManager.writeDartList(
@@ -132,14 +134,96 @@ class DartManager @Inject constructor(
         if (success) {
             trueAnalytics.log(
                 "dart__write_completed",
-                mapOf("num" to items.size)
+                mapOf(
+                    "num" to items.size,
+                    "newCount" to totalNewDisclosuresCount,
+                    "failedCount" to failedStocks.size
+                )
             )
         } else {
             trueAnalytics.log(
                 "dart__write_failed",
-                mapOf("num" to items.size)
+                mapOf(
+                    "num" to items.size,
+                    "newCount" to totalNewDisclosuresCount,
+                    "failedCount" to failedStocks.size
+                )
             )
         }
+
+        return totalNewDisclosuresCount
+    }
+
+    private fun buildExistingItemsMap(existingDartData: List<DartListResponse>): Map<String, List<DartListItem>> {
+        return existingDartData
+            .mapNotNull { response ->
+                response.list?.let { list ->
+                    if (list.isNotEmpty()) {
+                        // 모든 항목이 같은 stockCode를 가지고 있는지 확인
+                        val stockCodes = list.map { it.stockCode }.toSet()
+                        if (stockCodes.size == 1) {
+                            stockCodes.first() to list
+                        } else {
+                            logE("⚠️ 하나의 response에 여러 stockCode 존재: ${stockCodes.joinToString(", ")}")
+                            null
+                        }
+                    } else null
+                }
+            }
+            .toMap()
+    }
+
+    private suspend fun processStockDisclosure(
+        code: String,
+        dartCorpMap: Map<String, DartCorpCode>,
+        fromDate: String,
+        existingItemsMap: Map<String, List<DartListItem>>,
+        failedStocks: MutableList<String>
+    ): Int {
+        val dartInfo = dartCorpMap[code] ?: return 0
+        return try {
+            var newCount = 0
+            dartRemote.list(dartInfo.corpCode, fromDate)
+                .collect { res ->
+                    if (res.list?.isNotEmpty() == true) {
+                        logD("${dartInfo.nameKr} - ${res.list.first().let {"${it.receiptDate} ${it.reportName}"} }")
+                        items[code] = res.list.map {
+                            it.copy(reportName = it.reportName.replace(Regex("\\s+"), " "))
+                        }
+
+                        // 새로운 공시 확인
+                        val newDisclosures = findNewDisclosures(
+                            items[code] ?: emptyList(),
+                            existingItemsMap[code] ?: emptyList()
+                        )
+
+                        // 새로운 공시가 있으면 로그 출력
+                        if (newDisclosures.isNotEmpty()) {
+                            newCount = newDisclosures.size
+                            newDisclosures.forEach { disclosure ->
+                                logD("📢 새로운 공시: ${dartInfo.nameKr} - ${disclosure.reportName}")
+                            }
+                        }
+
+                        updateSignal.emit(Unit)
+                    }
+                }
+            newCount
+        } catch (e: Exception) {
+            logE("Error loading dart list for ${dartInfo.nameKr}: ${e.message}")
+            synchronized(failedStocks) {
+                failedStocks.add(dartInfo.nameKr)
+            }
+            0
+        }
+    }
+
+    private fun findNewDisclosures(
+        current: List<DartListItem>,
+        existing: List<DartListItem>
+    ): List<DartListItem> {
+        val existingReceiptNums = existing.map { it.receiptNum }.toSet()
+        return current.filter { it.receiptNum !in existingReceiptNums }
     }
 
     fun forceLoad() {

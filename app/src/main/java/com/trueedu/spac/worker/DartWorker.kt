@@ -65,14 +65,18 @@ class DartWorker @AssistedInject constructor(
             }
 
             logD("📡 ${spacList.size}개 종목의 DART 공시 정보를 가져옵니다...")
-            coroutineScope {
+            val newDisclosureCount = coroutineScope {
                 with(dartManager) {
                     syncListToFirebase(spacList.map { it.code })
                 }
             }
 
             val dartSize = dartManager.getSize()
-            logD("✅ DART 업데이트 완료: ${dartSize}개 종목")
+            if (newDisclosureCount > 0) {
+                logD("✅ DART 업데이트 완료: ${dartSize}개 종목 (새로운 공시: ${newDisclosureCount}개)")
+            } else {
+                logD("✅ DART 업데이트 완료: ${dartSize}개 종목 (새로운 공시 없음)")
+            }
 
             Result.success()
         } catch (e: IOException) {
