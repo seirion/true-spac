@@ -91,7 +91,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
             // 관리자 모드: 마스터 파일 다운로드 + Firebase 업로드
             logD("⚙️ 관리자 모드 - Worker 및 알람 설정 시작")
             setupPeriodicWork() // 15분 내외로 마스터 파일 업데이트
-            setupStockPriceAlarm() // 거래 시간 중 5분마다 시세 업데이트
+            setupStockPriceAlarm() // 거래 시간 중 10분마다 시세 업데이트
             setupDartUpdateAlarm() // 평일 9:00-23:00, 30분마다 DART 공시 업데이트
             logD("✅ Admin mode enabled - UserKey is valid, periodic updates active")
         } else {
@@ -192,7 +192,7 @@ class App : Application(), LifecycleEventObserver, Configuration.Provider {
 
     /**
      * 주식 시세 업데이트를 위한 알람 설정
-     * 거래 시간 중 5분 간격으로 실행
+     * 거래 시간 중 10분 간격으로 실행
      */
     private fun setupStockPriceAlarm() {
         stockPriceAlarmManager.startTradingTimeAlarm()
