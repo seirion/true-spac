@@ -24,7 +24,7 @@ import javax.inject.Singleton
 
 /**
  * 주식 시세 업데이트를 위한 AlarmManager 관리 클래스
- * 거래 시간 중 5분 간격으로 실행
+ * 거래 시간 중 10분 간격으로 실행
  */
 @Singleton
 class StockPriceAlarmManager @Inject constructor(
@@ -34,7 +34,7 @@ class StockPriceAlarmManager @Inject constructor(
 
     companion object {
         private const val ALARM_REQUEST_CODE = 1001
-        private const val INTERVAL_MINUTES = 5L // 5분 간격
+        private const val INTERVAL_MINUTES = 10L // 10분 간격
 
         // 재시도 전략: AlarmManager가 INTERVAL_MINUTES 마다 자동으로 재시도
         // WorkManager는 재시도하지 않고 실패 시 다음 스케줄에서 재시도
@@ -86,7 +86,7 @@ class StockPriceAlarmManager @Inject constructor(
         // 즉시 한 번 실행
         triggerImmediately()
 
-        // 정확한 반복 알람 설정 (5분 후부터 반복)
+        // 정확한 반복 알람 설정 (10분 후부터 반복)
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             System.currentTimeMillis() + intervalMillis,
@@ -115,7 +115,7 @@ class StockPriceAlarmManager @Inject constructor(
             .build()
 
         // REPLACE 정책으로 중복 실행 방지
-        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
+        // 실패 시 재시도하지 않고 다음 10분 스케줄에서 재시도
         WorkManager.getInstance(context).enqueueUniqueWork(
             StockPriceWorker.WORK_NAME,
             androidx.work.ExistingWorkPolicy.REPLACE,
@@ -320,7 +320,7 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
 
         // REPLACE 정책: 이전 작업이 실행 중이면 취소하고 새 작업 실행
         // 중복 실행 방지 및 최신 데이터 우선
-        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
+        // 실패 시 재시도하지 않고 다음 10분 스케줄에서 재시도
         WorkManager.getInstance(context).enqueueUniqueWork(
             StockPriceWorker.WORK_NAME,
             androidx.work.ExistingWorkPolicy.REPLACE,
