@@ -43,8 +43,8 @@ class PriceManager @Inject constructor(
         private const val MAX_API_CALLS_PER_SECOND = 20
         // 1초당 20회 제한을 준수하기 위해 여유를 두고 1.1초 대기
         private const val API_CALL_DELAY_MS = 1100L
-        // Firebase에서 시세 데이터를 주기적으로 로드하는 간격 (5분)
-        private const val PRICE_LOAD_INTERVAL_MS = 5 * 60 * 1000L
+        // Firebase에서 시세 데이터를 주기적으로 로드하는 간격 (10분)
+        private const val PRICE_LOAD_INTERVAL_MS = 10 * 60 * 1000L
     }
 
     // 캐시된 시세 데이터
@@ -275,7 +275,6 @@ class PriceManager @Inject constructor(
                 logE("Failed to check or load price on start", e)
             }
 
-            // 5분마다 반복 실행
             while (isActive) {
                 delay(PRICE_LOAD_INTERVAL_MS)
 
