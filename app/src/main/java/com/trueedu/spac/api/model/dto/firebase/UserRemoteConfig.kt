@@ -6,5 +6,5 @@ data class UserRemoteConfig(
     val pushToken: String? = null, // 푸시 토큰
 
     // notification
-    val notificationEnabled: Boolean = false, // 알림 수신 여부
+    val dartNotificationEnabled: Boolean = false, // 전자 공시 알림 수신 여부
 )

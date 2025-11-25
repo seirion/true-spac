@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,7 +48,7 @@ class RemoteConfig @Inject constructor(
             adVisible = true,
             refundPriceVisible = false,
             pushToken = null,
-            notificationEnabled = false
+            dartNotificationEnabled = false
         )
     )
 
@@ -63,8 +62,8 @@ class RemoteConfig @Inject constructor(
     val pushToken: String?
         get() = config.pushToken
 
-    val notificationEnabled: Boolean
-        get() = config.notificationEnabled
+    val dartNotificationEnabled: Boolean
+        get() = config.dartNotificationEnabled
 
     init {
         loginEventJob = scope.launch {
@@ -102,7 +101,7 @@ class RemoteConfig @Inject constructor(
             adVisible = true,
             refundPriceVisible = false,
             pushToken = null,
-            notificationEnabled = false
+            dartNotificationEnabled = false
         )
         _isInitialized.value = true
         logD("RemoteConfig 리셋 완료")
@@ -126,9 +125,9 @@ class RemoteConfig @Inject constructor(
         }
     }
 
-    fun updateNotificationEnabled(enabled: Boolean) {
-        if (notificationEnabled != enabled) {
-            updateConfig(config.copy(notificationEnabled = enabled))
+    fun updateDartNotificationEnabled(enabled: Boolean) {
+        if (dartNotificationEnabled != enabled) {
+            updateConfig(config.copy(dartNotificationEnabled = enabled))
         }
     }
 
