@@ -40,7 +40,7 @@ import com.trueedu.spac.MainActivity
 import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.edit.views.BottomBar
-import com.trueedu.spac.ui.settings.views.SettingSwitchItem
+import com.trueedu.spac.ui.notification.views.NotificationSettingItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,12 +154,13 @@ fun NotificationScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingSwitchItem(
-                text = "알림 수신",
-                checked = remoteConfig.notificationEnabled,
+            NotificationSettingItem(
+                title = "전자공시 알림",
+                desc = "새로운 전자공시를 알림으로 받기",
+                checked = remoteConfig.dartNotificationEnabled,
                 enabled = hasNotificationPermission,
                 onCheckedChange = { isChecked ->
-                    remoteConfig.updateNotificationEnabled(isChecked)
+                    remoteConfig.updateDartNotificationEnabled(isChecked)
                 }
             )
         }
