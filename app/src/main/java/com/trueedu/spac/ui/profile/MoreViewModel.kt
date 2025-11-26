@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.data.log.logE
+import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.user.GoogleAuthClient
 import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.repo.firebase.FirebaseRealtimeDatabase
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class MoreViewModel @Inject constructor(
     private val userCycle: UserCycle,
     private val local: Local,
+    private val dartManager: DartManager,
     private val trueAnalytics: TrueAnalytics,
     private val firebaseRealtimeDatabase: FirebaseRealtimeDatabase,
     private val googleAuthClient: GoogleAuthClient,
@@ -31,6 +33,8 @@ class MoreViewModel @Inject constructor(
 
     // Worker 상태 조회 메서드
     fun isAdminMode(): Boolean = local.getUserKey().isValid()
+
+    fun hasDisclosures(): Boolean = dartManager.getSize() > 0
 
     fun loggedIn(): Boolean = userCycle.loggedIn()
 

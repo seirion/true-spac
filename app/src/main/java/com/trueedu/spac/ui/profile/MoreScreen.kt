@@ -1,11 +1,21 @@
 package com.trueedu.spac.ui.profile
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
@@ -14,18 +24,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trueedu.spac.BuildConfig
 import com.trueedu.spac.LoginCallback
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.repo.local.LocalTrueLocal
+import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.common.DeleteAccountDialog
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.LogoutDialog
+import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
+import com.trueedu.spac.ui.home.views.DisclosurePoint
 import com.trueedu.spac.ui.profile.views.MoreTopBar
 import com.trueedu.spac.ui.settings.views.SettingItem
 import com.trueedu.spac.ui.settings.views.SettingLabel
@@ -75,7 +90,7 @@ fun MoreScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingItem("전자 공시 보기", true) {
+            DartDisclosureItem(vm.hasDisclosures()) {
                 trueAnalytics.enterView("profile__dart__click")
                 openDartScreen()
             }
@@ -168,4 +183,38 @@ fun MoreScreen(
             )
         }
     }
+}
+
+@Composable
+private fun DartDisclosureItem(
+    hasDisclosures: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp)
+            .height(56.dp)
+    ) {
+        Row {
+            TrueText(
+                s = "전자 공시 보기",
+                fontSize = 16,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (hasDisclosures) {
+                Column { DisclosurePoint() }
+            }
+        }
+        Icon(
+            modifier = Modifier.size(24.dp),
+            imageVector = Icons.Outlined.ChevronRight,
+            tint = MaterialTheme.colorScheme.primary,
+            contentDescription = "next"
+        )
+    }
+    DashDividerHorizontal()
 }
