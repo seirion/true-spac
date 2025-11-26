@@ -11,9 +11,8 @@ import com.trueedu.spac.dart.model.DartListItem
 import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.StockPool
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,22 +28,28 @@ class DartViewModel @Inject constructor(
     var items by mutableStateOf<List<Pair<String, List<DartListItem>>>>(emptyList())
 
     init {
-        // dartManager 초기화
-        dartManager.init()
-
         viewModelScope.launch {
-            // StockPool이 SUCCESS 상태가 되고, dartManager가 업데이트될 때 데이터 로드
-            combine(
-                stockPool.status.filter { it == StockPool.Status.SUCCESS },
-                dartManager.updateSignal
-            ) { _, _ -> Unit }
-                .collectLatest {
-                    items = dartManager.getListMap().map {
-                        it.key to it.value
-                    }
-                    loading = false
-                }
+            // StockPool이 SUCCESS가 될 때까지 대기
+            stockPool.status
+                .filter { it == StockPool.Status.SUCCESS }
+                .first()
+
+            // StockPool 준비 완료 후 dartManager 초기화
+            dartManager.init()
+
+            // 초기 데이터 로드
+            loadItems()
+
+            // dartManager 업데이트 구독
+            dartManager.updateSignal.collect {
+                loadItems()
+            }
         }
+    }
+
+    private fun loadItems() {
+        items = dartManager.getListMap().map { it.key to it.value }
+        loading = false
     }
 
     fun forceRefresh() {
