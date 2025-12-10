@@ -2,6 +2,7 @@ package com.trueedu.spac.ui.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,60 +77,73 @@ fun HomeScreen(
         contentWindowInsets =
             ScaffoldDefaults.contentWindowInsets.exclude(NavigationBarDefaults.windowInsets),
     ) { innerPadding ->
-        if (loading) {
-            LoadingView()
-            return@Scaffold
-        }
-
         val state = rememberLazyListState()
+        // 화면이 재생성되어도 초기화 여부를 기억하기 위해 rememberSaveable 사용
+        var initialScrollDone by rememberSaveable { mutableStateOf(false) }
 
-        LaunchedEffect(Unit) {
-            state.scrollToItem(1)
+        // 데이터가 로드되고 난 후, 최초 1회만 스크롤을 1번 위치(검색창 아래)로 이동
+        LaunchedEffect(loading, vm.stocks.value.isNotEmpty()) {
+            if (!loading && !initialScrollDone && vm.stocks.value.isNotEmpty()) {
+                // 데이터가 있을 때만 스크롤 시도
+                state.scrollToItem(1)
+                initialScrollDone = true
+            }
         }
 
-        LazyColumn(
-            state = state,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            item {
-                SearchBarWithSuggestions(
-                    searchText = vm.searchInput,
-                    searchHistory = vm.searchHistory.value,
-                    showSuggestions = vm.showSuggestions.value,
-                    onSearch = { vm.onSearchSubmit() },
-                    onFocusChanged = { vm.onSearchFocusChanged(it) },
-                    onHistoryClick = { vm.onSearchHistoryClick(it) },
-                    onDeleteHistoryItem = { vm.deleteSearchHistoryItem(it) },
-                    onClearHistory = { vm.clearSearchHistory() }
-                )
-            }
-            stickyHeader { SpacSectionView(vm::setSort) }
-
-            itemsIndexed(vm.stocks.value, key = { i, _ -> i }) { i, item ->
-                val spacRefund = spacManager.spacRefundMap.value[item.code]
-                val redemptionValue = spacManager.getRedemptionValue(item.code)
-                val expectedProfit = redemptionValue?.first
-                val expectedProfitRate = redemptionValue?.second
-
-                // 수동 보유 표시
-                val holdingNum = vm.holdingNum(item.code)
-
-                val hasDisclosure = vm.hasDisclosure(item.code)
-
-                SpacItem(i, item,
-                    spacRefund,
-                    vm.price(item.code),
-                    vm.priceChange(item.code),
-                    vm.volume(item.code),
-                    expectedProfit,
-                    expectedProfitRate,
-                    holdingNum,
-                    hasDisclosure,
-                ) {
-                    openStockDetail(item.code, null)
+            LazyColumn(
+                state = state,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    SearchBarWithSuggestions(
+                        searchText = vm.searchInput,
+                        searchHistory = vm.searchHistory.value,
+                        showSuggestions = vm.showSuggestions.value,
+                        onSearch = { vm.onSearchSubmit() },
+                        onFocusChanged = { vm.onSearchFocusChanged(it) },
+                        onHistoryClick = { vm.onSearchHistoryClick(it) },
+                        onDeleteHistoryItem = { vm.deleteSearchHistoryItem(it) },
+                        onClearHistory = { vm.clearSearchHistory() }
+                    )
                 }
+                stickyHeader { SpacSectionView(vm::setSort) }
+
+                itemsIndexed(
+                    vm.stocks.value,
+                    key = { _, item -> item.code }
+                ) { i, item ->
+                    val spacRefund = spacManager.spacRefundMap.value[item.code]
+                    val redemptionValue = spacManager.getRedemptionValue(item.code)
+                    val expectedProfit = redemptionValue?.first
+                    val expectedProfitRate = redemptionValue?.second
+
+                    // 수동 보유 표시
+                    val holdingNum = vm.holdingNum(item.code)
+
+                    val hasDisclosure = vm.hasDisclosure(item.code)
+
+                    SpacItem(i, item,
+                        spacRefund,
+                        vm.price(item.code),
+                        vm.priceChange(item.code),
+                        vm.volume(item.code),
+                        expectedProfit,
+                        expectedProfitRate,
+                        holdingNum,
+                        hasDisclosure,
+                    ) {
+                        openStockDetail(item.code, null)
+                    }
+                }
+            }
+
+            if (loading) {
+                LoadingView()
             }
         }
 
