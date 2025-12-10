@@ -75,8 +75,7 @@ fun MainScreen(
                     selected = currentDestination?.hasRoute(destination::class) == true,
                     onClick = {
                         navController.navigate(destination) {
-                            popUpTo(navController.graph.id) {
-                                inclusive = true
+                            popUpTo(navController.graph.startDestinationId) {
                                 saveState = true
                             }
                             launchSingleTop = true
