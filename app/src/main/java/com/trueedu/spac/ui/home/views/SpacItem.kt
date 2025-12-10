@@ -1,5 +1,6 @@
 package com.trueedu.spac.ui.home.views
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.api.model.dto.firebase.SpacRefund
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
@@ -38,11 +40,18 @@ fun SpacItem(
     hasDisclosure: Boolean = true, // 전자 공시 존재 여부
     onClick: () -> Unit = {},
 ) {
+    val backgroundColor = when (spacRefund?.status) {
+        SpacRefund.Status.MERGE_REVIEW -> Color.Red.copy(alpha = 0.01f)
+        SpacRefund.Status.MERGE_APPROVED -> Color.Red.copy(alpha = 0.03f)
+        else -> Color.Transparent
+    }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .background(backgroundColor)
             .clickable { onClick() }
             .height(56.dp)
             .padding(horizontal = 8.dp)
