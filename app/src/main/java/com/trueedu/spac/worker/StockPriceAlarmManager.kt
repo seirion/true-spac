@@ -44,8 +44,8 @@ class StockPriceAlarmManager @Inject constructor(
      * 거래 시간 중 주기적 알람 시작
      */
     fun startTradingTimeAlarm() {
-        if (!TradingTimeHelper.isTradingTime()) {
-            logD("거래 시간이 아닙니다. 다음 거래 시작 시간에 알람을 예약합니다")
+        if (!TradingTimeHelper.isPriceUpdateTime()) {
+            logD("시세 업데이트 시간이 아닙니다. 다음 거래 시작 시간에 알람을 예약합니다")
             scheduleNextTradingStart()
             return
         }
@@ -66,7 +66,17 @@ class StockPriceAlarmManager @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 logD("⚠️ Cannot schedule exact alarms - using inexact alarm. 설정에서 정확한 알람 권한을 허용해주세요.")
+                // 즉시 한 번 실행
+                triggerImmediately()
+
+                // inexact repeating 알람 설정
                 scheduleInexactRepeating(pendingIntent, intervalMillis)
+                logD("✅ inexact 알람이 설정되었습니다 - 즉시 실행 후 ${INTERVAL_MINUTES}분마다 반복")
+
+                // 가격 업데이트 종료 시간(15:40)에 알람 중지 스케줄링
+                if (TradingTimeHelper.isPriceUpdateTime()) {
+                    scheduleTradingEnd()
+                }
                 return
             } else {
                 logD("✅ 정확한 알람 권한이 허용되었습니다")
@@ -86,7 +96,7 @@ class StockPriceAlarmManager @Inject constructor(
         logD("✅ 알람이 성공적으로 설정되었습니다 - 즉시 실행 후 ${INTERVAL_MINUTES}분마다 반복")
 
         // 거래 종료 시간에 알람 중지 스케줄링 (거래 시간일 경우에만)
-        if (TradingTimeHelper.isTradingTime()) {
+        if (TradingTimeHelper.isPriceUpdateTime()) {
             scheduleTradingEnd()
         }
     }
@@ -126,14 +136,6 @@ class StockPriceAlarmManager @Inject constructor(
      * 다음 거래 시작 시간에 알람 시작 스케줄링
      */
     private fun scheduleNextTradingStart() {
-        // Android 12+ 에서 정확한 알람 권한 체크
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                logD("정확한 알람 권한이 없어 거래 시작 알람을 예약할 수 없습니다")
-                return
-            }
-        }
-
         val millisUntilStart = TradingTimeHelper.getMillisUntilTradingStart()
         val startIntent = Intent(context, TradingStartReceiver::class.java)
         val startPendingIntent = PendingIntent.getBroadcast(
@@ -143,28 +145,37 @@ class StockPriceAlarmManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setExact(
-            AlarmManager.RTC_WAKEUP,
-            System.currentTimeMillis() + millisUntilStart,
-            startPendingIntent
-        )
+        val triggerAtMillis = System.currentTimeMillis() + millisUntilStart
 
-        logD("거래 시작 알람이 ${millisUntilStart / 1000 / 60}분 후로 예약되었습니다")
+        // Android 12+ 에서 정확한 알람 권한이 없으면 inexact single alarm로 예약 (set)
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        if (canScheduleExact) {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                startPendingIntent
+            )
+        } else {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                startPendingIntent
+            )
+        }
+
+        logD("거래 시작 알람이 ${millisUntilStart / 1000 / 60}분 후로 예약되었습니다 (exact: $canScheduleExact)")
     }
 
     /**
-     * 거래 종료 시간에 알람 중지 스케줄링
+     * 가격 업데이트 종료 시간에 알람 중지 스케줄링 (15:40)
      */
     private fun scheduleTradingEnd() {
-        // Android 12+ 에서 정확한 알람 권한 체크
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                logD("정확한 알람 권한이 없어 거래 종료 알람을 예약할 수 없습니다")
-                return
-            }
-        }
-
-        val millisUntilEnd = TradingTimeHelper.getMillisUntilTradingEnd()
+        val millisUntilEnd = TradingTimeHelper.getMillisUntilPriceUpdateEnd()
         val endIntent = Intent(context, TradingEndReceiver::class.java)
         val endPendingIntent = PendingIntent.getBroadcast(
             context,
@@ -173,13 +184,30 @@ class StockPriceAlarmManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setExact(
-            AlarmManager.RTC_WAKEUP,
-            System.currentTimeMillis() + millisUntilEnd,
-            endPendingIntent
-        )
+        val triggerAtMillis = System.currentTimeMillis() + millisUntilEnd
 
-        logD("거래 종료 알람이 ${millisUntilEnd / 1000 / 60}분 후로 예약되었습니다")
+        // Android 12+ 에서 정확한 알람 권한이 없으면 inexact single alarm로 예약 (set)
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        if (canScheduleExact) {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                endPendingIntent
+            )
+        } else {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                endPendingIntent
+            )
+        }
+
+        logD("가격 업데이트 종료 알람이 ${millisUntilEnd / 1000 / 60}분 후로 예약되었습니다 (exact: $canScheduleExact)")
     }
 
     /**
@@ -225,6 +253,7 @@ class StockPriceAlarmManager @Inject constructor(
     fun getAlarmDiagnostics(): String {
         val isScheduled = isAlarmScheduled()
         val isTradingTime = TradingTimeHelper.isTradingTime()
+        val isPriceUpdateTime = TradingTimeHelper.isPriceUpdateTime()
         val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms()
         } else {
@@ -232,21 +261,24 @@ class StockPriceAlarmManager @Inject constructor(
         }
         val nextTradingStart = TradingTimeHelper.getNextTradingStartTime()
         val nextTradingEnd = TradingTimeHelper.getNextTradingEndTime()
+        val nextPriceUpdateEnd = TradingTimeHelper.getNextPriceUpdateEndTime()
 
         return buildString {
             appendLine("📊 알람 진단 정보")
             appendLine("━━━━━━━━━━━━━━━━")
             appendLine("알람 상태: ${if (isScheduled) "✅ 활성화" else "❌ 중단됨"}")
-            appendLine("현재 거래 시간: ${if (isTradingTime) "✅ YES" else "❌ NO"}")
+            appendLine("현재 거래 시간: ${if (isTradingTime) "✅ YES" else "❌ NO"} (09:00~15:30)")
+            appendLine("현재 업데이트 시간: ${if (isPriceUpdateTime) "✅ YES" else "❌ NO"} (09:00~15:40)")
             appendLine("정확한 알람 권한: ${if (canScheduleExact) "✅ 허용됨" else "❌ 거부됨"}")
             appendLine("다음 거래 시작: $nextTradingStart")
-            appendLine("다음 거래 종료: $nextTradingEnd")
+            appendLine("다음 거래 종료: $nextTradingEnd (15:30)")
+            appendLine("다음 업데이트 종료: $nextPriceUpdateEnd (15:40)")
             appendLine("━━━━━━━━━━━━━━━━")
             if (!isScheduled) {
                 appendLine("\n⚠️ 알람이 중단된 이유:")
-                if (!isTradingTime) {
-                    appendLine("• 현재 거래 시간이 아님")
-                    appendLine("  → 앱이 거래 시간 외에 실행됨")
+                if (!isPriceUpdateTime) {
+                    appendLine("• 현재 시세 업데이트 시간이 아님")
+                    appendLine("  → 앱이 업데이트 시간(09:00~15:40) 외에 실행됨")
                 }
                 if (!canScheduleExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     appendLine("• 정확한 알람 권한 없음")
@@ -269,14 +301,12 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
         val currentTime = java.time.LocalDateTime.now()
         logD("⏰ 시세 업데이트 알람 트리거: $currentTime")
 
-        // 거래 시간 체크 (경고만 하고 계속 진행 - 테스트 목적)
-        if (!TradingTimeHelper.isTradingTime()) {
-            logD("⚠️ 거래 시간이 아닙니다 (테스트 모드에서는 계속 진행)")
-            // 테스트 목적으로 거래 시간이 아니어도 계속 진행
-            // 프로덕션 배포 시 아래 return 주석을 해제하세요
-            // return
+        // 업데이트 시간 체크 (15:40까지 허용)
+        if (!TradingTimeHelper.isPriceUpdateTime()) {
+            logD("⏭️ 업데이트 시간이 아닙니다. Worker 실행을 건너뜁니다")
+            return
         } else {
-            logD("✅ 거래 시간 확인됨")
+            logD("✅ 업데이트 시간 확인됨")
         }
 
         // WorkManager로 실제 작업 실행
@@ -332,7 +362,7 @@ class TradingEndReceiver : BroadcastReceiver() {
     lateinit var applicationScope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
-        logD("거래 종료 시간 도달 - 종가 업데이트 후 알람 중지")
+        logD("가격 업데이트 종료 시간 도달 - 종가 업데이트 후 알람 중지")
 
         // BroadcastReceiver의 goAsync()를 사용하여 비동기 작업 수행
         val pendingResult = goAsync()
@@ -340,10 +370,12 @@ class TradingEndReceiver : BroadcastReceiver() {
         // Application 스코프에서 종가 업데이트
         applicationScope.launch {
             try {
-                // 오늘 날짜의 장 종료 시각(15:30)으로 종가 업데이트
+                // 오늘 날짜의 장 종료 시각(15:30)으로 종가를 저장하되,
+                // 실제 조회는 15:40 시점에 수행하여 종가 반영 지연을 흡수한다.
                 val marketCloseTime = TradingTimeHelper.getTodayMarketCloseTime()
+                val priceUpdateEndTime = TradingTimeHelper.getTodayPriceUpdateEndTime()
 
-                logD("📊 장 종가 업데이트 시작 (시각: $marketCloseTime)")
+                logD("📊 장 종가 업데이트 시작 (저장 시각: $marketCloseTime, 조회 시각: $priceUpdateEndTime)")
 
                 // KIS API에서 현재 시세 가져오기
                 val priceMap = priceManager.getPriceMap(forceRefresh = true)

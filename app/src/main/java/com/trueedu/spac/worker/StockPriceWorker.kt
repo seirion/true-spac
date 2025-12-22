@@ -14,7 +14,7 @@ import dagger.assisted.AssistedInject
 
 /**
  * 주식 시세를 주기적으로 가져와서 Firebase에 저장하는 Worker
- * 거래 시간에만 실행됩니다.
+ * 시세 업데이트 허용 시간(09:00~15:40)에만 실행됩니다.
  */
 @HiltWorker
 class StockPriceWorker @AssistedInject constructor(
@@ -35,13 +35,12 @@ class StockPriceWorker @AssistedInject constructor(
             tracker.recordPriceUpdateExecution()
             logD("🔄 시세 업데이트 Worker 시작: ${java.time.LocalDateTime.now()}")
 
-            // 거래 시간 체크 (경고만 하고 계속 진행)
-            if (!TradingTimeHelper.isTradingTime()) {
-                logD("⚠️ 거래 시간이 아니지만 테스트 목적으로 계속 진행합니다")
-                // 프로덕션에서는 return Result.success() 하려면 아래 주석 해제
-                // return Result.success()
+            // 업데이트 시간 체크 (15:40까지 허용)
+            if (!TradingTimeHelper.isPriceUpdateTime()) {
+                logD("⏭️ 업데이트 시간이 아닙니다. 작업을 종료합니다")
+                return Result.success()
             } else {
-                logD("✅ 거래 시간 확인됨")
+                logD("✅ 업데이트 시간 확인됨")
             }
 
             // KIS API에서 모든 SPAC 종목의 시세 데이터 가져오기
