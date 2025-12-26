@@ -172,6 +172,17 @@ tasks.register("printVersionCode") {
     }
 }
 
+// KSP가 특정 환경에서 generated/ksp/<variant>/kotlin 디렉터리를 생성하지 못하는 경우가 있어,
+// downstream 작업에서 NoSuchFileException이 발생할 수 있다. (빈 디렉터리라도 보장)
+tasks.matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }.configureEach {
+    doFirst {
+        val variantName = name.removePrefix("ksp").removeSuffix("Kotlin")
+        val variantDir = variantName.replaceFirstChar { it.lowercase() }
+        file("$buildDir/generated/ksp/$variantDir/kotlin").mkdirs()
+        file("$buildDir/generated/ksp/$variantDir/java").mkdirs()
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
