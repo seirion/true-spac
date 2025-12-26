@@ -84,6 +84,13 @@ sealed interface AppDestinations {
     }
 
     @Serializable
+    data object MergeSchedule : AppDestinations {
+        override val label: String = "스팩 합병 일정"
+        @Transient
+        override val icon: ImageVector = Icons.Default.BarChart
+    }
+
+    @Serializable
     data object ManageRefundSchedule : AppDestinations {
         override val label: String = "청산 일정 관리"
         @Transient

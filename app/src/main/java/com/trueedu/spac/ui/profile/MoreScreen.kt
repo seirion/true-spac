@@ -53,6 +53,7 @@ fun MoreScreen(
     gotoPlayStore: () -> Unit,
     openDartScreen: () -> Unit,
     openRefundSchedule: () -> Unit,
+    openMergeSchedule: () -> Unit,
     openFeedback: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
     openNotification: () -> Unit = {},
@@ -98,6 +99,11 @@ fun MoreScreen(
             SettingItem("스팩 청산 일정", true) {
                 trueAnalytics.enterView("profile__refund_schedule__click")
                 openRefundSchedule()
+            }
+
+            SettingItem("스팩 합병 일정", true) {
+                trueAnalytics.enterView("profile__merge_schedule__click")
+                openMergeSchedule()
             }
 
             SettingSwitchItem(
