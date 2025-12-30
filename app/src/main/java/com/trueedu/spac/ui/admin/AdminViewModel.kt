@@ -17,17 +17,20 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.log.logD
+import com.trueedu.spac.data.log.logE
 import com.trueedu.spac.data.master.MasterFileDownloader
 import com.trueedu.spac.repo.local.Local
 import com.trueedu.spac.worker.PeriodicSyncWorker
 import com.trueedu.spac.worker.StockPriceAlarmManager
-import com.trueedu.spac.worker.StockPriceWorker
 import com.trueedu.spac.worker.WorkerExecutionTracker
 import com.trueedu.spac.worker.WorkManagerHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -39,6 +42,7 @@ class AdminViewModel @Inject constructor(
     private val stockPriceAlarmManager: StockPriceAlarmManager,
     private val workManagerHelper: WorkManagerHelper,
     private val masterFileDownloader: MasterFileDownloader,
+    private val priceManager: PriceManager,
 ) : ViewModel() {
 
     // Worker 상태 State
@@ -139,20 +143,37 @@ class AdminViewModel @Inject constructor(
      * 시세 업데이트 Worker를 수동으로 실행 (테스트용)
      */
     fun manuallyTriggerPriceUpdate() {
-        logD("🧪 수동으로 시세 업데이트 Worker 실행")
+        logD("🧪 수동으로 시세 업데이트 실행 (거래시간 체크 우회)")
 
-        val workRequest = OneTimeWorkRequestBuilder<StockPriceWorker>()
-            .setConstraints(createNetworkConstraints())
-            .build()
+        viewModelScope.launch {
+            try {
+                // Worker와 동일하게 실행 기록 저장 (앱 종료 후에도 확인 가능)
+                tracker.recordPriceUpdateExecution()
+                logD("🔄 수동 시세 업데이트 시작")
 
-        // REPLACE 정책으로 중복 실행 방지
-        // 실패 시 재시도하지 않고 다음 5분 스케줄에서 재시도
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            StockPriceWorker.WORK_NAME,
-            androidx.work.ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
-        logD("✅ 시세 업데이트 Worker가 큐에 추가되었습니다 (REPLACE 정책)")
+                val priceMap = withContext(Dispatchers.IO) {
+                    priceManager.getPriceMap(forceRefresh = true)
+                }
+                if (priceMap.isEmpty()) {
+                    logD("⚠️ 업데이트할 시세 데이터가 없습니다 (UserKey/네트워크 상태를 확인하세요)")
+                    return@launch
+                }
+
+                logD("💾 Firebase에 ${priceMap.size}개 종목 시세를 저장합니다...")
+                val success = withContext(Dispatchers.IO) {
+                    priceManager.writePriceToFirebase(priceMap)
+                }
+                if (success) {
+                    logD("✅ 수동 시세 업데이트 완료: ${priceMap.size}개 종목")
+                } else {
+                    logD("❌ 수동 시세 업데이트 실패: Firebase 저장 실패")
+                }
+            } catch (e: Exception) {
+                logE(e, "❌ 수동 시세 업데이트 실패")
+            } finally {
+                refreshWorkerStats()
+            }
+        }
     }
 
     /**
@@ -224,7 +245,7 @@ class AdminViewModel @Inject constructor(
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             PeriodicSyncWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE, // KEEP 대신 REPLACE 사용
+            ExistingPeriodicWorkPolicy.UPDATE, // REPLACE deprecated → UPDATE 사용 (다음 실행부터 새 스펙 적용)
             periodicWorkRequest
         )
 
