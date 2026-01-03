@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,6 +33,28 @@ import com.trueedu.spac.ui.refund.ManageRefundScheduleScreen
 import com.trueedu.spac.ui.refund.RefundScheduleScreen
 import com.trueedu.spac.ui.search.SearchScreen
 import com.trueedu.spac.ui.stock.StockDetailScreen
+
+private const val MAX_CLEAR_NON_TAB_BACKSTACK_GUARD = 100
+
+/**
+ * 탭(Home/Following/More) 전환 시 탭 외 목적지(예: Search/StockDetail/Admin 등)는 상태를 유지하지 않기 위해,
+ * 현재 back stack을 "탭 루트 목적지"가 나올 때까지 정리한다.
+ *
+ * - 탭 루트 3개는 아래 navigate 옵션(popUpTo + saveState/restoreState)로만 유지된다.
+ * - 탭 외 화면은 popBackStack()으로 제거되어 restore 대상이 되지 않는다.
+ */
+private fun NavHostController.clearNonTabBackStack(tabs: List<AppDestinations>) {
+    fun isOnTabDestination(): Boolean {
+        val dest = currentDestination
+        return tabs.any { tab -> dest?.hasRoute(tab::class) == true }
+    }
+
+    // 비정상적인 back stack 상태에서 무한 루프를 방지하기 위한 안전장치
+    var guard = 0
+    while (!isOnTabDestination() && guard++ < MAX_CLEAR_NON_TAB_BACKSTACK_GUARD) {
+        if (!popBackStack()) break
+    }
+}
 
 @Composable
 fun MainScreen(
@@ -75,8 +98,11 @@ fun MainScreen(
                     label = { Text(destination.label) },
                     selected = currentDestination?.hasRoute(destination::class) == true,
                     onClick = {
+                        // 탭 외 화면(Search/StockDetail 등)은 유지하지 않고, 탭 루트까지만 남긴다.
+                        navController.clearNonTabBackStack(AppDestinations.tabs)
+
                         navController.navigate(destination) {
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }
                             launchSingleTop = true
