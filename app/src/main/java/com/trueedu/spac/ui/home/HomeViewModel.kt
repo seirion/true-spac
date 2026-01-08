@@ -91,6 +91,9 @@ class HomeViewModel @Inject constructor(
             launch {
                 snapshotFlow { manualAssets.assets.value }
                     .collectLatest {
+                        if (it.isEmpty() && spacFilter.onlyAssets) {
+                            spacFilter = spacFilter.copy(onlyAssets = false)
+                        }
                         filterStocks()
                     }
             }
@@ -122,6 +125,10 @@ class HomeViewModel @Inject constructor(
                 DateTimeFormatter.ofPattern("HH:mm").format(time)
             }
         }
+    }
+
+    val hasAssets = derivedStateOf {
+        manualAssets.assets.value.isNotEmpty()
     }
 
     fun setSort(option: SpacSort) {
@@ -160,6 +167,11 @@ class HomeViewModel @Inject constructor(
         return searchKey.isEmpty() || stock.nameKr.lowercase().contains(searchKey)
     }
 
+    private fun matchesAssetFilter(stock: StockInfo): Boolean {
+        if (!spacFilter.onlyAssets) return true
+        return manualAssets.assets.value.any { it.code == stock.code }
+    }
+
     fun filterStocks() {
         stocks.value = spacManager.spacList.value
             .filterNot { stockPool.delisted(it.code) }
@@ -167,6 +179,7 @@ class HomeViewModel @Inject constructor(
             .filter { matchesPriceFilter(it) }
             .filter { matchesFollowingFilter(it) }
             .filter { matchesSearchFilter(it) }
+            .filter { matchesAssetFilter(it) }
             .sortedBy(sortFun[sort.value]!!)
     }
 
