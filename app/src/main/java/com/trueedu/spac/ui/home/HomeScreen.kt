@@ -27,9 +27,11 @@ import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.ui.ads.NativeAdView
 import com.trueedu.spac.ui.common.LoadingView
+import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.home.bottomsheet.FilterOptionBottomSheet
 import com.trueedu.spac.ui.home.bottomsheet.SortOptionBottomSheet
 import com.trueedu.spac.ui.home.views.HomeTopBar
+import com.trueedu.spac.ui.home.views.MyAssetSummary
 import com.trueedu.spac.ui.home.views.SearchBarWithSuggestions
 import com.trueedu.spac.ui.home.views.SpacItem
 import com.trueedu.spac.ui.home.views.SpacSectionView
@@ -82,6 +84,11 @@ fun HomeScreen(
         // 화면이 재생성되어도 초기화 여부를 기억하기 위해 rememberSaveable 사용
         var initialScrollDone by rememberSaveable { mutableStateOf(false) }
 
+        val myAssetCount by vm.myAssetCount
+        val myAssetTotalPrincipal by vm.myAssetTotalPrincipal
+        val myAssetTotalValue by vm.myAssetTotalValue
+        val myAssetProfitRate by vm.myAssetProfitRate
+
         // 데이터가 로드되고 난 후, 최초 1회만 스크롤을 1번 위치(검색창 아래)로 이동
         LaunchedEffect(loading, vm.stocks.value.isNotEmpty()) {
             if (!loading && !initialScrollDone && vm.stocks.value.isNotEmpty()) {
@@ -113,6 +120,19 @@ fun HomeScreen(
                     )
                 }
                 stickyHeader { SpacSectionView(vm::setSort) }
+
+                if (vm.spacFilter.onlyAssets && hasAssets) {
+                    item { Margin(4) }
+                    item {
+                        MyAssetSummary(
+                            assetCount = myAssetCount,
+                            totalPrincipal = myAssetTotalPrincipal,
+                            totalValue = myAssetTotalValue,
+                            profitRate = myAssetProfitRate,
+                        )
+                    }
+                    item { Margin(4) }
+                }
 
                 itemsIndexed(
                     vm.stocks.value,

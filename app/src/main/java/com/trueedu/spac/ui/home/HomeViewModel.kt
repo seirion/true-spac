@@ -91,7 +91,7 @@ class HomeViewModel @Inject constructor(
             launch {
                 snapshotFlow { manualAssets.assets.value }
                     .collectLatest {
-                        if (it.isEmpty() && spacFilter.onlyAssets) {
+                        if (it.none { asset -> asset.quantity > 0.0 } && spacFilter.onlyAssets) {
                             spacFilter = spacFilter.copy(onlyAssets = false)
                         }
                         filterStocks()
@@ -128,7 +128,35 @@ class HomeViewModel @Inject constructor(
     }
 
     val hasAssets = derivedStateOf {
-        manualAssets.assets.value.isNotEmpty()
+        manualAssets.assets.value.any { it.quantity > 0.0 }
+    }
+
+    val myAssetCount = derivedStateOf {
+        manualAssets.assets.value.count { it.quantity > 0.0 }
+    }
+
+    val myAssetTotalPrincipal = derivedStateOf {
+        manualAssets.assets.value
+            .asSequence()
+            .filter { it.quantity > 0.0 }
+            .sumOf { it.quantity * it.price }
+    }
+
+    val myAssetTotalValue = derivedStateOf {
+        // PriceManager 내부 캐시는 Compose state가 아니므로, 타임스탬프를 읽어
+        // 가격 업데이트 시 요약이 재계산되도록 트리거로 사용한다.
+        priceManager.cacheTimestamp
+        manualAssets.assets.value
+            .asSequence()
+            .filter { it.quantity > 0.0 }
+            .sumOf { it.quantity * price(it.code) }
+    }
+
+    val myAssetProfitRate = derivedStateOf {
+        val principal = myAssetTotalPrincipal.value
+        if (principal <= 0.0) return@derivedStateOf 0.0
+        val currentValue = myAssetTotalValue.value
+        (currentValue - principal) * 100.0 / principal
     }
 
     fun setSort(option: SpacSort) {
@@ -169,7 +197,7 @@ class HomeViewModel @Inject constructor(
 
     private fun matchesAssetFilter(stock: StockInfo): Boolean {
         if (!spacFilter.onlyAssets) return true
-        return manualAssets.assets.value.any { it.code == stock.code }
+        return manualAssets.assets.value.any { it.code == stock.code && it.quantity > 0.0 }
     }
 
     fun filterStocks() {
