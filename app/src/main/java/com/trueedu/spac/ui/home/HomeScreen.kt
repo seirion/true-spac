@@ -48,6 +48,7 @@ fun HomeScreen(
 
     val spacManager = vm.spacManager
     val loading by spacManager.loading.collectAsState()
+    val hasAssets by vm.hasAssets
 
     Scaffold(
         topBar = {
@@ -160,6 +161,7 @@ fun HomeScreen(
         FilterOptionBottomSheet(
             visible = filterSheetVisible,
             current = vm.spacFilter,
+            hasAssets = hasAssets,
             spacManager = vm.spacManager,
             onDismiss = { filterSheetVisible = false },
             onValueChanged = vm::updateFilter,

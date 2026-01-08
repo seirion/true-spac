@@ -22,6 +22,7 @@ import com.trueedu.spac.ui.home.model.SpacFilter
 fun FilterOptionBottomSheet(
     visible: Boolean,
     current: SpacFilter,
+    hasAssets: Boolean,
     spacManager: SpacManager,
     onDismiss: () -> Unit,
     onValueChanged: (SpacFilter) -> Unit,
@@ -33,7 +34,7 @@ fun FilterOptionBottomSheet(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            FilterOptionBody(current, spacManager, onValueChanged)
+            FilterOptionBody(current, hasAssets, spacManager, onValueChanged)
         }
     }
 }
@@ -41,6 +42,7 @@ fun FilterOptionBottomSheet(
 @Composable
 private fun ColumnScope.FilterOptionBody(
     current: SpacFilter,
+    hasAssets: Boolean,
     spacManager: SpacManager,
     onValueChanged: (SpacFilter) -> Unit,
 ) {
@@ -75,6 +77,16 @@ private fun ColumnScope.FilterOptionBody(
             !it
         )
         onValueChanged(current.copy(filterFollowing = it))
+    }
+
+    if (hasAssets) {
+        OnOffSetting("내 보유 종목만 보기", current.onlyAssets) {
+            trueAnalytics.clickToggleButton(
+                "filter__only_assets__click",
+                !it
+            )
+            onValueChanged(current.copy(onlyAssets = it))
+        }
     }
 }
 
