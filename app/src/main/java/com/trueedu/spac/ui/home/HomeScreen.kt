@@ -22,7 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.data.user.LocalRemoteConfig
 import com.trueedu.spac.ui.ads.AdmobManager
 import com.trueedu.spac.ui.ads.NativeAdView
