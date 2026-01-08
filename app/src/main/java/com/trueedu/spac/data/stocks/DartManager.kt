@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,6 +37,8 @@ class DartManager @Inject constructor(
 ) {
     companion object {
         private const val CACHE_VALIDITY_MINUTES = 30L
+        private val CACHE_TIME_FORMATTER: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmm")
     }
 
     private val items = ConcurrentHashMap<String, List<DartListItem>>()
@@ -51,12 +54,16 @@ class DartManager @Inject constructor(
             val lastUpdatedAtRemote = firebaseDartManager.lastUpdatedAt()
             logD("lastUpdatedAtRemote: $lastUpdatedAtRemote")
             val now = LocalDateTime.now()
-                .toDateTimeCompactString()
-                .dropLast(2) // ss 제거 하여 yyyyMMddHHmm 으로 변환
-                .toLong()
             val hasApiKey = local.dartApiKey.isNotBlank()
 
-            if (hasApiKey && now - lastUpdatedAtRemote > CACHE_VALIDITY_MINUTES) {
+            val lastUpdatedAtRemoteTime = parseCacheTime(lastUpdatedAtRemote)
+            val cacheAgeMinutes = if (lastUpdatedAtRemoteTime == null) {
+                Long.MAX_VALUE
+            } else {
+                ChronoUnit.MINUTES.between(lastUpdatedAtRemoteTime, now).coerceAtLeast(0L)
+            }
+
+            if (hasApiKey && cacheAgeMinutes > CACHE_VALIDITY_MINUTES) {
                 // 다시 로딩
                 while (spacManager.loading.value) {
                     //logD("waiting spacManager")
@@ -77,6 +84,15 @@ class DartManager @Inject constructor(
             }
             logD("init() completed - ${items.size}")
         }
+    }
+
+    private fun parseCacheTime(timestamp: Long): LocalDateTime? {
+        if (timestamp <= 0L) return null
+        val s = timestamp.toString()
+        if (s.length != 12) return null
+        return runCatching {
+            LocalDateTime.parse(s, CACHE_TIME_FORMATTER)
+        }.getOrNull()
     }
 
     fun getSize(): Int {
