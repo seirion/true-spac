@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class MergeSchedule(
     val nameKr: String = "",
     val code: String = "",
+    val target: String = "", // 합병 대상
     // 합병반대의사통지 접수기간 (yyyyMMdd ~ yyyyMMdd)
     val dissentNoticeStartDate: String = "",
     val dissentNoticeEndDate: String = "",

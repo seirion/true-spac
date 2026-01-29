@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.TextStyle
@@ -38,10 +37,16 @@ import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.bottomsheet.DraggableBottomSheet
 import com.trueedu.spac.ui.merge.model.MergeSchedule
 import com.trueedu.spac.util.formatter.dateFormat
+import java.net.URLEncoder
 
 private fun formatDateOrDash(s: String): String {
     if (s.isBlank()) return "-"
     return dateFormat(s)
+}
+
+private fun dartCompanySearchUrl(companyName: String): String {
+    val encoded = URLEncoder.encode(companyName, Charsets.UTF_8.name())
+    return "https://dart.fss.or.kr/dsab001/main.do?autoSearch=true&textCrpNM=$encoded"
 }
 
 private fun formatDateRangeOrDash(start: String, end: String): String {
@@ -53,6 +58,7 @@ private fun formatDateRangeOrDash(start: String, end: String): String {
 fun MergeScheduleScreen(
     vm: MergeScheduleViewModel = hiltViewModel(),
     openStockDetail: (String, Int?) -> Unit,
+    openUrl: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -81,6 +87,7 @@ fun MergeScheduleScreen(
                 MergeScheduleContent(
                     schedules = vm.schedules,
                     openStockDetail = openStockDetail,
+                    openUrl = openUrl,
                 )
             }
         }
@@ -98,6 +105,7 @@ fun MergeScheduleScreen(
 private fun MergeScheduleContent(
     schedules: List<MergeSchedule>,
     openStockDetail: (String, Int?) -> Unit,
+    openUrl: (String) -> Unit,
 ) {
     if (schedules.isEmpty()) {
         Box(
@@ -121,6 +129,7 @@ private fun MergeScheduleContent(
                 MergeScheduleItem(
                     schedule = schedule,
                     openStockDetail = openStockDetail,
+                    openUrl = openUrl,
                 )
             }
         }
@@ -156,9 +165,8 @@ private fun MergeScheduleInfoContent() {
 private fun MergeScheduleItem(
     schedule: MergeSchedule,
     openStockDetail: (String, Int?) -> Unit,
+    openUrl: (String) -> Unit,
 ) {
-    val uriHandler = LocalUriHandler.current
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -186,6 +194,38 @@ private fun MergeScheduleItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+                val target = schedule.target.trim()
+                if (target.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        TrueText(
+                            s = "합병 대상: ",
+                            fontSize = 14,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = Int.MAX_VALUE,
+                        )
+                        TrueText(
+                            s = target,
+                            fontSize = 14,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable {
+                                openUrl(dartCompanySearchUrl(target))
+                            },
+                            maxLines = Int.MAX_VALUE,
+                            style = TextStyle(textDecoration = TextDecoration.Underline),
+                        )
+                    }
+                } else {
+                    TrueText(
+                        s = "합병 대상: -",
+                        fontSize = 14,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = Int.MAX_VALUE,
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
                 TrueText(
                     s = "합병반대의사통지 접수기간: ${formatDateRangeOrDash(schedule.dissentNoticeStartDate, schedule.dissentNoticeEndDate)}",
                     fontSize = 14,
@@ -224,7 +264,7 @@ private fun MergeScheduleItem(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable {
-                            uriHandler.openUri(disclosureUrl)
+                            openUrl(disclosureUrl)
                         },
                         maxLines = Int.MAX_VALUE,
                         style = TextStyle(textDecoration = TextDecoration.Underline),

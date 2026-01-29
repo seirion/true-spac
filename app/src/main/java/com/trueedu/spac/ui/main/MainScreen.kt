@@ -246,6 +246,7 @@ fun MainScreen(
             ) {
                 MergeScheduleScreen(
                     openStockDetail = openStockDetail,
+                    openUrl = openUrl,
                     onBack = { navController.popBackStack() }
                 )
             }
