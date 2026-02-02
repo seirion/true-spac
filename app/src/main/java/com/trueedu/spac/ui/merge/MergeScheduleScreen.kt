@@ -57,7 +57,7 @@ private fun formatDateRangeOrDash(start: String, end: String): String {
 @Composable
 fun MergeScheduleScreen(
     vm: MergeScheduleViewModel = hiltViewModel(),
-    openStockDetail: (String, Int?) -> Unit,
+    openStockDetail: (String, String, Int?) -> Unit,
     openUrl: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -104,7 +104,7 @@ fun MergeScheduleScreen(
 @Composable
 private fun MergeScheduleContent(
     schedules: List<MergeSchedule>,
-    openStockDetail: (String, Int?) -> Unit,
+    openStockDetail: (String, String, Int?) -> Unit,
     openUrl: (String) -> Unit,
 ) {
     if (schedules.isEmpty()) {
@@ -164,7 +164,7 @@ private fun MergeScheduleInfoContent() {
 @Composable
 private fun MergeScheduleItem(
     schedule: MergeSchedule,
-    openStockDetail: (String, Int?) -> Unit,
+    openStockDetail: (String, String, Int?) -> Unit,
     openUrl: (String) -> Unit,
 ) {
     Card(
@@ -172,7 +172,7 @@ private fun MergeScheduleItem(
             .fillMaxWidth()
             .clickable {
                 // 현재 스케줄의 code를 stockId로 사용
-                openStockDetail(schedule.code, null)
+                openStockDetail(schedule.code, schedule.nameKr, null)
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
