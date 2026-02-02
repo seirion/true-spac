@@ -80,8 +80,14 @@ fun MainScreen(
         }
     }
 
-    val openStockDetail = { stockId: String, followingGroupPage: Int? ->
-        trueAnalytics.log("stock_detail", mapOf("stockId" to stockId))
+    val openStockDetail = { stockId: String, nameKr: String, followingGroupPage: Int? ->
+        trueAnalytics.log(
+            "stock_detail",
+            mapOf(
+                "stockId" to stockId,
+                "nameKr" to nameKr,
+            )
+        )
         navController.navigate(AppDestinations.StockDetail(stockId, followingGroupPage))
     }
 

@@ -40,7 +40,7 @@ import com.trueedu.spac.ui.home.views.SpacSectionView
 @Composable
 fun HomeScreen(
     admobManager: AdmobManager,
-    openStockDetail: (String, Int?) -> Unit,
+    openStockDetail: (String, String, Int?) -> Unit, // code, nameKr, followingGroup
     vm: HomeViewModel = hiltViewModel()
 ) {
     val remoteConfig = LocalRemoteConfig.current
@@ -158,7 +158,7 @@ fun HomeScreen(
                         holdingNum,
                         hasDisclosure,
                     ) {
-                        openStockDetail(item.code, null)
+                        openStockDetail(item.code, item.nameKr, null)
                     }
                 }
             }
