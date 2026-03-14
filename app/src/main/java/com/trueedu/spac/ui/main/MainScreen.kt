@@ -192,6 +192,7 @@ fun MainScreen(
                 StockDetailScreen(
                     stockId = stockDetail.stockId,
                     followingGroupPage = stockDetail.followingGroupPage,
+                    loginWithGoogle = loginWithGoogle,
                     editAssets = {
                         if (userCycle.loggedIn()) {
                             navController.navigate(AppDestinations.EditAsset(stockDetail.stockId))

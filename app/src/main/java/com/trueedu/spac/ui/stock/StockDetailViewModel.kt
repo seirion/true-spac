@@ -12,6 +12,7 @@ import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.stocks.SpacManager
 import com.trueedu.spac.data.stocks.StockPool
 import com.trueedu.spac.data.user.ManualAssets
+import com.trueedu.spac.data.user.UserCycle
 import com.trueedu.spac.ui.stock.views.GroupSelectMode
 import com.trueedu.spac.util.formatter.dateFormat
 import com.trueedu.spac.util.formatter.numberFormatString
@@ -31,6 +32,7 @@ data class GroupDialogState(
 @HiltViewModel
 class StockDetailViewModel @Inject constructor(
     private val trueAnalytics: TrueAnalytics,
+    private val userCycle: UserCycle,
     val followingManager: FollowingManager,
     val manualAssets: ManualAssets,
     private val stockPool: StockPool,
@@ -100,6 +102,8 @@ class StockDetailViewModel @Inject constructor(
         _priceChange.value = priceManager.priceChange(code)
         _priceChangeRate.value = priceManager.priceChangeRate(code)
     }
+
+    fun loggedIn() = userCycle.loggedIn()
 
     fun isFollowing(): Boolean {
         val code = _stockInfo.value?.code ?: return false
