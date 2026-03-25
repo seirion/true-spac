@@ -20,3 +20,8 @@ google-services.json
 *.svg
 crowdin.yml
 .cursor
+
+# Script outputs
+scripts/dart_quarters/
+scripts/dart_spac_cache/
+scripts/spac_merge_history.tsv
