@@ -55,14 +55,13 @@ class AdmobManager @Inject constructor(
         // 기존 job이 있으면 취소
         job?.cancel()
 
-        // adLoader가 초기화되지 않았으면 초기화
         if (!::adLoader.isInitialized) {
+            // 최초 초기화: adLoader 생성 + 즉시 로드
             init()
-            return // init()이 loadNativeAd()를 이미 호출함
+        } else {
+            // 포그라운드 복귀 시 즉시 광고 로드
+            loadNativeAd()
         }
-
-        // 포그라운드 복귀 시 즉시 광고 로드
-        loadNativeAd()
 
         job = CoroutineScope(Dispatchers.Main).launch {
             flow {
