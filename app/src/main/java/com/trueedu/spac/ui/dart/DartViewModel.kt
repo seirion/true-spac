@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.StockInfo
 import com.trueedu.spac.dart.model.DartListItem
+import com.trueedu.spac.dart.model.ImportantDisclosure
 import com.trueedu.spac.data.stocks.DartManager
 import com.trueedu.spac.data.stocks.StockPool
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +26,35 @@ class DartViewModel @Inject constructor(
 
     var loading by mutableStateOf(true)
 
+    /** 주요 공시만 보기 on/off */
+    var importantOnly by mutableStateOf(false)
+
+    private var allItems = listOf<Pair<String, List<DartListItem>>>()
+
     var items by mutableStateOf<List<Pair<String, List<DartListItem>>>>(emptyList())
+
+    /** 주요 공시 수 (스위치 옆 뱃지용) */
+    val importantCount: Int
+        get() = allItems.sumOf { (_, list) ->
+            list.count { ImportantDisclosure.isImportant(it.reportName) }
+        }
+
+    fun toggleImportantOnly() {
+        importantOnly = !importantOnly
+        applyFilter()
+    }
+
+    private fun applyFilter() {
+        items = if (importantOnly) {
+            allItems
+                .mapNotNull { (code, list) ->
+                    val filtered = list.filter { ImportantDisclosure.isImportant(it.reportName) }
+                    if (filtered.isEmpty()) null else code to filtered
+                }
+        } else {
+            allItems
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -48,7 +77,8 @@ class DartViewModel @Inject constructor(
     }
 
     private fun loadItems() {
-        items = dartManager.getListMap().map { it.key to it.value }
+        allItems = dartManager.getListMap().map { it.key to it.value }
+        applyFilter()
         loading = false
     }
 

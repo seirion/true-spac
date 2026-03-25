@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.dart.model.DartListItem
+import com.trueedu.spac.dart.model.ImportantDisclosure
 import com.trueedu.spac.repo.local.LocalTrueLocal
 import com.trueedu.spac.ui.common.LoadingView
 import com.trueedu.spac.ui.common.Margin
@@ -43,7 +44,14 @@ fun DartScreen(
             } else {
                 null
             }
-            DartTopBar(vm.items.size, onBack, forceRefresh)
+            DartTopBar(
+                num = vm.items.size,
+                importantOnly = vm.importantOnly,
+                importantCount = vm.importantCount,
+                onBack = onBack,
+                onRefresh = forceRefresh,
+                onToggleImportant = vm::toggleImportantOnly,
+            )
         },
         modifier = Modifier
             .fillMaxSize()
@@ -125,6 +133,13 @@ private fun DartListItemView(
     item: DartListItem,
     onClick: (String) -> Unit,
 ) {
+    val isCritical = ImportantDisclosure.isCritical(item.reportName)
+    val isImportant = ImportantDisclosure.isImportant(item.reportName)
+    val textColor = when {
+        isCritical -> com.trueedu.spac.ui.theme.ChartColor.color(1.0)  // 빨강 계열
+        isImportant -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.primary
+    }
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -137,7 +152,7 @@ private fun DartListItemView(
         TrueText(
             s = item.reportName,
             fontSize = 14,
-            color = MaterialTheme.colorScheme.primary,
+            color = textColor,
             modifier = Modifier.weight(1f)
         )
         Margin(8)
