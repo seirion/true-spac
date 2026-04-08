@@ -40,13 +40,13 @@ class StockPool @Inject constructor(
     /**
      * 종목 정보 로딩 전략 (일반 사용자용):
      * 1. local database 에서 우선 종목 정보를 먼저 로딩한다
-     * 2. Firebase에 최신 데이터가 있으면 그것을 받아서 local database 갱신
+     * 2. 현재 시각 기준으로 업데이트가 필요하면 마스터 파일을 직접 다운로드하여 local database 갱신
      *
      * 업데이트 우선순위:
-     * 1순위: Firebase 리모트 데이터 → 로컬 DB에 저장
+     * 1순위: 마스터 파일 직접 다운로드 → 로컬 DB에 저장
      * 2순위: 로컬 DB 데이터 → 메모리에 로드
      *
-     * 주의: 마스터 파일 다운로드 및 Firebase 업로드는 관리자 전용 기능 (PeriodicSyncWorker)
+     * 주의: Firebase 업로드는 관리자 전용 기능 (PeriodicSyncWorker)
      */
     fun loadStockInfo() {
         if (status.value == Status.SUCCESS || status.value == Status.UPDATING) {
@@ -57,31 +57,38 @@ class StockPool @Inject constructor(
             delisted = loadDelistedStocks()
             val localStocks = loadLocalStocks()
 
-            // Firebase 데이터가 필요한지 체크
-            val remoteUpdatedTime = firebaseRealtimeDatabase.lastUpdatedTime()
-            val needUpdateRemote = needUpdateRemoteData(local.stockUpdatedAt, remoteUpdatedTime)
+            // 현재 시각 기준으로 마스터 파일 업데이트 필요 여부 체크
+            val currentTime = currentTimeToYyyyMMddHHmm()
+            val needUpdate = needUpdateRemoteData(local.stockUpdatedAt, currentTime)
 
-            logD("업데이트 체크 - Firebase 리모트(${needUpdateRemote})")
+            logD("업데이트 체크 - 마스터 파일 직접 다운로드($needUpdate)")
 
-            if (needUpdateRemote) {
-                // 1순위: Firebase에서 데이터 가져오기
-                logD("종목 업데이트 ${local.stockUpdatedAt} < $remoteUpdatedTime")
-                val (_, stocks) = firebaseRealtimeDatabase.loadStocks()
-
-                status.value = Status.SUCCESS
-                this@StockPool.stocks = stocks
-                local.stockUpdatedAt = remoteUpdatedTime
-                logD("remote stocks(${stocks.size}) loaded")
-
-                if (stocks.isNotEmpty()) {
-                    writeToLocalDatabase(stocks.values)
+            if (needUpdate) {
+                logD("마스터 파일 다운로드 시작: localUpdatedAt=${local.stockUpdatedAt}, currentTime=$currentTime")
+                try {
+                    val stocksList = stockInfoDownloader.getKrStockInfoList()
+                    if (stocksList.isNotEmpty()) {
+                        stocks = stocksList.associateBy(StockInfo::code)
+                        local.stockUpdatedAt = currentTime
+                        writeToLocalDatabase(stocks.values)
+                        logD("마스터 파일 다운로드 완료: ${stocks.size} stocks")
+                    } else {
+                        // 다운로드 결과 없을 시 로컬 데이터 사용
+                        logD("마스터 파일 다운로드 결과 없음, 로컬 데이터 사용: ${localStocks.size}")
+                        stocks = localStocks
+                    }
+                } catch (e: Exception) {
+                    // 다운로드 실패 시 로컬 데이터 폴백
+                    logD("마스터 파일 다운로드 실패, 로컬 데이터 사용: $e")
+                    stocks = localStocks
                 }
             } else {
-                // 2순위: 로컬 DB 데이터 사용
+                // 업데이트 불필요: 로컬 DB 데이터 사용
                 logD("종목 업데이트 불필요: ${localStocks.size}")
-                status.value = Status.SUCCESS
-                this@StockPool.stocks = localStocks
+                stocks = localStocks
             }
+
+            status.value = if (stocks.isNotEmpty()) Status.SUCCESS else Status.FAIL
         }
     }
 
