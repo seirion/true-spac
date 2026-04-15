@@ -1,5 +1,8 @@
 package com.trueedu.spac.api.model.dto.firebase
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class RefundSchedule(
     val nameKr: String = "",
     val code: String = "",
