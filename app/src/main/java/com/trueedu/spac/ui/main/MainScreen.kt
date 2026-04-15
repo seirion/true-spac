@@ -29,7 +29,6 @@ import com.trueedu.spac.ui.home.HomeScreen
 import com.trueedu.spac.ui.merge.MergeScheduleScreen
 import com.trueedu.spac.ui.notification.NotificationScreen
 import com.trueedu.spac.ui.profile.MoreScreen
-import com.trueedu.spac.ui.refund.ManageRefundScheduleScreen
 import com.trueedu.spac.ui.refund.RefundScheduleScreen
 import com.trueedu.spac.ui.search.SearchScreen
 import com.trueedu.spac.ui.stock.StockDetailScreen
@@ -230,9 +229,6 @@ fun MainScreen(
             composable<AppDestinations.Admin> {
                 AdminScreen(
                     onBack = { navController.popBackStack() },
-                    openManageRefundSchedule = {
-                        navController.navigate(AppDestinations.ManageRefundSchedule)
-                    }
                 )
             }
 
@@ -254,12 +250,6 @@ fun MainScreen(
                 MergeScheduleScreen(
                     openStockDetail = openStockDetail,
                     openUrl = openUrl,
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable<AppDestinations.ManageRefundSchedule> {
-                ManageRefundScheduleScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
