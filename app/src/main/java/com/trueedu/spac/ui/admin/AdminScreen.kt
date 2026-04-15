@@ -35,7 +35,6 @@ import com.trueedu.spac.ui.components.TrueText
 fun AdminScreen(
     vm: AdminViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    openManageRefundSchedule: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -61,22 +60,6 @@ fun AdminScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // 청산 일정 관리 버튼
-            Button(
-                onClick = openManageRefundSchedule,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                TrueText(
-                    s = "청산 일정 관리",
-                    fontSize = 16,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
             // 미국 주식 마스터 파일 다운로드 버튼
             Button(
                 onClick = { vm.downloadUsMasterFile() },
