@@ -7,15 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trueedu.spac.api.model.dto.firebase.RefundSchedule
 import com.trueedu.spac.data.log.logD
-import com.trueedu.spac.repo.firebase.FirebaseRefundDatabase
+import com.trueedu.spac.repo.etc.readRefundSchedules
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RefundScheduleViewModel @Inject constructor(
-    private val refundDatabase: FirebaseRefundDatabase
-) : ViewModel() {
+class RefundScheduleViewModel @Inject constructor() : ViewModel() {
 
     var loading by mutableStateOf(false)
         private set
@@ -31,8 +29,7 @@ class RefundScheduleViewModel @Inject constructor(
         viewModelScope.launch {
             loading = true
             try {
-                schedules = refundDatabase.loadRefundSchedule()
-                    .sortedBy { it.date }
+                schedules = readRefundSchedules()
                 logD("Loaded ${schedules.size} refund schedules")
             } catch (e: Exception) {
                 logD("Failed to load refund schedules: ${e.message}")
