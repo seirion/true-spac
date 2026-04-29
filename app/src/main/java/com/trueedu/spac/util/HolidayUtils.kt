@@ -18,6 +18,7 @@ fun LocalDate.isHoliday(): Boolean {
 // 주식 장이 열리지 않는 날
 private val holidays = setOf(
     LocalDate.of(2026, 3, 2),
+    LocalDate.of(2026, 5, 1),
     LocalDate.of(2026, 5, 5),
     LocalDate.of(2026, 5, 25),
     LocalDate.of(2026, 6, 3), // 지방선거
