@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -94,8 +95,10 @@ class FirebaseRealtimeDatabase @Inject constructor() {
     suspend fun loadDelistedStocks(): List<String> {
         logD("loadDelistedStocks()")
         try {
-            val snapshot = stocksRef.get().await()
-            return snapshot.child("delisted").getValue(object : GenericTypeIndicator<List<String>>() {}) ?: emptyList()
+            val snapshot = withTimeout(5_000L) {
+                stocksRef.child("delisted").get().await()
+            }
+            return snapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: emptyList()
         } catch (e: Exception) {
             // 오류 처리
             logE("Failed to get delisted stocks", e)
