@@ -36,6 +36,7 @@ private val holidays = setOf(
     LocalDate.of(2027, 3, 1),   // 3·1절
     LocalDate.of(2027, 5, 5),   // 어린이날
     LocalDate.of(2027, 5, 13),  // 부처님 오신날
+    LocalDate.of(2027, 7, 19),  // 제헌절 대체휴일
     LocalDate.of(2027, 8, 16),  // 대체공휴일(광복절)
     LocalDate.of(2027, 9, 14),  // 추석 연휴
     LocalDate.of(2027, 9, 15),  // 추석
