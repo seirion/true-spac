@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.MaterialTheme
@@ -16,6 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.ui.common.ActionDialog
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.Margin
+import com.trueedu.spac.ui.common.keyboardOverlapPadding
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.edit.views.BottomBar
 import com.trueedu.spac.ui.edit.views.InputSet
@@ -38,7 +41,7 @@ fun EditAssetScreen(
 
     Scaffold(
         topBar = {
-            val nameKr = vm.stockPool.get(stockId)?.nameKr?: ""
+            val nameKr = vm.stockPool.get(stockId)?.nameKr ?: ""
             val onAction = if (vm.editMode.value) {
                 vm::showDeleteConfirmDialog
             } else {
@@ -61,12 +64,14 @@ fun EditAssetScreen(
         },
         modifier = Modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background),
+            .background(color = MaterialTheme.colorScheme.background)
+            .keyboardOverlapPadding(),
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.End,
         ) {
             Margin(24)
@@ -75,6 +80,7 @@ fun EditAssetScreen(
             InputSet("수량", vm.quantityInput, vm::increaseQuantity, vm::decreaseQuantity)
             Margin(24)
             MemoInput(vm.memoInput)
+            Margin(24)
         }
 
         if (vm.deleteConfirmDialogVisible.value) {

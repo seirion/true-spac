@@ -19,6 +19,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.Margin
+import com.trueedu.spac.ui.common.keyboardOverlapPadding
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.edit.views.BottomBar
@@ -57,7 +58,8 @@ fun FeedbackScreen(
         },
         modifier = Modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background),
+            .background(color = MaterialTheme.colorScheme.background)
+            .keyboardOverlapPadding(),
     ) { innerPadding ->
         Column(
             modifier = Modifier
