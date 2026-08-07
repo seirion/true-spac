@@ -109,8 +109,10 @@ object NetworkModule {
         flipperOkhttpInterceptor: FlipperOkhttpInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(tokenInterceptor)
+            // tokenRefreshInterceptor가 바깥쪽에 있어야 재시도 요청이 tokenInterceptor를 다시 거치면서
+            // 새로 발급받은 토큰으로 authorization 헤더가 갱신된다
             .addInterceptor(tokenRefreshInterceptor)
+            .addInterceptor(tokenInterceptor)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(chuckerInterceptor)
             .addNetworkInterceptor(flipperOkhttpInterceptor)

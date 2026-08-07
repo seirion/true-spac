@@ -30,7 +30,11 @@ import javax.inject.Provider
  *
  * 순환 참조 방지:
  * - Provider<TokenKeyManager>를 사용하여 지연 주입(lazy injection)으로 순환 참조를 회피합니다.
- * - TokenKeyManager → AuthRemote → Retrofit → OkHttpClient → TokenRefreshInterceptor → TokenKeyManager
+ *
+ * 갱신 요청 경로:
+ * - TokenKeyManager가 쓰는 AuthRemote는 이 인터셉터가 붙지 않은 전용 OkHttpClient(@TokenRefreshService)를
+ *   사용합니다. 같은 클라이언트를 쓰면 만료를 감지한 요청들이 커넥션 슬롯을 붙잡은 채 갱신을 기다려
+ *   갱신 요청 자체가 나가지 못합니다. (RemoteModule.providesAuthRemote 참고)
  */
 class TokenRefreshInterceptor(
     private val tokenKeyManagerProvider: Provider<TokenKeyManager>,
@@ -66,13 +70,9 @@ class TokenRefreshInterceptor(
 
         val response = chain.proceed(originalRequest)
 
-        // HTTP 200-299 또는 500 응답인 경우 body를 체크 (토큰 만료 에러 감지)
-        // KIS API는 토큰 만료 시 200 또는 500으로 응답할 수 있음
-        if (response.isSuccessful || response.code == 500) {
-            return checkAndHandleTokenExpiration(chain, response, retryCount)
-        }
-
-        return response
+        // KIS API는 토큰 만료를 HTTP 상태 코드가 아니라 body의 msg_cd로 알려주고
+        // 상태 코드는 200/500 외의 값으로 올 수도 있어서, 상태 코드로 거르지 않고 body를 확인한다
+        return checkAndHandleTokenExpiration(chain, response, retryCount)
     }
 
     private fun checkAndHandleTokenExpiration(

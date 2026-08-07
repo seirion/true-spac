@@ -4,12 +4,10 @@ import com.trueedu.spac.api.model.dto.auth.HashKeyRequest
 import com.trueedu.spac.api.model.dto.auth.RevokeTokenRequest
 import com.trueedu.spac.api.model.dto.auth.TokenRequest
 import com.trueedu.spac.api.model.dto.auth.WebSocketKeyRequest
-import com.trueedu.spac.di.NormalService
 import com.trueedu.spac.network.apiCallFlow
 import com.trueedu.spac.repo.kis.services.AuthService
 
 class AuthRemoteImpl(
-    @NormalService
     private val authService: AuthService
 ): AuthRemote {
     override fun refreshToken(request: TokenRequest) = apiCallFlow {

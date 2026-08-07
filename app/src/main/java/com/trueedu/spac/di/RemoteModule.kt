@@ -64,10 +64,18 @@ object RemoteModule {
             .create(AuthService::class.java)
     }
 
+    /**
+     * 토큰 발급/갱신은 반드시 @TokenRefreshService(전용 OkHttpClient)를 써야 한다.
+     *
+     * KIS 클라이언트를 쓰면 시세 조회처럼 동시에 여러 요청이 나가는 상황에서
+     * 토큰 갱신 요청이 영영 나가지 못한다. OkHttp의 maxRequestsPerHost 기본값은 5인데,
+     * 만료를 감지한 요청들이 TokenRefreshInterceptor 안에서 갱신을 기다리며 그 슬롯을 붙잡고 있어
+     * 정작 갱신 요청은 큐에서 대기만 하다가 callTimeout으로 죽는다.
+     */
     @Singleton
     @Provides
     fun providesAuthRemote(
-        @NormalService
+        @TokenRefreshService
         authService: AuthService
     ): AuthRemote = AuthRemoteImpl(authService = authService)
 
