@@ -20,6 +20,7 @@ import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.data.user.LocalUserCycle
 import com.trueedu.spac.ui.admin.AdminScreen
 import com.trueedu.spac.ui.ads.AdmobManager
+import com.trueedu.spac.ui.chat.ChatScreen
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
 import com.trueedu.spac.ui.dart.DartScreen
 import com.trueedu.spac.ui.edit.EditAssetScreen
@@ -164,6 +165,9 @@ fun MainScreen(
                     openFeedback = {
                         navController.navigate(AppDestinations.Feedback)
                     },
+                    openChat = {
+                        navController.navigate(AppDestinations.Chat)
+                    },
                     loginWithGoogle = loginWithGoogle,
                     openNotification = {
                         navController.navigate(AppDestinations.Notification)
@@ -260,6 +264,17 @@ fun MainScreen(
                 )
             ) {
                 FeedbackScreen(
+                    simpleSnackbar = simpleSnackbar,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<AppDestinations.Chat>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "truespac://app/chat" }
+                )
+            ) {
+                ChatScreen(
                     simpleSnackbar = simpleSnackbar,
                     onBack = { navController.popBackStack() }
                 )

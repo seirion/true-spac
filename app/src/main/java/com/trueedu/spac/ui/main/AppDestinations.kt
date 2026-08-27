@@ -1,6 +1,7 @@
 package com.trueedu.spac.ui.main
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -95,6 +96,13 @@ sealed interface AppDestinations {
         override val label: String = "오류나 제안 보내기"
         @Transient
         override val icon: ImageVector = Icons.Default.Feedback
+    }
+
+    @Serializable
+    data object Chat : AppDestinations {
+        override val label: String = "AI 공시 도우미"
+        @Transient
+        override val icon: ImageVector = Icons.AutoMirrored.Filled.Chat
     }
 
     @Serializable
