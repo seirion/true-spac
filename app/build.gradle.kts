@@ -53,10 +53,11 @@ android {
             keyPassword = "android"
         }
         register("release") {
-            storeFile = file(gradleLocalProperties(rootDir, providers).getProperty("STORE_FILE", System.getenv("RELEASE_STORE_FILE")))
-            storePassword = gradleLocalProperties(rootDir, providers).getProperty("STORE_PASSWORD", System.getenv("RELEASE_STORE_PASSWORD"))
-            keyAlias = gradleLocalProperties(rootDir, providers).getProperty("KEY_ALIAS", System.getenv("RELEASE_KEY_ALIAS"))
-            keyPassword = gradleLocalProperties(rootDir, providers).getProperty("KEY_PASSWORD", System.getenv("RELEASE_KEY_PASSWORD"))
+            val props = gradleLocalProperties(rootDir, providers)
+            storeFile = file(props.getProperty("STORE_FILE") ?: System.getenv("RELEASE_STORE_FILE") ?: "release.keystore")
+            storePassword = props.getProperty("STORE_PASSWORD") ?: System.getenv("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = props.getProperty("KEY_ALIAS") ?: System.getenv("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword = props.getProperty("KEY_PASSWORD") ?: System.getenv("RELEASE_KEY_PASSWORD") ?: ""
         }
     }
 
