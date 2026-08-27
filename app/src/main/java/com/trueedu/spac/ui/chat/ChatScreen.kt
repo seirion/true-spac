@@ -1,13 +1,13 @@
 package com.trueedu.spac.ui.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -35,6 +36,7 @@ import com.trueedu.spac.ui.chat.views.MessageBubble
 import com.trueedu.spac.ui.chat.views.WaitingIndicator
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.Margin
+import com.trueedu.spac.ui.common.keyboardOverlapPadding
 import com.trueedu.spac.ui.components.TouchIcon24
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
@@ -63,8 +65,13 @@ fun ChatScreen(
         }
     }
 
+    // 키보드가 올라오면 목록 높이가 줄어드는데, LazyColumn 은 스크롤 위치를
+    // 그대로 유지해서 마지막 대화가 가려진다. 열림/닫힘에만 반응한다 —
+    // 높이 자체를 키로 쓰면 애니메이션 프레임마다 스크롤이 걸린다.
+    val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+
     // 새 메시지가 붙거나 답변이 채워지면 항상 마지막을 보여준다.
-    LaunchedEffect(vm.messages.size, vm.messages.lastOrNull()?.text, vm.isUnclaimed) {
+    LaunchedEffect(vm.messages.size, vm.messages.lastOrNull()?.text, vm.isUnclaimed, imeOpen) {
         val lastIndex = vm.messages.lastIndex + if (vm.isUnclaimed) 1 else 0
         if (lastIndex >= 0) {
             listState.animateScrollToItem(lastIndex)
@@ -85,13 +92,13 @@ fun ChatScreen(
         },
         modifier = Modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background),
+            .background(color = MaterialTheme.colorScheme.background)
+            .keyboardOverlapPadding(),
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding(),
+                .padding(innerPadding),
         ) {
             if (vm.messages.isEmpty()) {
                 EmptyGuide(modifier = Modifier.weight(1f))
@@ -165,7 +172,6 @@ private fun InputBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
