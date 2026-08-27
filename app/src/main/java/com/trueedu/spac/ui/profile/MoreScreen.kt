@@ -55,6 +55,7 @@ fun MoreScreen(
     openRefundSchedule: () -> Unit,
     openMergeSchedule: () -> Unit,
     openFeedback: () -> Unit,
+    openChat: () -> Unit,
     loginWithGoogle: (LoginCallback) -> Unit,
     openNotification: () -> Unit = {},
     openAdmin: () -> Unit = {},
@@ -117,6 +118,11 @@ fun MoreScreen(
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
             if (vm.loggedIn()) {
+                SettingItem("AI 공시 도우미", true) {
+                    trueAnalytics.enterView("profile__chat__click")
+                    openChat()
+                }
+
                 SettingItem("오류나 제안 보내기", true) {
                     trueAnalytics.enterView("profile__feedback__click")
                     openFeedback()
