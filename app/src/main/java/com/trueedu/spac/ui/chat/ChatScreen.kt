@@ -90,6 +90,19 @@ fun ChatScreen(
                 },
             )
         },
+        bottomBar = {
+            InputBar(
+                value = vm.input,
+                enabled = !vm.isSending && !vm.isWaiting,
+                onValueChange = { vm.input = it },
+                onSend = {
+                    trueAnalytics.clickButton("chat__send__click")
+                    vm.send(
+                        onFail = { simpleSnackbar.normal("전송에 실패했습니다. 다시 시도해주세요.") }
+                    )
+                },
+            )
+        },
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
@@ -122,18 +135,6 @@ fun ChatScreen(
                     }
                 }
             }
-
-            InputBar(
-                value = vm.input,
-                enabled = !vm.isSending && !vm.isWaiting,
-                onValueChange = { vm.input = it },
-                onSend = {
-                    trueAnalytics.clickButton("chat__send__click")
-                    vm.send(
-                        onFail = { simpleSnackbar.normal("전송에 실패했습니다. 다시 시도해주세요.") }
-                    )
-                },
-            )
         }
     }
 }
