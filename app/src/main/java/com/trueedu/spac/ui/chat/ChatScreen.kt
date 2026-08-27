@@ -21,6 +21,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -28,11 +32,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.analytics.LocalTrueAnalytics
 import com.trueedu.spac.ui.chat.views.MessageBubble
+import com.trueedu.spac.ui.chat.views.WaitingIndicator
 import com.trueedu.spac.ui.common.BackTitleTopBar
 import com.trueedu.spac.ui.common.Margin
 import com.trueedu.spac.ui.components.TouchIcon24
 import com.trueedu.spac.ui.components.TrueText
 import com.trueedu.spac.ui.components.snackbar.SimpleSnackbar
+import kotlinx.coroutines.delay
+
+private const val REPLY_DELAY_NOTICE_MS = 30_000L
+private const val WAITING_ITEM_KEY = "waiting"
 
 @Composable
 fun ChatScreen(
@@ -43,10 +52,22 @@ fun ChatScreen(
     val trueAnalytics = LocalTrueAnalytics.current
     val listState = rememberLazyListState()
 
+    // 답변이 오래 걸리면 "지연되고 있습니다"를 덧붙인다. 답변을 만드는 쪽이
+    // 꺼져 있으면 영원히 안 오므로, 무한정 "생각 중"만 띄워두지 않는다.
+    var delayed by remember { mutableStateOf(false) }
+    LaunchedEffect(vm.isWaiting, vm.messages.lastOrNull()?.id) {
+        delayed = false
+        if (vm.isWaiting) {
+            delay(REPLY_DELAY_NOTICE_MS)
+            delayed = true
+        }
+    }
+
     // 새 메시지가 붙거나 답변이 채워지면 항상 마지막을 보여준다.
-    LaunchedEffect(vm.messages.size, vm.messages.lastOrNull()?.text) {
-        if (vm.messages.isNotEmpty()) {
-            listState.animateScrollToItem(vm.messages.lastIndex)
+    LaunchedEffect(vm.messages.size, vm.messages.lastOrNull()?.text, vm.isUnclaimed) {
+        val lastIndex = vm.messages.lastIndex + if (vm.isUnclaimed) 1 else 0
+        if (lastIndex >= 0) {
+            listState.animateScrollToItem(lastIndex)
         }
     }
 
@@ -83,6 +104,14 @@ fun ChatScreen(
                 ) {
                     items(vm.messages, key = { it.id }) { message ->
                         MessageBubble(message)
+                    }
+
+                    // 답변 말풍선이 아직 없는 구간을 메운다. pending 말풍선이
+                    // 생긴 뒤로는 MessageBubble 이 "생각 중"을 맡는다.
+                    if (vm.isUnclaimed) {
+                        item(key = WAITING_ITEM_KEY) {
+                            WaitingIndicator(delayed = delayed)
+                        }
                     }
                 }
             }

@@ -27,9 +27,19 @@ class ChatViewModel @Inject constructor(
     var isSending by mutableStateOf(false)
         private set
 
-    /** 답변을 기다리는 중. 마지막 메시지가 아직 pending 인 답변이면 참. */
+    /**
+     * 답변을 기다리는 중.
+     *
+     * 두 구간이 있다. 질문만 올라가 있고 답변 말풍선이 아직 안 생긴 구간과,
+     * 답변 말풍선이 pending 인 구간. 앞쪽은 답변을 만드는 쪽이 질문을 아직
+     * 집어가지 않은 상태라 화면에 아무 변화가 없다.
+     */
     val isWaiting: Boolean
-        get() = messages.lastOrNull()?.isPending == true
+        get() = messages.lastOrNull()?.let { it.isUser || it.isPending } == true
+
+    /** 질문만 올라가 있고 답변 말풍선조차 없는 상태. */
+    val isUnclaimed: Boolean
+        get() = messages.lastOrNull()?.isUser == true
 
     init {
         viewModelScope.launch {
