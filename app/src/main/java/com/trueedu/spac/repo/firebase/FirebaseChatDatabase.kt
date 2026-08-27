@@ -3,6 +3,7 @@ package com.trueedu.spac.repo.firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseException
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.trueedu.spac.api.model.dto.firebase.ChatMessage
@@ -73,9 +74,16 @@ class FirebaseChatDatabase @Inject constructor(
             val ref = database.getReference("$BASE_PATH/${currentUser.uid}")
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    // 스키마에 안 맞는 노드(수동 테스트 등으로 남은 것) 하나 때문에
+                    // 대화 전체가 못 뜨면 안 되므로, 그 노드만 건너뛴다.
                     val messages = snapshot.children.mapNotNull { child ->
-                        child.getValue(ChatMessage::class.java)?.apply {
-                            id = child.key ?: ""
+                        try {
+                            child.getValue(ChatMessage::class.java)?.apply {
+                                id = child.key ?: ""
+                            }
+                        } catch (e: DatabaseException) {
+                            logD("observeMessages() malformed node skip: ${child.key}, ${e.message}")
+                            null
                         }
                     }
                     trySend(messages)
