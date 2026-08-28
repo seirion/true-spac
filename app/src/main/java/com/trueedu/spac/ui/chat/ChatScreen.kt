@@ -174,14 +174,14 @@ private fun EmptyGuide(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TrueText(
-            s = "공시에 대해 물어보세요",
+            s = "스팩에 대해 무엇이든 물어보세요",
             fontSize = 16,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Margin(12)
         TrueText(
-            s = "예) 삼성전자 최근 공시 알려줘\n" +
-                "예) SK하이닉스 3개월간 중요한 공시만 요약해줘",
+            s = "예) KB제27호스팩 청산일까지 며칠 남았어?\n" +
+                "예) 수익률 높은 스팩 순으로 알려줘",
             fontSize = 14,
             color = MaterialTheme.colorScheme.surfaceVariant,
             maxLines = Int.MAX_VALUE,
