@@ -67,6 +67,8 @@ class ChatViewModel @Inject constructor(
         val text = input.trim()
         if (text.isBlank() || isSending) return
 
+        trueAnalytics.log("ai_chat_send")
+
         isSending = true
         input = ""
 
