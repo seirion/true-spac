@@ -83,4 +83,35 @@ class ChatMarkdownTest {
         assertEquals(1, blocks.size)
         assertTrue(blocks[0] is MdBlock.Paragraph)
     }
+
+    @Test
+    fun `블록 수식 파싱 - 실제 응답 예시`() {
+        val raw = """
+            ### 1. 기본 계산 수식
+            $$\text{예상 청산금액} = \text{공모가(2,000원)} + \text{예치금 이자}$$
+
+            ### 2. 상세 항목 설명
+        """.trimIndent()
+
+        val blocks = parseMarkdownBlocks(raw)
+        assertEquals(3, blocks.size)
+        assertTrue(blocks[0] is MdBlock.Header)
+
+        val math = blocks[1] as MdBlock.Math
+        assertEquals(
+            "\\text{예상 청산금액} = \\text{공모가(2,000원)} + \\text{예치금 이자}",
+            math.latex,
+        )
+
+        assertTrue(blocks[2] is MdBlock.Header)
+    }
+
+    @Test
+    fun `인라인 수식은 유니코드 기호로 정규화`() {
+        val annotated = inlineAnnotatedString(
+            "[합병 불성립] \$\\rightarrow\$ [주주총회 결의]",
+            codeBackground = androidx.compose.ui.graphics.Color.Gray,
+        )
+        assertEquals("[합병 불성립] → [주주총회 결의]", annotated.text)
+    }
 }
