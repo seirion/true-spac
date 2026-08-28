@@ -30,22 +30,41 @@ fun MessageBubble(message: ChatMessage) {
         else -> MaterialTheme.colorScheme.onSurface
     }
 
+    val bubbleModifier = Modifier
+        .widthIn(max = 300.dp)
+        .clip(RoundedCornerShape(12.dp))
+        .background(background)
+        .padding(horizontal = 12.dp, vertical = 8.dp)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
     ) {
-        TrueText(
-            s = if (message.isPending) "생각 중…" else message.text,
-            fontSize = 14,
-            color = textColor,
-            maxLines = Int.MAX_VALUE,
-            modifier = Modifier
-                .widthIn(max = 300.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(background)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-        )
+        if (message.isPending) {
+            TrueText(
+                s = "생각 중…",
+                fontSize = 14,
+                color = textColor,
+                maxLines = Int.MAX_VALUE,
+                modifier = bubbleModifier,
+            )
+        } else if (isUser) {
+            // 사용자 입력은 원문 그대로 보여준다 — 마크다운으로 다시 해석하지 않는다.
+            TrueText(
+                s = message.text,
+                fontSize = 14,
+                color = textColor,
+                maxLines = Int.MAX_VALUE,
+                modifier = bubbleModifier,
+            )
+        } else {
+            MarkdownMessageText(
+                text = message.text,
+                color = textColor,
+                modifier = bubbleModifier,
+            )
+        }
     }
 }
