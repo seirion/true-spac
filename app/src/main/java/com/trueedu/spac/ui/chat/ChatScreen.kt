@@ -56,7 +56,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        trueAnalytics.enterView("chat__view")
+        trueAnalytics.enterView("ai_chat_view")
     }
 
     // 답변이 오래 걸리면 "지연되고 있습니다"를 덧붙인다. 답변을 만드는 쪽이
