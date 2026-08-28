@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.trueedu.spac.analytics.LocalTrueAnalytics
+import com.trueedu.spac.ui.chat.views.AiUnavailablePopupView
 import com.trueedu.spac.ui.chat.views.ChatDisclaimerPopupView
 import com.trueedu.spac.ui.chat.views.MessageBubble
 import com.trueedu.spac.ui.chat.views.WaitingIndicator
@@ -98,7 +99,7 @@ fun ChatScreen(
         bottomBar = {
             InputBar(
                 value = vm.input,
-                enabled = !vm.isSending && !vm.isWaiting,
+                enabled = !vm.isSending && !vm.isWaiting && vm.aiAvailable,
                 onValueChange = { vm.input = it },
                 onSend = {
                     trueAnalytics.clickButton("ai_chat_send_click")
@@ -151,6 +152,15 @@ fun ChatScreen(
             },
             onDismiss = {
                 vm.dismissDisclaimer()
+            },
+        )
+    }
+
+    if (vm.aiUnavailablePopupVisible) {
+        AiUnavailablePopupView(
+            onConfirm = {
+                trueAnalytics.clickButton("ai_chat_unavailable_confirm_click")
+                vm.dismissAiUnavailablePopup()
             },
         )
     }
