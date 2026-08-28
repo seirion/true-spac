@@ -9,6 +9,7 @@ import com.trueedu.spac.analytics.TrueAnalytics
 import com.trueedu.spac.api.model.dto.firebase.ChatMessage
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.repo.firebase.FirebaseChatDatabase
+import com.trueedu.spac.repo.local.Local
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,9 +18,23 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val firebaseChatDatabase: FirebaseChatDatabase,
     private val trueAnalytics: TrueAnalytics,
+    private val local: Local,
 ) : ViewModel() {
 
     var input by mutableStateOf("")
+
+    // 채팅 화면 첫 진입 시 한 번만 보여주는 안내 팝업. 확인을 눌러야 다시 안 뜬다.
+    var disclaimerVisible by mutableStateOf(!local.chatDisclaimerAccepted)
+        private set
+
+    fun acceptDisclaimer() {
+        local.chatDisclaimerAccepted = true
+        disclaimerVisible = false
+    }
+
+    fun dismissDisclaimer() {
+        disclaimerVisible = false
+    }
 
     var messages by mutableStateOf<List<ChatMessage>>(emptyList())
         private set

@@ -102,6 +102,9 @@ class Local @Inject constructor(
     // 면책 문구 확인 여부
     var disclaimerAccepted by preferences.boolean(false)
 
+    // AI 스팩 도우미(채팅) 안내 문구 확인 여부
+    var chatDisclaimerAccepted by preferences.boolean(false)
+
     // 종목 다운로드 시각 yyyyMMddHHmm
     var stockUpdatedAt by preferences.long(0L)
 
