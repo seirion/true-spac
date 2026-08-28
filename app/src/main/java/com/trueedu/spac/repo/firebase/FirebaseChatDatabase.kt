@@ -110,4 +110,24 @@ class FirebaseChatDatabase @Inject constructor(
             false
         }
     }
+
+    /**
+     * 원격으로 AI 채팅 기능을 껐는지 확인한다. 화면 진입마다 새로 읽는다 —
+     * 앱을 켜 둔 채로 서비스가 내려가도 다음 진입에서 바로 반영되도록.
+     *
+     * 값이 없거나 읽기에 실패하면 켜져 있는 것으로 본다. 이 값은 "끄는" 용도의
+     * 킬 스위치라, 못 읽었다고 매번 정상 사용자까지 막는 건 배보다 배꼽이 크다.
+     */
+    suspend fun isAiAvailable(): Boolean {
+        return try {
+            val snapshot = database.getReference(FirebasePaths.APP_CONFIG)
+                .child("aiAvailable")
+                .get()
+                .await()
+            snapshot.getValue(Boolean::class.java) ?: true
+        } catch (e: Exception) {
+            logD("isAiAvailable() failed: ${e.message}")
+            true
+        }
+    }
 }

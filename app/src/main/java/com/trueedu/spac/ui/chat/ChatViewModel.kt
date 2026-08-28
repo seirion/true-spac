@@ -36,6 +36,17 @@ class ChatViewModel @Inject constructor(
         disclaimerVisible = false
     }
 
+    // 원격으로 AI 채팅을 껐는지. 화면에 들어올 때마다 새로 확인한다.
+    var aiAvailable by mutableStateOf(true)
+        private set
+
+    var aiUnavailablePopupVisible by mutableStateOf(false)
+        private set
+
+    fun dismissAiUnavailablePopup() {
+        aiUnavailablePopupVisible = false
+    }
+
     var messages by mutableStateOf<List<ChatMessage>>(emptyList())
         private set
 
@@ -61,11 +72,18 @@ class ChatViewModel @Inject constructor(
             firebaseChatDatabase.observeMessages()
                 .collect { messages = it }
         }
+        viewModelScope.launch {
+            aiAvailable = firebaseChatDatabase.isAiAvailable()
+            if (!aiAvailable) {
+                trueAnalytics.log("ai_chat_unavailable")
+                aiUnavailablePopupVisible = true
+            }
+        }
     }
 
     fun send(onFail: () -> Unit) {
         val text = input.trim()
-        if (text.isBlank() || isSending) return
+        if (text.isBlank() || isSending || !aiAvailable) return
 
         trueAnalytics.log("ai_chat_send")
 
