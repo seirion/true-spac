@@ -3,6 +3,7 @@ package com.trueedu.spac.ui.settings.views
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,15 +20,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.trueedu.spac.ui.common.DashDividerHorizontal
 import com.trueedu.spac.ui.components.TrueText
+import com.trueedu.spac.ui.home.views.RoundedBadge
 
 @Preview(showBackground = true)
 @Composable
 fun SettingItem(
     text: String = "나의 설정",
     enabled: Boolean = true,
+    badge: String? = null,
     onClick: () -> Unit = {},
 ) {
-    ItemWithIcon(text, Icons.Outlined.ChevronRight, enabled, onClick)
+    ItemWithIcon(text, Icons.Outlined.ChevronRight, enabled, badge, onClick)
 }
 
 @Composable
@@ -35,6 +38,7 @@ fun ItemWithIcon(
     text: String,
     icon: ImageVector,
     enabled: Boolean = true,
+    badge: String? = null,
     onClick: () -> Unit,
 ) {
     Row(
@@ -46,11 +50,17 @@ fun ItemWithIcon(
             .padding(horizontal = 10.dp)
             .height(56.dp)
     ) {
-        TrueText(
-            s = text,
-            fontSize = 16,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TrueText(
+                s = text,
+                fontSize = 16,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (badge != null) {
+                Spacer(modifier = Modifier.size(6.dp))
+                RoundedBadge(s = badge, bgColor = MaterialTheme.colorScheme.primary)
+            }
+        }
         Icon(
             modifier = Modifier.size(24.dp),
             imageVector = icon,

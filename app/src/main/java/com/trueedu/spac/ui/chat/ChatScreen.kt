@@ -81,7 +81,7 @@ fun ChatScreen(
     Scaffold(
         topBar = {
             BackTitleTopBar(
-                title = "AI 공시 도우미",
+                title = "AI 스팩 도우미 (BETA)",
                 onBack = onBack,
                 actionIcon = Icons.Default.DeleteOutline,
                 onAction = {
