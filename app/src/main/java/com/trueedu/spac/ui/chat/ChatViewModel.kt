@@ -75,15 +75,15 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (firebaseChatDatabase.sendMessage(text)) {
-                    trueAnalytics.log("chat_send_success")
+                    trueAnalytics.log("ai_chat_send_success")
                 } else {
-                    trueAnalytics.log("chat_send_fail")
+                    trueAnalytics.log("ai_chat_send_fail")
                     input = text        // 실패하면 입력을 되돌려 다시 보낼 수 있게 한다
                     onFail()
                 }
             } catch (e: Exception) {
                 logD("메시지 전송 실패: ${e.message}")
-                trueAnalytics.log("chat_send_error", mapOf("error" to (e.message ?: "unknown")))
+                trueAnalytics.log("ai_chat_send_error", mapOf("error" to (e.message ?: "unknown")))
                 input = text
                 onFail()
             } finally {
@@ -94,7 +94,7 @@ class ChatViewModel @Inject constructor(
 
     fun clear() {
         viewModelScope.launch {
-            trueAnalytics.log("chat_clear")
+            trueAnalytics.log("ai_chat_clear")
             firebaseChatDatabase.clear()
         }
     }

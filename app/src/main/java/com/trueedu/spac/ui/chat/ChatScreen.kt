@@ -90,7 +90,7 @@ fun ChatScreen(
                 onBack = onBack,
                 actionIcon = Icons.Default.DeleteOutline,
                 onAction = {
-                    trueAnalytics.clickButton("chat__clear__click")
+                    trueAnalytics.clickButton("ai_chat_clear_click")
                     vm.clear()
                 },
             )
@@ -101,7 +101,7 @@ fun ChatScreen(
                 enabled = !vm.isSending && !vm.isWaiting,
                 onValueChange = { vm.input = it },
                 onSend = {
-                    trueAnalytics.clickButton("chat__send__click")
+                    trueAnalytics.clickButton("ai_chat_send_click")
                     vm.send(
                         onFail = { simpleSnackbar.normal("전송에 실패했습니다. 다시 시도해주세요.") }
                     )
@@ -146,7 +146,7 @@ fun ChatScreen(
     if (vm.disclaimerVisible) {
         ChatDisclaimerPopupView(
             onConfirm = {
-                trueAnalytics.clickButton("chat__disclaimer_confirm__click")
+                trueAnalytics.clickButton("ai_chat_disclaimer_confirm_click")
                 vm.acceptDisclaimer()
             },
             onDismiss = {
