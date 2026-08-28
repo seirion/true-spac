@@ -55,6 +55,10 @@ fun ChatScreen(
     val trueAnalytics = LocalTrueAnalytics.current
     val listState = rememberLazyListState()
 
+    LaunchedEffect(Unit) {
+        trueAnalytics.enterView("chat__view")
+    }
+
     // 답변이 오래 걸리면 "지연되고 있습니다"를 덧붙인다. 답변을 만드는 쪽이
     // 꺼져 있으면 영원히 안 오므로, 무한정 "생각 중"만 띄워두지 않는다.
     var delayed by remember { mutableStateOf(false) }
