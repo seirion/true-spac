@@ -118,7 +118,7 @@ fun MoreScreen(
             SettingLabel("버전", BuildConfig.VERSION_NAME, gotoPlayStore)
 
             if (vm.loggedIn()) {
-                SettingItem("AI 공시 도우미", true) {
+                SettingItem("AI 스팩 도우미", true, badge = "BETA") {
                     trueAnalytics.enterView("profile__chat__click")
                     openChat()
                 }

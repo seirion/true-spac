@@ -100,7 +100,7 @@ sealed interface AppDestinations {
 
     @Serializable
     data object Chat : AppDestinations {
-        override val label: String = "AI 공시 도우미"
+        override val label: String = "AI 스팩 도우미"
         @Transient
         override val icon: ImageVector = Icons.AutoMirrored.Filled.Chat
     }
