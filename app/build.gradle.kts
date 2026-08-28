@@ -244,6 +244,9 @@ dependencies {
     implementation(platform(libs.coil.bom))
     implementation(libs.coil.compose)
 
+    implementation(libs.markwon.core)
+    implementation(libs.markwon.ext.latex)
+
     implementation(libs.retrofit)
     implementation(libs.retrofit.serialization)
     debugImplementation(libs.chucker.debug)
