@@ -2,6 +2,7 @@ package com.trueedu.spac.ui.chat.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,13 +37,16 @@ fun MessageBubble(message: ChatMessage) {
         .background(background)
         .padding(horizontal = 12.dp, vertical = 8.dp)
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
     ) {
-        if (message.isPending) {
+        if (message.isThinking) {
             TrueText(
                 s = "생각 중…",
                 fontSize = 14,
@@ -65,6 +69,22 @@ fun MessageBubble(message: ChatMessage) {
                 color = textColor,
                 modifier = bubbleModifier,
             )
+        }
+    }
+
+        // 무엇을 조회해서 나온 답인지 밝힌다. 답변보다 먼저 채워지므로
+        // 생성 중에도 보인다.
+        if (!isUser && message.sources.isNotEmpty()) {
+            Column(modifier = Modifier.padding(top = 4.dp)) {
+                message.sources.forEach { source ->
+                    TrueText(
+                        s = "🔎 $source",
+                        fontSize = 11,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        maxLines = Int.MAX_VALUE,
+                    )
+                }
+            }
         }
     }
 }
