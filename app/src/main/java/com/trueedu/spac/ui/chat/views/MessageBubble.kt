@@ -67,6 +67,7 @@ fun MessageBubble(message: ChatMessage) {
             MarkdownMessageText(
                 text = message.text,
                 color = textColor,
+                background = background,
                 modifier = bubbleModifier,
             )
         }
