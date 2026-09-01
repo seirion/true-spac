@@ -2,6 +2,8 @@ package com.trueedu.spac.ui.chat.views
 
 import android.widget.TextView
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -14,7 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -259,6 +263,7 @@ private const val INDENT_UNIT_DP = 16
 fun MarkdownMessageText(
     text: String,
     color: Color,
+    background: Color,
     modifier: Modifier = Modifier,
 ) {
     val blocks = remember(text) { parseMarkdownBlocks(text) }
@@ -313,6 +318,7 @@ fun MarkdownMessageText(
                     block = block,
                     color = color,
                     codeBackground = codeBackground,
+                    background = background,
                 )
 
                 is MdBlock.Math -> LatexBlockView(
@@ -340,6 +346,7 @@ private fun MarkdownTable(
     block: MdBlock.Table,
     color: Color,
     codeBackground: Color,
+    background: Color,
 ) {
     val measurer = rememberTextMeasurer()
     val style = TextStyle(fontSize = BASE_FONT_SIZE.sp)
@@ -361,7 +368,10 @@ private fun MarkdownTable(
         }
     }
 
-    Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+    val scrollState = rememberScrollState()
+
+    Box {
+    Column(modifier = Modifier.horizontalScroll(scrollState)) {
         Row {
             block.header.forEachIndexed { col, cell ->
                 TrueText(
@@ -395,6 +405,34 @@ private fun MarkdownTable(
                     )
                 }
             }
+        }
+    }
+
+        // 가로로 더 볼 게 있다는 힌트. 열이 잘려 보이기만 하면 스크롤할 수
+        // 있다는 걸 알기 어렵다. 말풍선 배경색으로 페이드해 자연스럽게 만든다.
+        if (scrollState.canScrollForward) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            0.88f to Color.Transparent,
+                            1f to background,
+                        )
+                    )
+            )
+        }
+        if (scrollState.canScrollBackward) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            0f to background,
+                            0.12f to Color.Transparent,
+                        )
+                    )
+            )
         }
     }
 }
