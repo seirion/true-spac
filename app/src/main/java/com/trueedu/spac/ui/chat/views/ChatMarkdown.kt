@@ -1,7 +1,10 @@
 package com.trueedu.spac.ui.chat.views
 
 import android.widget.TextView
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,6 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -18,6 +22,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -31,10 +38,12 @@ import io.noties.markwon.ext.latex.JLatexMathPlugin
 /**
  * 모델 답변에 섞여 나오는 마크다운 표기를 화면 스타일로 바꾸기 위한 파서.
  *
- * 실사용 답변 40건을 전수 조사한 결과 쓰이는 표기는 굵게(**), 목록(*, 1.),
- * 헤더(#), 인라인 코드(`), 구분선(---), 기울임(*) 뿐이었다 — 표나 인용문은
- * 안 쓰여서 지원하지 않는다. 범용 마크다운 라이브러리 대신 이 앱이 실제로
+ * 굵게(**), 목록(*, 1.), 헤더(#), 인라인 코드(`), 구분선(---), 기울임(*),
+ * 수식($$), 표(|)를 다룬다. 범용 마크다운 라이브러리 대신 이 앱이 실제로
  * 받는 표기만 다루는 가벼운 파서로 충분하다.
+ *
+ * 표는 스팩 목록처럼 여러 건을 나열할 때 모델이 자주 쓴다. 지원하기 전에는
+ * "| :--- |" 가 원문 그대로 노출됐다.
  */
 sealed class MdBlock {
     data class Header(val level: Int, val text: String) : MdBlock()
@@ -42,6 +51,7 @@ sealed class MdBlock {
     data class Numbered(val indent: Int, val number: String, val text: String) : MdBlock()
     data class Paragraph(val text: String) : MdBlock()
     data class Math(val latex: String) : MdBlock()
+    data class Table(val header: List<String>, val rows: List<List<String>>) : MdBlock()
     data object Rule : MdBlock()
 }
 
@@ -49,6 +59,13 @@ private val RULE_RE = Regex("^-{3,}$")
 private val HEADER_RE = Regex("^(#{1,6})\\s+(.*)$")
 private val BULLET_RE = Regex("^(\\s*)\\*\\s+(.*)$")
 private val NUMBERED_RE = Regex("^(\\s*)(\\d+)\\.\\s+(.*)$")
+
+// GFM 파이프 표. 두 번째 줄이 구분선(| :--- | ---: |)인지로 표를 판별한다.
+// 파이프가 들어간 평범한 문장을 표로 오인하지 않기 위해서다.
+private val TABLE_DIVIDER_RE = Regex("^\\|?\\s*:?-{2,}:?\\s*(\\|\\s*:?-{2,}:?\\s*)*\\|?$")
+
+private fun splitTableRow(line: String): List<String> =
+    line.trim().removePrefix("|").removeSuffix("|").split("|").map { it.trim() }
 
 // $$...$$ 는 여러 줄에 걸칠 수 있어(청산금액 계산 수식처럼) 줄 단위 파서보다
 // 먼저, 문자열 전체에서 한 번에 뽑아낸다.
@@ -81,8 +98,32 @@ private fun parseTextBlocks(raw: String): List<MdBlock> {
         }
     }
 
-    for (line in raw.split("\n")) {
+    val lines = raw.split("\n")
+    var i = 0
+    while (i < lines.size) {
+        val line = lines[i]
         val trimmed = line.trim()
+
+        // 표: 헤더 줄 + 구분선 + 본문 줄들
+        if (trimmed.contains("|") && i + 1 < lines.size &&
+            TABLE_DIVIDER_RE.matches(lines[i + 1].trim())
+        ) {
+            flushParagraph()
+            val header = splitTableRow(trimmed)
+            val rows = mutableListOf<List<String>>()
+            var j = i + 2
+            while (j < lines.size && lines[j].trim().contains("|")) {
+                val cells = splitTableRow(lines[j])
+                // 열 수가 헤더와 다르면 잘라내거나 빈 칸으로 채운다. 모델이
+                // 셀 안에 파이프를 넣거나 열을 빠뜨리는 경우가 있다.
+                rows.add(List(header.size) { cells.getOrElse(it) { "" } })
+                j++
+            }
+            blocks.add(MdBlock.Table(header, rows))
+            i = j
+            continue
+        }
+
         when {
             trimmed.isEmpty() -> flushParagraph()
             RULE_RE.matches(trimmed) -> {
@@ -116,6 +157,7 @@ private fun parseTextBlocks(raw: String): List<MdBlock> {
                 }
             }
         }
+        i++
     }
     flushParagraph()
     return blocks
@@ -267,11 +309,91 @@ fun MarkdownMessageText(
                     maxLines = Int.MAX_VALUE,
                 )
 
+                is MdBlock.Table -> MarkdownTable(
+                    block = block,
+                    color = color,
+                    codeBackground = codeBackground,
+                )
+
                 is MdBlock.Math -> LatexBlockView(
                     latex = block.latex,
                     color = color,
                     modifier = Modifier.fillMaxWidth(),
                 )
+            }
+        }
+    }
+}
+
+private const val TABLE_CELL_PADDING_DP = 8
+private const val TABLE_MAX_COL_WIDTH_DP = 160
+
+/**
+ * 파이프 표를 격자로 그린다.
+ *
+ * 말풍선 폭이 300dp 로 제한돼 있어 4열짜리 표는 들어가지 않는다. 열 폭을
+ * 내용에 맞춰 실제로 재고, 총합이 넘치면 가로로 스크롤한다. 열마다 폭을
+ * 고정해야 행 사이 정렬이 맞는다 — weight 는 스크롤 영역에서 쓸 수 없다.
+ */
+@Composable
+private fun MarkdownTable(
+    block: MdBlock.Table,
+    color: Color,
+    codeBackground: Color,
+) {
+    val measurer = rememberTextMeasurer()
+    val style = TextStyle(fontSize = BASE_FONT_SIZE.sp)
+    val density = LocalDensity.current
+
+    val widths = remember(block, style) {
+        List(block.header.size) { col ->
+            val texts = buildList {
+                add(block.header.getOrElse(col) { "" })
+                block.rows.forEach { add(it.getOrElse(col) { "" }) }
+            }
+            // 굵게 표기(**)는 폭 계산에서 빼야 실제보다 넓게 잡히지 않는다.
+            val widest = texts.maxOf { text ->
+                val plain = text.replace("**", "").replace("`", "")
+                with(density) { measurer.measure(plain, style).size.width.toDp().value }
+            }
+            (widest + TABLE_CELL_PADDING_DP * 2)
+                .coerceAtMost(TABLE_MAX_COL_WIDTH_DP.toFloat())
+        }
+    }
+
+    Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+        Row {
+            block.header.forEachIndexed { col, cell ->
+                TrueText(
+                    s = inlineAnnotatedString(cell, codeBackground),
+                    fontSize = BASE_FONT_SIZE,
+                    fontWeight = FontWeight.Bold,
+                    color = color,
+                    maxLines = Int.MAX_VALUE,
+                    modifier = Modifier
+                        .width(widths[col].dp)
+                        .padding(horizontal = TABLE_CELL_PADDING_DP.dp, vertical = 4.dp),
+                )
+            }
+        }
+        HorizontalDivider(color = color.copy(alpha = 0.3f))
+
+        block.rows.forEachIndexed { rowIndex, row ->
+            if (rowIndex > 0) {
+                HorizontalDivider(color = color.copy(alpha = 0.12f))
+            }
+            Row {
+                row.forEachIndexed { col, cell ->
+                    TrueText(
+                        s = inlineAnnotatedString(cell, codeBackground),
+                        fontSize = BASE_FONT_SIZE,
+                        color = color,
+                        maxLines = Int.MAX_VALUE,
+                        modifier = Modifier
+                            .width(widths[col].dp)
+                            .padding(horizontal = TABLE_CELL_PADDING_DP.dp, vertical = 4.dp),
+                    )
+                }
             }
         }
     }
