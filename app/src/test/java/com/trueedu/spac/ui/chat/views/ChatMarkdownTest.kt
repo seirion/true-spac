@@ -114,4 +114,42 @@ class ChatMarkdownTest {
         )
         assertEquals("[합병 불성립] → [주주총회 결의]", annotated.text)
     }
+
+    @Test
+    fun `파이프 표 파싱 - 실제 응답 예시`() {
+        val raw = """
+            현재 **합병 심사 중**인 스팩 목록입니다. (총 5개)
+
+            | 스팩 이름 | 종목코드 | 예상 청산일 | 예상 수익률 |
+            | :--- | :--- | :--- | :--- |
+            | **IBKS제24호스팩** | 469480 | 2027-01-16 | 7.79% |
+            | **유진스팩10호** | 468760 | 2027-02-13 | 7.80% |
+        """.trimIndent()
+
+        val blocks = parseMarkdownBlocks(raw)
+        val table = blocks.filterIsInstance<MdBlock.Table>().single()
+
+        assertEquals(listOf("스팩 이름", "종목코드", "예상 청산일", "예상 수익률"), table.header)
+        assertEquals(2, table.rows.size)
+        assertEquals("469480", table.rows[0][1])
+        assertEquals("7.80%", table.rows[1][3])
+
+        // 표 앞 문단은 그대로 남는다
+        assertTrue(blocks.filterIsInstance<MdBlock.Paragraph>().any { it.text.contains("합병 심사") })
+    }
+
+    @Test
+    fun `구분선 없는 파이프 문장은 표로 오인하지 않는다`() {
+        val blocks = parseMarkdownBlocks("검색은 A | B 형태로 입력하세요")
+        assertTrue(blocks.filterIsInstance<MdBlock.Table>().isEmpty())
+        assertEquals(1, blocks.filterIsInstance<MdBlock.Paragraph>().size)
+    }
+
+    @Test
+    fun `열 수가 모자란 행은 빈 칸으로 채운다`() {
+        val raw = "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |"
+        val table = parseMarkdownBlocks(raw).filterIsInstance<MdBlock.Table>().single()
+        assertEquals(3, table.rows[0].size)
+        assertEquals("", table.rows[0][2])
+    }
 }
