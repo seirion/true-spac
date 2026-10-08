@@ -7,7 +7,6 @@ object FirebasePaths {
     // Root paths
     const val USERS = "users"
     const val META = "meta"
-    const val APP_CONFIG = "app_config"
     const val STOCKS = "stocks"
     const val SPAC = "spac"
     const val DART = "dart"
