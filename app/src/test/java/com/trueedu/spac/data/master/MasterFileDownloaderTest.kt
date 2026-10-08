@@ -154,33 +154,34 @@ class MasterFileDownloaderTest {
     }
 
     private fun createUsStockInfo(code: String, nameKr: String): UsStockInfo {
-        val data = buildString {
-            append("US")                                        // ncod (2자)
-            append("22 ")                                       // exid (3자)
-            append("NAS")                                       // excd (3자)
-            append("나스닥".padEnd(16))                          // exnm (16자)
-            append(code.padEnd(16))                             // symb (16자)
-            append("NAS$code".padEnd(16))                       // rsym (16자)
-            append(nameKr.padEnd(64))                           // knam (64자)
-            append("$code INC".padEnd(64))                      // enam (64자)
-            append("2")                                         // stis (1자)
-            append("USD ")                                      // curr (4자)
-            append("4")                                         // zdiv (1자)
-            append(" ")                                         // ztyp (1자)
-            append("100.0000".padEnd(12))                       // base (12자)
-            append("1".padEnd(8))                               // bnit (8자)
-            append("1".padEnd(8))                               // anit (8자)
-            append("930 ")                                      // mstm (4자)
-            append("1600")                                      // metm (4자)
-            append("N")                                         // isdr (1자)
-            append("  ")                                        // drcd (2자)
-            append("730 ")                                      // icod (4자)
-            append("0")                                         // sjong (1자)
-            append("0")                                         // ttyp (1자)
-            append("   ")                                       // etyp (3자)
-            append("   ")                                       // ttyp_sb (3자)
-        }
+        // 실제 마스터 파일은 탭 구분이다. 고정폭으로 만들면 UsStockInfo.from 이
+        // 필드를 1개로 보고 통째로 거른다.
+        val data = listOf(
+            "US",           // ncod 국가코드
+            "22",           // exid 거래소ID
+            "NAS",          // excd 거래소코드
+            "나스닥",        // exnm 거래소명
+            code,           // symb 심볼
+            "NAS$code",     // rsym 실시간심볼
+            nameKr,         // knam 한글명
+            "$code INC",    // enam 영문명
+            "2",            // stis 증권타입
+            "USD",          // curr 통화
+            "4",            // zdiv 소수점자리
+            "",             // ztyp 데이터타입
+            "100.0000",     // base 기준가
+            "1",            // bnit 매수호가단위
+            "1",            // anit 매도호가단위
+            "930",          // mstm 시장시작시간
+            "1600",         // metm 시장종료시간
+            "N",            // isdr DR여부
+            "",             // drcd DR국가코드
+            "730",          // icod 업종분류코드
+            "0",            // sjong 지수구성종목여부
+            "0",            // ttyp 호가단위타입
+            "",             // etyp ETP타입
+            "",             // ttyp_sb 호가단위타입상세
+        ).joinToString("\t")
         return UsStockInfo.from(data)
     }
 }
-
