@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,6 +37,7 @@ class PriceManager @Inject constructor(
     private val priceRemote: PriceRemote,
     private val firebasePriceManager: FirebasePriceDatabase,
     private val tokenKeyManager: TokenKeyManager,
+    private val stockPool: StockPool,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     companion object {
@@ -45,7 +47,30 @@ class PriceManager @Inject constructor(
         private const val API_CALL_DELAY_MS = 1100L
         // Firebase에서 시세 데이터를 주기적으로 로드하는 간격 (10분)
         private const val PRICE_LOAD_INTERVAL_MS = 10 * 60 * 1000L
+        // 백그라운드(알람/워커)에서 종목 목록이 준비되기를 기다리는 최대 시간
+        private const val SPAC_READY_TIMEOUT_MS = 30_000L
+        private const val SPAC_READY_POLL_MS = 200L
     }
+
+    /** 시세 조회가 비어 있을 때의 사유 */
+    enum class PriceFetchFailure {
+        INVALID_USER_KEY,   // KIS UserKey 가 유효하지 않음
+        NO_STOCKS,          // 종목 목록(spacList)이 비어 있어 조회할 대상이 없음
+        ALL_FETCH_FAILED,   // 모든 종목의 시세 조회가 실패함
+        EXCEPTION,          // 조회 중 예외
+    }
+
+    /**
+     * 시세 조회 결과.
+     * @param requested 조회를 시도한 종목 수 (일부만 성공했는지 판단하는 데 사용)
+     * @param failure prices 가 비어 있을 때의 사유. 비어 있지 않으면 null
+     */
+    data class PriceFetchResult(
+        val prices: Map<String, StockPriceDao>,
+        val requested: Int,
+        val failure: PriceFetchFailure? = null,
+        val errorName: String? = null,
+    )
 
     // 캐시된 시세 데이터
     private var cachedPriceMap: Map<String, StockPriceDao> = emptyMap()
@@ -126,6 +151,31 @@ class PriceManager @Inject constructor(
     }
 
     /**
+     * 종목 목록(StockPool → SpacManager.spacList)이 준비될 때까지 기다린다.
+     *
+     * 종목 로딩([StockPool.loadStockInfo])은 앱이 포그라운드로 올라올 때만 호출되므로,
+     * 알람/워커가 앱 프로세스를 새로 띄운 경우에는 종목 목록이 비어 있다.
+     * 이 경우 직접 로딩을 시작하고 [timeoutMs] 안에 준비되는지 확인한다.
+     *
+     * @return 종목 목록이 준비되었으면 true
+     */
+    suspend fun ensureSpacListReady(timeoutMs: Long = SPAC_READY_TIMEOUT_MS): Boolean {
+        if (spacManager.spacList.value.isNotEmpty()) return true
+
+        logD("ensureSpacListReady() - 종목 목록이 비어 있어 로딩을 시작합니다 (status=${stockPool.status.value})")
+        stockPool.loadStockInfo()
+        val ready = withTimeoutOrNull(timeoutMs) {
+            while (spacManager.spacList.value.isEmpty()) {
+                if (stockPool.status.value == StockPool.Status.FAIL) return@withTimeoutOrNull false
+                delay(SPAC_READY_POLL_MS)
+            }
+            true
+        } ?: false
+        logD("ensureSpacListReady() - ready=$ready, spacList=${spacManager.spacList.value.size}, status=${stockPool.status.value}")
+        return ready
+    }
+
+    /**
      * 모든 SPAC 종목의 시세 정보를 조회하여 Map으로 반환
      * API 호출 제약: 1초당 최대 20회
      * @param forceRefresh true면 강제로 새로 조회, false면 캐시된 데이터 사용 가능
@@ -133,23 +183,35 @@ class PriceManager @Inject constructor(
      */
     suspend fun getPriceMap(
         forceRefresh: Boolean = false
-    ): Map<String, StockPriceDao> = coroutineScope {
+    ): Map<String, StockPriceDao> = fetchPrices(forceRefresh).prices
+
+    /**
+     * [getPriceMap] 과 같지만 조회가 비었을 때의 사유와 조회 대상 수를 함께 돌려준다.
+     * (워커가 실패 원인을 분석 이벤트로 남기기 위함)
+     */
+    suspend fun fetchPrices(
+        forceRefresh: Boolean = false
+    ): PriceFetchResult = coroutineScope {
         // UserKey 유효성 체크
         val userKey = tokenKeyManager.userKey.value
         if (userKey?.isValid() != true) {
             logE("❌ getPriceMap() - UserKey is not valid. Cannot fetch prices from API.")
-            return@coroutineScope emptyMap()
+            return@coroutineScope PriceFetchResult(emptyMap(), 0, PriceFetchFailure.INVALID_USER_KEY)
         }
         logD("✅ UserKey validated - proceeding with price fetch")
 
         // forceRefresh가 false이고 캐시가 있으면 캐시 반환
         if (!forceRefresh && cachedPriceMap.isNotEmpty()) {
             logD("getPriceMap() - returning cached data (${cachedPriceMap.size} items)")
-            return@coroutineScope cachedPriceMap
+            return@coroutineScope PriceFetchResult(cachedPriceMap, cachedPriceMap.size)
         }
 
         val stocks = spacManager.spacList.value
         logD("getPriceMap() - fetching prices for ${stocks.size} stocks (forceRefresh: $forceRefresh)")
+        if (stocks.isEmpty()) {
+            logE("❌ getPriceMap() - 종목 목록이 비어 있어 시세를 조회하지 않습니다 (StockPool status=${stockPool.status.value})")
+            return@coroutineScope PriceFetchResult(emptyMap(), 0, PriceFetchFailure.NO_STOCKS)
+        }
 
         try {
             val allPrices = mutableListOf<Pair<String, StockPriceDao>>()
@@ -203,6 +265,11 @@ class PriceManager @Inject constructor(
             }
 
             val priceMap = allPrices.toMap()
+            if (priceMap.isEmpty()) {
+                // 모든 조회가 실패한 경우에는 기존 캐시를 지우지 않는다
+                logE("❌ getPriceMap() - 모든 종목(${stocks.size}개)의 시세 조회가 실패했습니다")
+                return@coroutineScope PriceFetchResult(emptyMap(), stocks.size, PriceFetchFailure.ALL_FETCH_FAILED)
+            }
             // 캐시 업데이트
             cachedPriceMap = priceMap
             // 현재 시간을 yyyyMMddHHmm 형식으로 저장
@@ -210,13 +277,14 @@ class PriceManager @Inject constructor(
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
                 .toLong()
             _priceUpdated.value = cacheTimestamp // UI 업데이트 트리거
-            logD("getPriceMap() completed - ${priceMap.size} prices fetched, cache timestamp: $cacheTimestamp")
-            priceMap
+            logD("getPriceMap() completed - ${priceMap.size}/${stocks.size} prices fetched, cache timestamp: $cacheTimestamp")
+            PriceFetchResult(priceMap, stocks.size)
         } catch (e: Exception) {
             logE("Failed to get price map", e)
-            emptyMap()
+            PriceFetchResult(emptyMap(), stocks.size, PriceFetchFailure.EXCEPTION, e.javaClass.simpleName)
         }
     }
+
 
     /**
      * 시세 데이터를 Firebase에 저장
