@@ -14,7 +14,7 @@ import dagger.assisted.AssistedInject
 
 /**
  * 주식 시세를 주기적으로 가져와서 Firebase에 저장하는 Worker
- * 시세 업데이트 허용 시간(09:00~15:40)에만 실행됩니다.
+ * 시세 업데이트 허용 시간(09:00~20:10, 애프터마켓 포함)에만 실행됩니다.
  */
 @HiltWorker
 class StockPriceWorker @AssistedInject constructor(
@@ -35,7 +35,7 @@ class StockPriceWorker @AssistedInject constructor(
             tracker.recordPriceUpdateExecution()
             logD("🔄 시세 업데이트 Worker 시작: ${java.time.LocalDateTime.now()}")
 
-            // 업데이트 시간 체크 (15:40까지 허용)
+            // 업데이트 시간 체크 (20:10까지 허용)
             if (!TradingTimeHelper.isPriceUpdateTime()) {
                 logD("⏭️ 업데이트 시간이 아닙니다. 작업을 종료합니다")
                 trueAnalytics.log(
