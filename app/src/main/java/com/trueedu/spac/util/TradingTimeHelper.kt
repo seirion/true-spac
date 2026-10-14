@@ -12,9 +12,9 @@ object TradingTimeHelper {
     // 한국 주식 시장 거래 시간
     private val MARKET_OPEN_TIME = LocalTime.of(9, 0)  // 09:00
     private val MARKET_CLOSE_TIME = LocalTime.of(15, 30)  // 15:30
-    // 장 종료 직후 종가 반영 지연을 고려한 추가 업데이트 시간
-    // 15:30 직후에는 종가가 즉시 반영되지 않는 경우가 있어 15:40까지 업데이트를 허용한다.
-    private val PRICE_UPDATE_END_TIME = LocalTime.of(15, 40)  // 15:40
+    // 애프터마켓(16:00~20:00)까지 시세를 반영하기 위한 가격 업데이트 종료 시간.
+    // 20:00 종료 직후 마지막 체결이 늦게 반영되는 경우를 위해 10분 여유를 둔다.
+    private val PRICE_UPDATE_END_TIME = LocalTime.of(20, 10)  // 20:10
 
     /**
      * 현재 시간이 거래 시간인지 확인
@@ -36,10 +36,11 @@ object TradingTimeHelper {
 
     /**
      * 현재 시간이 가격 업데이트 허용 시간인지 확인
-     * - 평일 09:00 - 15:40
+     * - 평일 09:00 - 20:10
      * - 공휴일 제외
      *
-     * 장 종료(15:30) 직후 종가가 늦게 반영되는 케이스를 위해 여유 구간을 둔다.
+     * 정규장(09:00~15:30)뿐 아니라 애프터마켓(~20:00)까지 시세를 갱신하고,
+     * 마지막 체결 반영 지연을 위해 20:10까지 허용한다.
      */
     fun isPriceUpdateTime(dateTime: LocalDateTime = LocalDateTime.now()): Boolean {
         val date = dateTime.toLocalDate()
@@ -92,7 +93,7 @@ object TradingTimeHelper {
     }
 
     /**
-     * 다음 가격 업데이트 종료 시간을 반환 (15:40)
+     * 다음 가격 업데이트 종료 시간을 반환 (20:10)
      */
     fun getNextPriceUpdateEndTime(dateTime: LocalDateTime = LocalDateTime.now()): LocalDateTime {
         var nextDate = dateTime.toLocalDate()
@@ -145,7 +146,7 @@ object TradingTimeHelper {
     }
 
     /**
-     * 오늘 날짜의 가격 업데이트 종료 시각(15:40) 반환
+     * 오늘 날짜의 가격 업데이트 종료 시각(20:10) 반환
      */
     fun getTodayPriceUpdateEndTime(): LocalDateTime {
         return LocalDateTime.of(LocalDate.now(), PRICE_UPDATE_END_TIME)

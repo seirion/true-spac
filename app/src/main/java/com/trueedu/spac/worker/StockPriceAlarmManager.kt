@@ -73,7 +73,7 @@ class StockPriceAlarmManager @Inject constructor(
                 scheduleInexactRepeating(pendingIntent, intervalMillis)
                 logD("✅ inexact 알람이 설정되었습니다 - 즉시 실행 후 ${INTERVAL_MINUTES}분마다 반복")
 
-                // 가격 업데이트 종료 시간(15:40)에 알람 중지 스케줄링
+                // 가격 업데이트 종료 시간(20:10)에 알람 중지 스케줄링
                 if (TradingTimeHelper.isPriceUpdateTime()) {
                     scheduleTradingEnd()
                 }
@@ -172,7 +172,7 @@ class StockPriceAlarmManager @Inject constructor(
     }
 
     /**
-     * 가격 업데이트 종료 시간에 알람 중지 스케줄링 (15:40)
+     * 가격 업데이트 종료 시간에 알람 중지 스케줄링 (20:10)
      */
     private fun scheduleTradingEnd() {
         val millisUntilEnd = TradingTimeHelper.getMillisUntilPriceUpdateEnd()
@@ -268,17 +268,17 @@ class StockPriceAlarmManager @Inject constructor(
             appendLine("━━━━━━━━━━━━━━━━")
             appendLine("알람 상태: ${if (isScheduled) "✅ 활성화" else "❌ 중단됨"}")
             appendLine("현재 거래 시간: ${if (isTradingTime) "✅ YES" else "❌ NO"} (09:00~15:30)")
-            appendLine("현재 업데이트 시간: ${if (isPriceUpdateTime) "✅ YES" else "❌ NO"} (09:00~15:40)")
+            appendLine("현재 업데이트 시간: ${if (isPriceUpdateTime) "✅ YES" else "❌ NO"} (09:00~20:10)")
             appendLine("정확한 알람 권한: ${if (canScheduleExact) "✅ 허용됨" else "❌ 거부됨"}")
             appendLine("다음 거래 시작: $nextTradingStart")
             appendLine("다음 거래 종료: $nextTradingEnd (15:30)")
-            appendLine("다음 업데이트 종료: $nextPriceUpdateEnd (15:40)")
+            appendLine("다음 업데이트 종료: $nextPriceUpdateEnd (20:10)")
             appendLine("━━━━━━━━━━━━━━━━")
             if (!isScheduled) {
                 appendLine("\n⚠️ 알람이 중단된 이유:")
                 if (!isPriceUpdateTime) {
                     appendLine("• 현재 시세 업데이트 시간이 아님")
-                    appendLine("  → 앱이 업데이트 시간(09:00~15:40) 외에 실행됨")
+                    appendLine("  → 앱이 업데이트 시간(09:00~20:10) 외에 실행됨")
                 }
                 if (!canScheduleExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     appendLine("• 정확한 알람 권한 없음")
@@ -301,7 +301,7 @@ class StockPriceAlarmReceiver : BroadcastReceiver() {
         val currentTime = java.time.LocalDateTime.now()
         logD("⏰ 시세 업데이트 알람 트리거: $currentTime")
 
-        // 업데이트 시간 체크 (15:40까지 허용)
+        // 업데이트 시간 체크 (20:10까지 허용)
         if (!TradingTimeHelper.isPriceUpdateTime()) {
             logD("⏭️ 업데이트 시간이 아닙니다. Worker 실행을 건너뜁니다")
             return
@@ -362,33 +362,36 @@ class TradingEndReceiver : BroadcastReceiver() {
     lateinit var applicationScope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
-        logD("가격 업데이트 종료 시간 도달 - 종가 업데이트 후 알람 중지")
+        logD("가격 업데이트 종료 시간 도달 - 마지막 시세 업데이트 후 알람 중지")
 
         // BroadcastReceiver의 goAsync()를 사용하여 비동기 작업 수행
         val pendingResult = goAsync()
 
-        // Application 스코프에서 종가 업데이트
+        // Application 스코프에서 마지막 시세 업데이트
         applicationScope.launch {
             try {
-                // 오늘 날짜의 장 종료 시각(15:30)으로 종가를 저장하되,
-                // 실제 조회는 15:40 시점에 수행하여 종가 반영 지연을 흡수한다.
-                val marketCloseTime = TradingTimeHelper.getTodayMarketCloseTime()
+                // 애프터마켓(~20:00) 종료 후의 마지막 시세를 저장한다.
+                // 저장 시각은 현재 시각이다. 과거 시각(예: 15:30)으로 저장하면 앞서 저장한
+                // priceLastUpdatedAt 보다 값이 작아져 클라이언트가 최신 여부를 잘못 판단한다.
                 val priceUpdateEndTime = TradingTimeHelper.getTodayPriceUpdateEndTime()
 
-                logD("📊 장 종가 업데이트 시작 (저장 시각: $marketCloseTime, 조회 시각: $priceUpdateEndTime)")
+                logD("📊 마지막 시세 업데이트 시작 (종료 시각: $priceUpdateEndTime)")
+
+                // 종목 목록이 준비되기 전이면 시세를 조회할 수 없다
+                priceManager.ensureSpacListReady()
 
                 // KIS API에서 현재 시세 가져오기
                 val priceMap = priceManager.getPriceMap(forceRefresh = true)
 
-                // Firebase에 15:30 시각으로 저장
+                // Firebase에 현재 시각으로 저장
                 if (priceMap.isNotEmpty()) {
-                    priceManager.writePriceToFirebase(priceMap, marketCloseTime)
-                    logD("✅ 장 종가 업데이트 완료: ${priceMap.size}개 종목")
+                    priceManager.writePriceToFirebase(priceMap)
+                    logD("✅ 마지막 시세 업데이트 완료: ${priceMap.size}개 종목")
                 } else {
-                    logD("⚠️ 종가 업데이트할 데이터가 없습니다")
+                    logD("⚠️ 마지막 시세 업데이트할 데이터가 없습니다")
                 }
             } catch (e: Exception) {
-                logE(e, "❌ 장 종가 업데이트 실패")
+                logE(e, "❌ 마지막 시세 업데이트 실패")
             } finally {
                 // 알람 중지
                 stockPriceAlarmManager.stopAlarm()
