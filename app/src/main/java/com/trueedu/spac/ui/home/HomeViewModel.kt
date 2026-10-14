@@ -27,6 +27,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
+import com.trueedu.spac.util.priceTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -103,28 +104,7 @@ class HomeViewModel @Inject constructor(
     val priceUpdateTimeStr by derivedStateOf {
         val timestamp = priceManager.cacheTimestamp
         logD("priceUpdateTimeStr: $timestamp")
-        if (timestamp == 0L) return@derivedStateOf "전일 종가"
-
-        val timestampStr = timestamp.toString()
-        if (timestampStr.length != 12) return@derivedStateOf "전일 종가"
-
-        val dateStr = timestampStr.take(8)
-        val timeStr = timestampStr.substring(8, 12)
-
-        val cacheDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val today = LocalDate.now()
-
-        if (cacheDate.isBefore(today)) {
-            "전일 종가"
-        } else {
-            val time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HHmm"))
-            val limitTime = LocalTime.of(15, 30)
-            if (time.isAfter(limitTime)) {
-                "15:30"
-            } else {
-                DateTimeFormatter.ofPattern("HH:mm").format(time)
-            }
-        }
+        priceTimeLabel(timestamp)
     }
 
     val hasAssets = derivedStateOf {
