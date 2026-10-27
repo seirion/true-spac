@@ -267,7 +267,7 @@ class StockInfoKosdaq(
     override val isKosdaq: Boolean = true
 
     override val isSpac: Boolean
-        get() = nameKr.contains("스팩")
+        get() = nameKr.contains("스팩") || nameKr.contains("기업인수목적")
 
     override val isHalt: Boolean
         get() = getAttribute("거래정지 여부") == "Y"
