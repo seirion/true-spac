@@ -160,6 +160,10 @@ class StockPool @Inject constructor(
                 )
             } else {
                 status.value = Status.FAIL
+                trueAnalytics.log(
+                    "master_file_update_failed",
+                    mapOf("reason" to "empty")
+                )
             }
 
             if (stocks.isNotEmpty()) {
@@ -168,6 +172,10 @@ class StockPool @Inject constructor(
         } catch (e: Exception) {
             logD("downloadMasterFiles failed: $e")
             status.value = Status.FAIL
+            trueAnalytics.log(
+                "master_file_update_failed",
+                mapOf("reason" to "exception", "error" to (e.message ?: e.javaClass.simpleName))
+            )
             throw e
         }
     }
