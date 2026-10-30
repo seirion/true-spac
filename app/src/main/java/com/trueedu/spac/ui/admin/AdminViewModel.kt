@@ -17,6 +17,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.trueedu.spac.data.stocks.PriceManager
 import com.trueedu.spac.data.log.logD
 import com.trueedu.spac.data.log.logE
@@ -184,6 +185,7 @@ class AdminViewModel @Inject constructor(
 
         val workRequest = OneTimeWorkRequestBuilder<PeriodicSyncWorker>()
             .setConstraints(createNetworkConstraints())
+            .setInputData(workDataOf(PeriodicSyncWorker.KEY_FORCE to true))
             .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)

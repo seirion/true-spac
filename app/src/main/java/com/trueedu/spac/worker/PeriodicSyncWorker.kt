@@ -28,8 +28,9 @@ class PeriodicSyncWorker @AssistedInject constructor(
             tracker.recordMasterFileExecution()
             logD("🔄 PeriodicSyncWorker started - checking if update needed")
 
-            // Firebase 데이터가 오늘 날짜보다 오래되었는지 확인
-            val needUpdate = stockPool.needUpdateMasterFile()
+            // 수동 실행은 갱신 시각 체크를 건너뛰고 항상 다운로드한다
+            val force = inputData.getBoolean(KEY_FORCE, false)
+            val needUpdate = force || stockPool.needUpdateMasterFile()
             logD("📊 needUpdateMasterFile() = $needUpdate")
 
             if (needUpdate) {
@@ -51,5 +52,6 @@ class PeriodicSyncWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "periodic_sync_work"
+        const val KEY_FORCE = "force"
     }
 }
