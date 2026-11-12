@@ -84,7 +84,9 @@ class DartViewModel @Inject constructor(
 
     fun forceRefresh() {
         trueAnalytics.clickButton("dart__force_refresh__click")
-        dartManager.forceLoad()
+        viewModelScope.launch {
+            dartManager.forceLoad()
+        }
     }
 
     fun getStock(code: String): StockInfo? {
