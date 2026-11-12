@@ -65,7 +65,9 @@ class HomeViewModel @Inject constructor(
     )
 
     init {
-        dartManager.init()
+        viewModelScope.launch {
+            dartManager.init()
+        }
         loadSearchHistory()
 
         viewModelScope.launch {

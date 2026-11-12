@@ -13,12 +13,11 @@ import com.trueedu.spac.util.isHoliday
 import com.trueedu.spac.util.toDateTimeCompactString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -46,44 +45,41 @@ class DartManager @Inject constructor(
 
     val updateSignal = MutableSharedFlow<Unit>()
 
-    fun init() {
+    suspend fun init() = withContext(Dispatchers.IO) {
         logD("init() - ${local.dartApiKey.take(8)}")
-        // TODO: MainScope 대신 명시적인 Job 관리나 ViewModel의 viewModelScope 사용 고려
-        MainScope().launch(Dispatchers.IO) {
-            // yyyyMMddHHmm
-            val lastUpdatedAtRemote = firebaseDartManager.lastUpdatedAt()
-            logD("lastUpdatedAtRemote: $lastUpdatedAtRemote")
-            val now = LocalDateTime.now()
-            val hasApiKey = local.dartApiKey.isNotBlank()
+        // yyyyMMddHHmm
+        val lastUpdatedAtRemote = firebaseDartManager.lastUpdatedAt()
+        logD("lastUpdatedAtRemote: $lastUpdatedAtRemote")
+        val now = LocalDateTime.now()
+        val hasApiKey = local.dartApiKey.isNotBlank()
 
-            val lastUpdatedAtRemoteTime = parseCacheTime(lastUpdatedAtRemote)
-            val cacheAgeMinutes = if (lastUpdatedAtRemoteTime == null) {
-                Long.MAX_VALUE
-            } else {
-                ChronoUnit.MINUTES.between(lastUpdatedAtRemoteTime, now).coerceAtLeast(0L)
-            }
-
-            if (hasApiKey && cacheAgeMinutes > CACHE_VALIDITY_MINUTES) {
-                // 다시 로딩
-                while (spacManager.loading.value) {
-                    //logD("waiting spacManager")
-                    delay(200)
-                }
-                val list = spacManager.spacList.value
-                syncListToFirebase(list.map { it.code })
-                logD("lastUpdatedAt: $lastUpdatedAt")
-            } else {
-                lastUpdatedAt = lastUpdatedAtRemote
-                firebaseDartManager.loadDartList().forEach {
-                    if (it.list?.isNotEmpty() == true) {
-                        val code = it.list.first().stockCode
-                        items[code] = it.list
-                        updateSignal.emit(Unit)
-                    }
-                }
-            }
-            logD("init() completed - ${items.size}")
+        val lastUpdatedAtRemoteTime = parseCacheTime(lastUpdatedAtRemote)
+        val cacheAgeMinutes = if (lastUpdatedAtRemoteTime == null) {
+            Long.MAX_VALUE
+        } else {
+            ChronoUnit.MINUTES.between(lastUpdatedAtRemoteTime, now).coerceAtLeast(0L)
         }
+
+        if (hasApiKey && cacheAgeMinutes > CACHE_VALIDITY_MINUTES) {
+            // 다시 로딩
+            while (spacManager.loading.value) {
+                //logD("waiting spacManager")
+                delay(200)
+            }
+            val list = spacManager.spacList.value
+            syncListToFirebase(list.map { it.code })
+            logD("lastUpdatedAt: $lastUpdatedAt")
+        } else {
+            lastUpdatedAt = lastUpdatedAtRemote
+            firebaseDartManager.loadDartList().forEach {
+                if (it.list?.isNotEmpty() == true) {
+                    val code = it.list.first().stockCode
+                    items[code] = it.list
+                    updateSignal.emit(Unit)
+                }
+            }
+        }
+        logD("init() completed - ${items.size}")
     }
 
     private fun parseCacheTime(timestamp: Long): LocalDateTime? {
@@ -242,13 +238,11 @@ class DartManager @Inject constructor(
         return current.filter { it.receiptNum !in existingReceiptNums }
     }
 
-    fun forceLoad() {
+    suspend fun forceLoad() = withContext(Dispatchers.IO) {
         logD("forceLoad()")
         clear()
-        MainScope().launch(Dispatchers.IO) {
-            val list = spacManager.spacList.value
-            syncListToFirebase(list.map { it.code })
-        }
+        val list = spacManager.spacList.value
+        syncListToFirebase(list.map { it.code })
     }
 
     fun hasDisclosure(code: String): Boolean {
