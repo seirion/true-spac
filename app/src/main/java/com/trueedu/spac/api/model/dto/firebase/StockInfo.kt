@@ -219,6 +219,9 @@ class StockInfoKosdaq(
             return StockInfoKosdaq(code, nameKr, attributes)
         }
 
+        // "스팩" 으로 끝나거나 "스팩N호" 형태만 스팩 (예: 아인스팩씨엔에스 는 일반 종목)
+        private val SPAC_NAME_REGEX = Regex("스팩(\\d+호)?$")
+
         private const val ATTRIBUTES_LEN = 221 // 예제에서는 222 이지만 실제로 해보면 하나 적음
 
         val fieldSpecs = listOf(
@@ -267,7 +270,7 @@ class StockInfoKosdaq(
     override val isKosdaq: Boolean = true
 
     override val isSpac: Boolean
-        get() = nameKr.contains("스팩") || nameKr.contains("기업인수목적")
+        get() = SPAC_NAME_REGEX.containsMatchIn(nameKr) || nameKr.contains("기업인수목적")
 
     override val isHalt: Boolean
         get() = getAttribute("거래정지 여부") == "Y"
