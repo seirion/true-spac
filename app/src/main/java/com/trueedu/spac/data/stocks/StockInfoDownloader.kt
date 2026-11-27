@@ -19,6 +19,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.Charset
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -53,35 +54,56 @@ class StockInfoDownloader @Inject constructor(
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    suspend fun getKrStockInfoList(): List<StockInfo> {
+    /**
+     * 코스피·코스닥 종목을 모두 받아 온다.
+     * 한 시장이라도 받지 못하면 일부만 저장되어(예: 코스닥 누락 → 스팩 0개) 복구가 어려우므로
+     * 건너뛰지 않고 [IOException] 을 던진다.
+     */
+    suspend fun getKrStockInfoList(): List<StockInfo> = withWorkDir { dir ->
         val stocks = ArrayList<StockInfo>()
         listOf(Exchange.KOSPI, Exchange.KOSDAQ).forEach { exchange ->
-            val file = download(exchange) ?: return@forEach
-            val unzipped = unzipFile(file) ?: return@forEach
+            val file = download(exchange, dir)
+                ?: throw IOException("${exchange.fileName} 다운로드 실패")
+            val unzipped = unzipFile(file, dir)
+                ?: throw IOException("${exchange.fileName} 압축 해제 실패")
             val stockInfo = readKrStockFromUnzippedFile(unzipped, exchange)
+            if (stockInfo.isEmpty()) throw IOException("${exchange.fileName} 종목이 비어 있음")
             stocks.addAll(stockInfo)
         }
-        return stocks
+        stocks
     }
 
-    suspend fun getUsStockInfoList(): List<UsStockInfo> {
+    suspend fun getUsStockInfoList(): List<UsStockInfo> = withWorkDir { dir ->
         val exchange = Exchange.NASDAQ
-        val file = download(exchange) ?: return emptyList()
-        val unzipped = unzipFile(file) ?: return emptyList()
-        val usStockInfo = readUsStockFromUnzippedFile(unzipped)
-        return usStockInfo
+        val file = download(exchange, dir) ?: return@withWorkDir emptyList()
+        val unzipped = unzipFile(file, dir) ?: return@withWorkDir emptyList()
+        readUsStockFromUnzippedFile(unzipped)
+    }
+
+    /**
+     * 호출마다 겹치지 않는 임시 폴더를 만들어 쓰고 끝나면 지운다.
+     * 파일 이름이 고정이면 동시에 실행된 다운로드끼리 서로의 파일을 지워 압축 해제가 실패한다.
+     */
+    private suspend fun <T> withWorkDir(block: suspend (File) -> T): T {
+        val dir = File(context.cacheDir, "master_${UUID.randomUUID()}")
+        dir.mkdirs()
+        try {
+            return block(dir)
+        } finally {
+            dir.deleteRecursively()
+        }
     }
 
 
-    private suspend fun download(exchange: Exchange): File? = withContext(Dispatchers.IO) {
+    private suspend fun download(exchange: Exchange, dir: File): File? = withContext(Dispatchers.IO) {
         val fileName = exchange.fileName
         logD("begin download(): $fileName")
 
         val url = "https://new.real.download.dws.co.kr/common/master/${fileName}"
 
         try {
-            // 캐시 디렉토리에 파일 저장
-            val outputFile = File(context.cacheDir, fileName)
+            // 호출별 임시 폴더에 파일 저장
+            val outputFile = File(dir, fileName)
 
             // HTTP 요청 생성
             val request = Request.Builder()
@@ -112,11 +134,10 @@ class StockInfoDownloader @Inject constructor(
         }
     }
 
-    private fun unzipFile(zipFile: File): String? {
+    private fun unzipFile(zipFile: File, destDir: File): String? {
         logD("unzip ${zipFile.path}")
 
         var unzippedFile: String? = null
-        val destDir = context.cacheDir
 
         try {
             FileInputStream(zipFile).use { inputStream ->
