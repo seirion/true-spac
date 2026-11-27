@@ -13,8 +13,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,6 +40,10 @@ class StockPool @Inject constructor(
     }
     val status = MutableStateFlow(Status.LOADING)
 
+    // 앱 시작·워커·관리자 수동 실행이 겹쳐도 종목 로딩/다운로드는 한 번에 하나만 돌게 한다
+    private val loadInFlight = AtomicBoolean(false)
+    private val masterFileMutex = Mutex()
+
     /**
      * 종목 정보 로딩 전략 (일반 사용자용):
      * 1. local database 에서 우선 종목 정보를 먼저 로딩한다
@@ -52,44 +59,56 @@ class StockPool @Inject constructor(
         if (status.value == Status.SUCCESS || status.value == Status.UPDATING) {
             return
         }
+        // 이미 로딩 중이면 중복 실행하지 않는다 (진행 중인 로딩이 status 를 갱신한다)
+        if (!loadInFlight.compareAndSet(false, true)) {
+            return
+        }
 
         CoroutineScope(Dispatchers.IO).launch {
-            delisted = loadDelistedStocks()
-            val localStocks = loadLocalStocks()
+            try {
+                masterFileMutex.withLock { loadStockInfoLocked() }
+            } finally {
+                loadInFlight.set(false)
+            }
+        }
+    }
 
-            // 현재 시각 기준으로 마스터 파일 업데이트 필요 여부 체크
-            val currentTime = currentTimeToYyyyMMddHHmm()
-            val needUpdate = needUpdateRemoteData(local.stockUpdatedAt, currentTime)
+    private suspend fun loadStockInfoLocked() {
+        delisted = loadDelistedStocks()
+        val localStocks = loadLocalStocks()
 
-            logD("업데이트 체크 - 마스터 파일 직접 다운로드($needUpdate)")
+        // 현재 시각 기준으로 마스터 파일 업데이트 필요 여부 체크
+        val currentTime = currentTimeToYyyyMMddHHmm()
+        val needUpdate = needUpdateRemoteData(local.stockUpdatedAt, currentTime)
 
-            if (needUpdate) {
-                logD("마스터 파일 다운로드 시작: localUpdatedAt=${local.stockUpdatedAt}, currentTime=$currentTime")
-                try {
-                    val stocksList = stockInfoDownloader.getKrStockInfoList()
-                    if (stocksList.isNotEmpty()) {
-                        stocks = stocksList.associateBy(StockInfo::code)
-                        local.stockUpdatedAt = currentTime
-                        writeToLocalDatabase(stocks.values)
-                        logD("마스터 파일 다운로드 완료: ${stocks.size} stocks")
-                    } else {
-                        // 다운로드 결과 없을 시 로컬 데이터 사용
-                        logD("마스터 파일 다운로드 결과 없음, 로컬 데이터 사용: ${localStocks.size}")
-                        stocks = localStocks
-                    }
-                } catch (e: Exception) {
-                    // 다운로드 실패 시 로컬 데이터 폴백
-                    logD("마스터 파일 다운로드 실패, 로컬 데이터 사용: $e")
+        logD("업데이트 체크 - 마스터 파일 직접 다운로드($needUpdate)")
+
+        if (needUpdate) {
+            logD("마스터 파일 다운로드 시작: localUpdatedAt=${local.stockUpdatedAt}, currentTime=$currentTime")
+            try {
+                val stocksList = stockInfoDownloader.getKrStockInfoList()
+                if (stocksList.isNotEmpty()) {
+                    stocks = stocksList.associateBy(StockInfo::code)
+                    local.stockUpdatedAt = currentTime
+                    writeToLocalDatabase(stocks.values)
+                    logD("마스터 파일 다운로드 완료: ${stocks.size} stocks")
+                } else {
+                    // 다운로드 결과 없을 시 로컬 데이터 사용
+                    logD("마스터 파일 다운로드 결과 없음, 로컬 데이터 사용: ${localStocks.size}")
                     stocks = localStocks
                 }
-            } else {
-                // 업데이트 불필요: 로컬 DB 데이터 사용
-                logD("종목 업데이트 불필요: ${localStocks.size}")
+            } catch (e: Exception) {
+                // 다운로드 실패 시 로컬 데이터 폴백
+                logD("마스터 파일 다운로드 실패, 로컬 데이터 사용: $e")
                 stocks = localStocks
             }
-
-            status.value = if (stocks.isNotEmpty()) Status.SUCCESS else Status.FAIL
+        } else {
+            // 업데이트 불필요: 로컬 DB 데이터 사용
+            logD("종목 업데이트 불필요: ${localStocks.size}")
+            stocks = localStocks
         }
+
+        status.value = if (stocks.isNotEmpty()) Status.SUCCESS else Status.FAIL
     }
 
     private suspend fun writeToLocalDatabase(stocks: Collection<StockInfo>) {
@@ -139,44 +158,47 @@ class StockPool @Inject constructor(
      * 주의: 관리자 전용 기능 - 일반 사용자는 이 메서드를 직접 호출하지 않습니다
      */
     suspend fun downloadMasterFiles() {
-        status.value = Status.UPDATING
-        try {
-            val stocksList = stockInfoDownloader.getKrStockInfoList()
-            stocks = stocksList.associateBy(StockInfo::code)
+        masterFileMutex.withLock {
+            status.value = Status.UPDATING
+            try {
+                val stocksList = stockInfoDownloader.getKrStockInfoList()
+                stocks = stocksList.associateBy(StockInfo::code)
 
-            val yyyyMMddHHmm = currentTimeToYyyyMMddHHmm()
-            firebaseRealtimeDatabase.writeStockInfo(yyyyMMddHHmm, stocks)
+                val yyyyMMddHHmm = currentTimeToYyyyMMddHHmm()
+                firebaseRealtimeDatabase.writeStockInfo(yyyyMMddHHmm, stocks)
 
-            if (stocks.isNotEmpty()) {
-                local.stockUpdatedAt = yyyyMMddHHmm
-                status.value = Status.SUCCESS
-                logD("Master file downloaded and uploaded to Firebase: ${stocks.size} stocks")
-                trueAnalytics.log(
-                    "master_file_updated",
-                    mapOf(
-                        "stock_count" to stocks.size,
-                        "updated_at" to yyyyMMddHHmm
+                if (stocks.isNotEmpty()) {
+                    local.stockUpdatedAt = yyyyMMddHHmm
+                    status.value = Status.SUCCESS
+                    logD("Master file downloaded and uploaded to Firebase: ${stocks.size} stocks")
+                    trueAnalytics.log(
+                        "master_file_updated",
+                        mapOf(
+                            "stock_count" to stocks.size,
+                            "updated_at" to yyyyMMddHHmm
+                        )
                     )
-                )
-            } else {
-                status.value = Status.FAIL
+                } else {
+                    status.value = Status.FAIL
+                    trueAnalytics.log(
+                        "master_file_update_failed",
+                        mapOf("reason" to "empty")
+                    )
+                }
+
+                if (stocks.isNotEmpty()) {
+                    writeToLocalDatabase(stocks.values)
+                }
+            } catch (e: Exception) {
+                logD("downloadMasterFiles failed: $e")
+                // 이미 받아 둔 종목이 있으면 그대로 쓸 수 있으므로 FAIL 로 바꾸지 않는다
+                status.value = if (stocks.isNotEmpty()) Status.SUCCESS else Status.FAIL
                 trueAnalytics.log(
                     "master_file_update_failed",
-                    mapOf("reason" to "empty")
+                    mapOf("reason" to "exception", "error" to (e.message ?: e.javaClass.simpleName))
                 )
+                throw e
             }
-
-            if (stocks.isNotEmpty()) {
-                writeToLocalDatabase(stocks.values)
-            }
-        } catch (e: Exception) {
-            logD("downloadMasterFiles failed: $e")
-            status.value = Status.FAIL
-            trueAnalytics.log(
-                "master_file_update_failed",
-                mapOf("reason" to "exception", "error" to (e.message ?: e.javaClass.simpleName))
-            )
-            throw e
         }
     }
 
